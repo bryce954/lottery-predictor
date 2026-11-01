@@ -12,6 +12,7 @@ from rich import print as rprint
 from typing import Optional, List
 from pathlib import Path
 import json
+import asyncio
 import numpy as np
 import pandas as pd
 
@@ -31,6 +32,11 @@ from .models import (
 from sklearn.preprocessing import StandardScaler
 from .visualize import LotteryVisualizer, visualize_predictions
 from .universal import get_universal_manager, list_lotteries
+from .data_integration import (
+    DataIntegrator, DataValidator, ScheduledUpdater,
+    update_lottery_data, update_all_lotteries,
+    save_github_workflow, run_scheduled_updater
+)
 
 try:
     import openpyxl
@@ -806,6 +812,163 @@ def info():
 
         console.print(table)
         console.print()
+
+
+@app.command()
+def update_data(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type to update"),
+    all_lotteries: bool = typer.Option(False, "--all", help="Update all lotteries"),
+):
+    """Update lottery data from real APIs and web scraping (v1.4)."""
+
+    print_header("🔄 Updating Lottery Data (v1.4)")
+    print_disclaimer()
+
+    if all_lotteries:
+        console.print("[cyan]Updating all lotteries...[/cyan]")
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Fetching data from all sources...", total=None)
+            results = asyncio.run(update_all_lotteries())
+            progress.update(task, description="Done!", completed=True)
+
+        for key, result in results.items():
+            console.print(f"\n[bold]{LOTTERY_CONFIGS[key]['name']}:[/bold]")
+            console.print(f"  Fetched: {result['total_fetched']} | Valid: {result['valid']} | Saved: {result['saved']}")
+            if result['invalid'] > 0:
+                console.print(f"  [red]Invalid: {result['invalid']}[/red]")
+            if result['anomalies']:
+                console.print(f"  [yellow]Anomalies: {len(result['anomalies'])}[/yellow]")
+                for a in result['anomalies'][:3]:
+                    console.print(f"    - {a['type']}: {a['details']}")
+    else:
+        if lottery not in LOTTERY_TYPES:
+            console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+            raise typer.Exit(1)
+
+        console.print(f"[cyan]Updating {LOTTERY_CONFIGS[lottery]['name']}...[/cyan]")
+        with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            console=console,
+        ) as progress:
+            task = progress.add_task("Fetching data from sources...", total=None)
+            result = asyncio.run(update_lottery_data(lottery))
+            progress.update(task, description="Done!", completed=True)
+
+        console.print(f"\n[bold]Results:[/bold]")
+        console.print(f"  Total Fetched: {result['total_fetched']}")
+        console.print(f"  Valid: {result['valid']}")
+        console.print(f"  Saved: {result['saved']}")
+        console.print(f"  Invalid: {result['invalid']}")
+
+        if result['errors']:
+            console.print(f"\n[yellow]Errors (first 10):[/yellow]")
+            for err in result['errors'][:10]:
+                console.print(f"  - {err}")
+
+        if result['anomalies']:
+            console.print(f"\n[yellow]Anomalies Detected:[/yellow]")
+            for a in result['anomalies']:
+                console.print(f"  - {a['type']}: {a['details']}")
+
+
+@app.command()
+def validate_data(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type to validate"),
+):
+    """Validate lottery data and detect anomalies (v1.4)."""
+
+    print_header("🔍 Data Validation & Anomaly Detection (v1.4)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    dm = get_data_manager(lottery)
+    df = dm.load_data()
+
+    if len(df) == 0:
+        console.print("[red]No data to validate[/red]")
+        raise typer.Exit(1)
+
+    validator = DataValidator(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Validating data...", total=None)
+        anomalies = validator.detect_anomalies(df)
+        progress.update(task, description="Done!", completed=True)
+
+    console.print(f"\n[bold]Dataset:[/bold] {len(df)} draws from {df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}")
+
+    if anomalies:
+        console.print(f"\n[yellow]Anomalies Found ({len(anomalies)}):[/yellow]")
+        table = Table(show_header=True)
+        table.add_column("Type", style="cyan")
+        table.add_column("Count", style="red")
+        table.add_column("Details", style="yellow")
+        for a in anomalies:
+            table.add_row(a['type'], str(a['count']), a['details'])
+        console.print(table)
+    else:
+        console.print("\n[green]✓ No anomalies detected[/green]")
+
+    # Also validate each draw
+    invalid_count = 0
+    for _, row in df.iterrows():
+        draw = row.to_dict()
+        draw['date'] = draw['date'].strftime('%Y-%m-%d') if hasattr(draw['date'], 'strftime') else str(draw['date'])
+        is_valid, errors = validator.validate_draw(draw)
+        if not is_valid:
+            invalid_count += 1
+            if invalid_count <= 5:
+                console.print(f"[red]Invalid draw {draw.get('draw_number', '?')}: {errors}[/red]")
+
+    if invalid_count > 0:
+        console.print(f"\n[red]Total invalid draws: {invalid_count}[/red]")
+    else:
+        console.print("\n[green]✓ All draws pass validation[/green]")
+
+
+@app.command()
+def generate_workflow():
+    """Generate GitHub Actions workflow for scheduled data updates (v1.4)."""
+    print_header("⚙️ Generating GitHub Actions Workflow (v1.4)")
+
+    path = save_github_workflow()
+    console.print(f"\n[green]✓ Workflow saved to {path}[/green]")
+    console.print("\nThis workflow will:")
+    console.print("  - Run daily at 6 AM UTC")
+    console.print("  - Update data for major lotteries")
+    console.print("  - Commit and push changes if data changed")
+    console.print("\nTo enable: Push to GitHub and the workflow will run automatically.")
+
+
+@app.command()
+def run_scheduler(
+    lotteries: str = typer.Option("powerball,mega_millions,florida_lotto", "--lotteries", help="Comma-separated lottery keys"),
+    interval: int = typer.Option(24, "--interval", "-i", help="Update interval in hours"),
+):
+    """Run scheduled data updater (blocking, v1.4)."""
+    print_header("⏰ Scheduled Data Updater (v1.4)")
+
+    keys = [k.strip() for k in lotteries.split(',')]
+    for k in keys:
+        if k not in LOTTERY_TYPES:
+            console.print(f"[red]Error: Unknown lottery type '{k}'[/red]")
+            raise typer.Exit(1)
+
+    console.print(f"[cyan]Scheduling updates for: {', '.join(keys)} every {interval} hours[/cyan]")
+    console.print("[yellow]Press Ctrl+C to stop[/yellow]\n")
+
+    run_scheduled_updater(keys, interval)
 
 
 if __name__ == "__main__":

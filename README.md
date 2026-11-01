@@ -139,6 +139,11 @@ streamlit run streamlit_app.py
 
 # Launch desktop GUI (requires tkinter: sudo apt-get install python3-tk on Ubuntu/Debian)
 python tkinter_app.py
+
+# v1.4 Data Integration commands
+python main.py update-data --lottery powerball
+python main.py validate-data --lottery powerball
+python main.py generate-workflow
 ```
 
 ## Commands
@@ -225,6 +230,37 @@ Options:
 python main.py info
 ```
 
+### `update-data` - Update Lottery Data (v1.4)
+```bash
+python main.py update-data [OPTIONS]
+
+Options:
+  -l, --lottery TEXT     Lottery type (default: powerball)
+  --all                  Update all lotteries
+```
+
+### `validate-data` - Validate Data & Detect Anomalies (v1.4)
+```bash
+python main.py validate-data [OPTIONS]
+
+Options:
+  -l, --lottery TEXT     Lottery type (default: powerball)
+```
+
+### `generate-workflow` - Generate GitHub Actions Workflow (v1.4)
+```bash
+python main.py generate-workflow
+```
+
+### `run-scheduler` - Run Scheduled Updater (v1.4)
+```bash
+python main.py run-scheduler [OPTIONS]
+
+Options:
+  --lotteries TEXT       Comma-separated lottery keys (default: powerball,mega_millions,florida_lotto)
+  -i, --interval INTEGER Update interval in hours (default: 24)
+```
+
 ## Prediction Methods
 
 ### Statistical Methods
@@ -262,7 +298,8 @@ lottery-predictor/
     ├── models.py         # Prediction models (statistical, ML, DL)
     ├── visualize.py      # Visualization generation
     ├── cli.py            # Command-line interface
-    └── universal.py      # Universal lottery configuration system
+    ├── universal.py      # Universal lottery configuration system
+    └── data_integration.py  # API integration, web scraping, validation (v1.4)
 ```
 
 ## Example Output
@@ -364,12 +401,12 @@ If you or someone you know has a gambling problem, please contact:
 - [x] Model explainability (SHAP values)
 - [x] Online learning / incremental training
 
-### v1.4 - Data & Integration
-- [ ] Real API integrations (official lottery APIs)
-- [ ] Web scraping fallback for historical data
-- [ ] Data validation & anomaly detection
-- [ ] Scheduled data updates (cron/GitHub Actions)
-- [ ] Export to CSV/Excel/JSON
+### v1.4 - Data & Integration ✅
+- [x] Real API integrations (official lottery APIs) - framework ready
+- [x] Web scraping fallback for historical data - framework ready
+- [x] Data validation & anomaly detection
+- [x] Scheduled data updates (cron/GitHub Actions)
+- [x] Export to CSV/Excel/JSON
 
 ### v1.5 - Advanced Features
 - [x] Backtesting framework with historical validation
