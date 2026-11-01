@@ -255,37 +255,43 @@ class MLModelPredictor:
             'random_forest': RandomForestClassifier(
                 n_estimators=200, max_depth=15, random_state=42, n_jobs=-1
             ),
-            'gradient_boost': GradientBoostingClassifier(
-                n_estimators=150, max_depth=8, random_state=42
-            ),
+            # 'gradient_boost': GradientBoostingClassifier(
+            #     n_estimators=50, max_depth=5, random_state=42,
+            #     subsample=0.8
+            # ),  # Disabled - too slow on large datasets
             'mlp': MLPClassifier(
-                hidden_layer_sizes=(256, 128, 64),
-                max_iter=500,
+                hidden_layer_sizes=(128, 64),
+                max_iter=300,
                 random_state=42,
                 early_stopping=True
             ),
             'xgboost': xgb.XGBClassifier(
-                n_estimators=200, max_depth=10,
+                n_estimators=100, max_depth=8,
                 random_state=42, n_jobs=-1,
-                eval_metric='mlogloss'
+                eval_metric='mlogloss',
+                verbosity=0
             )
         }
 
         results = {}
         for name, model in models_config.items():
             logger.info(f"Training {name}...")
+            try:
+                # For multi-output, train one model per number position
+                # Simplified: predict top-k numbers
+                model.fit(X_train_scaled, y_train.argmax(axis=1))
 
-            # For multi-output, train one model per number position
-            # Simplified: predict top-k numbers
-            model.fit(X_train_scaled, y_train.argmax(axis=1))
+                # Evaluate
+                train_acc = model.score(X_train_scaled, y_train.argmax(axis=1))
+                test_acc = model.score(X_test_scaled, y_test.argmax(axis=1))
 
-            # Evaluate
-            train_acc = model.score(X_train_scaled, y_train.argmax(axis=1))
-            test_acc = model.score(X_test_scaled, y_test.argmax(axis=1))
-
-            self.models[name] = model
-            results[name] = {'train_acc': train_acc, 'test_acc': test_acc}
-            logger.info(f"{name}: Train={train_acc:.4f}, Test={test_acc:.4f}")
+                self.models[name] = model
+                results[name] = {'train_acc': train_acc, 'test_acc': test_acc}
+                logger.info(f"{name}: Train={train_acc:.4f}, Test={test_acc:.4f}")
+            except Exception as e:
+                logger.warning(f"{name} training failed: {e}")
+                results[name] = {'train_acc': 0, 'test_acc': 0, 'error': str(e)}
+                continue
 
         self.is_trained = True
         self.save_models()
