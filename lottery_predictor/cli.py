@@ -1,0 +1,418 @@
+"""
+Main CLI Entry Point for Lottery Predictor
+AI-powered Florida Lotto & Powerball number prediction.
+"""
+
+import typer
+from rich.console import Console
+from rich.table import Table
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, TextColumn
+from rich import print as rprint
+from typing import Optional, List
+from pathlib import Path
+import json
+
+from .data import LotteryDataManager, get_data_manager, LOTTERY_CONFIGS
+from .models import (
+    StatisticalPredictor,
+    MLModelPredictor,
+    EnsemblePredictor,
+    PredictionResult,
+    get_predictor
+)
+from .visualize import LotteryVisualizer, visualize_predictions
+
+app = typer.Typer(
+    name="lottery-predictor",
+    help="🎲 AI-Powered Florida Lotto & Powerball Number Predictor",
+    add_completion=False,
+)
+console = Console()
+
+LOTTERY_TYPES = ["florida_lotto", "powerball"]
+
+
+def print_header(title: str):
+    """Print a styled header."""
+    console.print(Panel.fit(f"[bold cyan]{title}[/bold cyan]", border_style="cyan"))
+
+
+def print_predictions(predictions: List[PredictionResult], lottery_type: str):
+    """Print predictions in a nice table."""
+    config = LOTTERY_CONFIGS[lottery_type]
+
+    table = Table(title=f"🎯 {config['name']} Predictions", show_header=True, header_style="bold magenta")
+    table.add_column("#", style="dim", width=4)
+    table.add_column("Main Numbers", style="green", width=30)
+    table.add_column("Bonus", style="yellow", width=15)
+    table.add_column("Confidence", style="blue", width=12)
+    table.add_column("Method", style="cyan", width=20)
+
+    for i, pred in enumerate(predictions, 1):
+        main_str = "  ".join(f"[bold]{n:2d}[/bold]" for n in pred.main_numbers)
+        bonus_str = "  ".join(f"[bold]{n:2d}[/bold]" for n in pred.bonus_numbers) if pred.bonus_numbers else "N/A"
+        conf_str = f"{pred.confidence:.1%}"
+
+        table.add_row(str(i), main_str, bonus_str, conf_str, pred.method)
+
+    console.print(table)
+
+
+def print_disclaimer():
+    """Print important disclaimer."""
+    console.print(Panel(
+        "[bold red]⚠️  IMPORTANT DISCLAIMER[/bold red]\n\n"
+        "This tool is for [bold]entertainment and educational purposes only[/bold]. "
+        "Lottery draws are random events. No algorithm or AI can predict "
+        "future lottery numbers with certainty. Past performance does not "
+        "guarantee future results. Please play responsibly and within your means.",
+        title="Disclaimer",
+        border_style="red"
+    ))
+
+
+@app.command()
+def predict(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type: florida_lotto or powerball"),
+    method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method: statistical, ml, ensemble"),
+    count: int = typer.Option(5, "--count", "-c", help="Number of predictions to generate"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of historical draws to analyze"),
+    train: bool = typer.Option(False, "--train", "-t", help="Retrain ML models before predicting"),
+    visualize: bool = typer.Option(False, "--visualize", "-v", help="Generate visualization charts"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Save predictions to JSON file"),
+):
+    """Generate lottery number predictions using AI and statistical analysis."""
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'. Choose from: {', '.join(LOTTERY_TYPES)}[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"🎲 {LOTTERY_CONFIGS[lottery]['name']} Predictor")
+    print_disclaimer()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        # Load data
+        task = progress.add_task("Loading historical data...", total=None)
+        dm = get_data_manager(lottery)
+        df = dm.load_data()
+        progress.update(task, description=f"Loaded {len(df)} historical draws")
+
+        # Get predictor
+        progress.update(task, description="Initializing predictor...")
+        predictor = get_predictor(lottery, method)
+
+        # Train if requested
+        if train and hasattr(predictor, 'ml'):
+            progress.update(task, description="Training ML models...")
+            predictor.ml.train()
+
+        # Generate predictions
+        progress.update(task, description="Generating predictions...")
+
+        if method == "statistical":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_balanced(last_n=last_n, num_predictions=count)
+        elif method == "ml":
+            pred = MLModelPredictor(lottery)
+            if not pred.is_trained:
+                pred.train()
+            predictions = pred.predict(num_predictions=count)
+        else:  # ensemble
+            pred = EnsemblePredictor(lottery)
+            predictions = pred.get_consensus_prediction(num_predictions=count)
+
+        progress.update(task, description="Done!", completed=True)
+
+    # Display results
+    print_predictions(predictions, lottery)
+
+    # Visualize if requested
+    if visualize:
+        console.print("\n[cyan]Generating visualizations...[/cyan]")
+        viz = LotteryVisualizer(lottery)
+        viz.generate_all_visualizations(last_n)
+        visualize_predictions(predictions, lottery)
+        console.print(f"[green]Visualizations saved to visualizations/[/green]")
+
+    # Save to file if requested
+    if output:
+        data = {
+            "lottery": lottery,
+            "method": method,
+            "predictions": [
+                {
+                    "main_numbers": p.main_numbers,
+                    "bonus_numbers": p.bonus_numbers,
+                    "confidence": p.confidence,
+                    "method": p.method,
+                    "metadata": p.metadata
+                }
+                for p in predictions
+            ]
+        }
+        with open(output, 'w') as f:
+            json.dump(data, f, indent=2)
+        console.print(f"[green]Predictions saved to {output}[/green]")
+
+
+@app.command()
+def analyze(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of draws to analyze"),
+    visualize: bool = typer.Option(True, "--visualize/--no-visualize", help="Generate charts"),
+):
+    """Analyze historical lottery data and show statistics."""
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"📊 {LOTTERY_CONFIGS[lottery]['name']} Analysis")
+
+    dm = get_data_manager(lottery)
+    df = dm.load_data()
+    df = df.tail(last_n)
+
+    # Basic stats
+    console.print(f"\n[bold]Total Draws Analyzed:[/bold] {len(df)}")
+    console.print(f"[bold]Date Range:[/bold] {df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}")
+
+    # Frequency table
+    freq = dm.get_number_frequency(last_n)
+    hot, cold = dm.get_hot_cold_numbers(last_n)
+
+    table = Table(title="🔥 Hot & Cold Numbers", show_header=True)
+    table.add_column("Rank", width=6)
+    table.add_column("Hot Numbers", style="red")
+    table.add_column("Freq", width=6)
+    table.add_column("Cold Numbers", style="blue")
+    table.add_column("Freq", width=6)
+
+    for i in range(10):
+        table.add_row(
+            str(i+1),
+            str(hot[i]),
+            str(freq[hot[i]]),
+            str(cold[i]),
+            str(freq[cold[i]])
+        )
+    console.print(table)
+
+    # Sum statistics
+    stats = dm.get_sum_statistics(last_n)
+    console.print(f"\n[bold]Sum Statistics:[/bold]")
+    console.print(f"  Mean: {stats['mean']:.1f} | Median: {stats['median']:.1f} | Std: {stats['std']:.1f}")
+    console.print(f"  Range: {stats['min']:.0f} - {stats['max']:.0f}")
+
+    # Pair analysis
+    pairs = dm.get_pair_frequency(last_n)
+    top_pairs = list(pairs.items())[:10]
+
+    pair_table = Table(title="🔗 Top 10 Number Pairs", show_header=True)
+    pair_table.add_column("Pair", style="cyan")
+    pair_table.add_column("Count", style="green")
+
+    for (n1, n2), count in top_pairs:
+        pair_table.add_row(f"{n1:2d} - {n2:2d}", str(count))
+    console.print(pair_table)
+
+    if visualize:
+        console.print("\n[cyan]Generating visualizations...[/cyan]")
+        viz = LotteryVisualizer(lottery)
+        files = viz.generate_all_visualizations(last_n)
+        for f in files:
+            console.print(f"  [green]✓[/green] {f}")
+
+
+@app.command()
+def train(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    lookback: int = typer.Option(10, "--lookback", help="Number of previous draws to use as features"),
+):
+    """Train ML models on historical data."""
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"🤖 Training ML Models for {LOTTERY_CONFIGS[lottery]['name']}")
+
+    predictor = MLModelPredictor(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Training models...", total=None)
+        results = predictor.train(lookback=lookback)
+        progress.update(task, description="Training complete!")
+
+    console.print("\n[bold]Training Results:[/bold]")
+    table = Table(show_header=True)
+    table.add_column("Model", style="cyan")
+    table.add_column("Train Accuracy", style="green")
+    table.add_column("Test Accuracy", style="yellow")
+
+    for model, metrics in results.items():
+        table.add_row(model, f"{metrics['train_acc']:.4f}", f"{metrics['test_acc']:.4f}")
+
+    console.print(table)
+    console.print(f"\n[green]Models saved to models/{lottery}_models.joblib[/green]")
+
+
+@app.command()
+def history(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    count: int = typer.Option(10, "--count", "-c", help="Number of recent draws to show"),
+):
+    """Show recent lottery draw history."""
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    dm = get_data_manager(lottery)
+    df = dm.load_data()
+    recent = dm.get_recent_draws(count)
+
+    print_header(f"📜 Recent {LOTTERY_CONFIGS[lottery]['name']} Draws")
+
+    table = Table(show_header=True)
+    table.add_column("Date", style="cyan")
+    table.add_column("Main Numbers", style="green")
+    table.add_column("Bonus", style="yellow")
+    table.add_column("Jackpot", style="magenta")
+
+    for _, row in recent.iterrows():
+        main_str = "  ".join(f"{n:2d}" for n in row['main_numbers'])
+        bonus_str = "  ".join(f"{n:2d}" for n in row['bonus_numbers']) if row['bonus_numbers'] else "N/A"
+        jackpot_str = f"${row['jackpot']:,}"
+
+        table.add_row(
+            row['date'].strftime('%Y-%m-%d'),
+            main_str,
+            bonus_str,
+            jackpot_str
+        )
+
+    console.print(table)
+
+
+@app.command()
+def compare(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    methods: List[str] = typer.Option(["statistical", "ml", "ensemble"], "--methods", "-m", help="Methods to compare"),
+    count: int = typer.Option(3, "--count", "-c", help="Predictions per method"),
+):
+    """Compare predictions from different methods."""
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"⚔️ Method Comparison - {LOTTERY_CONFIGS[lottery]['name']}")
+    print_disclaimer()
+
+    all_predictions = {}
+
+    for method in methods:
+        console.print(f"\n[cyan]Running {method}...[/cyan]")
+        predictor = get_predictor(lottery, method)
+
+        if method == "statistical":
+            pred = StatisticalPredictor(lottery)
+            preds = pred.predict_balanced(num_predictions=count)
+        elif method == "ml":
+            pred = MLModelPredictor(lottery)
+            if not pred.is_trained:
+                pred.train()
+            preds = pred.predict(num_predictions=count)
+        else:
+            pred = EnsemblePredictor(lottery)
+            preds = pred.get_consensus_prediction(num_predictions=count)
+
+        all_predictions[method] = preds
+        print_predictions(preds, lottery)
+
+    # Summary comparison
+    console.print("\n[bold]Method Comparison Summary:[/bold]")
+    summary = Table(show_header=True)
+    summary.add_column("Method", style="cyan")
+    summary.add_column("Avg Confidence", style="green")
+    summary.add_column("Unique Predictions", style="yellow")
+
+    for method, preds in all_predictions.items():
+        avg_conf = np.mean([p.confidence for p in preds])
+        unique = len(set(tuple(p.main_numbers) for p in preds))
+        summary.add_row(method, f"{avg_conf:.1%}", str(unique))
+
+    console.print(summary)
+
+
+@app.command()
+def viz(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of draws to visualize"),
+    predictions_file: Optional[str] = typer.Option(None, "--predictions", "-p", help="JSON file with predictions to visualize"),
+):
+    """Generate visualization charts."""
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"📈 Generating Visualizations for {LOTTERY_CONFIGS[lottery]['name']}")
+
+    viz = LotteryVisualizer(lottery)
+    files = viz.generate_all_visualizations(last_n)
+
+    if predictions_file and Path(predictions_file).exists():
+        with open(predictions_file) as f:
+            data = json.load(f)
+
+        predictions = [
+            PredictionResult(
+                main_numbers=p['main_numbers'],
+                bonus_numbers=p['bonus_numbers'],
+                confidence=p['confidence'],
+                method=p['method'],
+                metadata=p.get('metadata', {})
+            )
+            for p in data['predictions']
+        ]
+        viz.plot_prediction_analysis(predictions)
+        files.append(str(Path("visualizations") / f"{lottery}_prediction_analysis.png"))
+
+    console.print("\n[green]Generated visualizations:[/green]")
+    for f in files:
+        console.print(f"  ✓ {f}")
+
+
+@app.command()
+def info():
+    """Show information about supported lotteries."""
+    print_header("🎲 Supported Lotteries")
+
+    for key, config in LOTTERY_CONFIGS.items():
+        table = Table(title=config['name'], show_header=False)
+        table.add_column("Property", style="cyan")
+        table.add_column("Value", style="green")
+
+        table.add_row("Main Numbers", f"{config['main_numbers']} (1-{config['main_max']})")
+        if config['bonus_numbers'] > 0:
+            table.add_row("Bonus Numbers", f"{config['bonus_numbers']} (1-{config['bonus_max']})")
+        table.add_row("Draw Days", ", ".join(config['draw_days']))
+        table.add_row("First Draw", config['start_date'])
+
+        console.print(table)
+        console.print()
+
+
+if __name__ == "__main__":
+    app()
