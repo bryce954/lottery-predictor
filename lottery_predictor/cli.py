@@ -12,6 +12,7 @@ from rich import print as rprint
 from typing import Optional, List
 from pathlib import Path
 import json
+import numpy as np
 
 from .data import LotteryDataManager, get_data_manager, LOTTERY_CONFIGS
 from .models import (
@@ -294,8 +295,15 @@ def history(
         bonus_str = "  ".join(f"{n:2d}" for n in row['bonus_numbers']) if row['bonus_numbers'] else "N/A"
         jackpot_str = f"${row['jackpot']:,}"
 
+        # Handle both string and datetime dates
+        date_val = row['date']
+        if isinstance(date_val, str):
+            date_str = date_val
+        else:
+            date_str = date_val.strftime('%Y-%m-%d')
+
         table.add_row(
-            row['date'].strftime('%Y-%m-%d'),
+            date_str,
             main_str,
             bonus_str,
             jackpot_str
@@ -328,12 +336,21 @@ def compare(
         if method == "statistical":
             pred = StatisticalPredictor(lottery)
             preds = pred.predict_balanced(num_predictions=count)
+        elif method == "frequency":
+            pred = StatisticalPredictor(lottery)
+            preds = pred.predict_frequency_based(num_predictions=count)
+        elif method == "cold":
+            pred = StatisticalPredictor(lottery)
+            preds = pred.predict_cold_numbers(num_predictions=count)
+        elif method == "pairs":
+            pred = StatisticalPredictor(lottery)
+            preds = pred.predict_pair_based(num_predictions=count)
         elif method == "ml":
             pred = MLModelPredictor(lottery)
             if not pred.is_trained:
                 pred.train()
             preds = pred.predict(num_predictions=count)
-        else:
+        else:  # ensemble
             pred = EnsemblePredictor(lottery)
             preds = pred.get_consensus_prediction(num_predictions=count)
 

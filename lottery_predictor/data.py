@@ -132,7 +132,9 @@ class LotteryDataManager:
         """Save data to cache."""
         if self.df is not None:
             data = self.df.copy()
-            data['date'] = data['date'].dt.strftime('%Y-%m-%d')
+            # Handle both datetime and string dates
+            if pd.api.types.is_datetime64_any_dtype(data['date']):
+                data['date'] = data['date'].dt.strftime('%Y-%m-%d')
             with open(self.cache_file, 'w') as f:
                 json.dump(data.to_dict('records'), f)
             logger.info(f"Saved {len(data)} draws to cache")
