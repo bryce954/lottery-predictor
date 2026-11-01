@@ -121,13 +121,13 @@ Past performance does not guarantee future results. Please play responsibly and 
 with st.sidebar:
     st.header("⚙️ Settings")
 
-    # Lottery selection
-    games = manager.list_games()
+    # Lottery selection - filter out "no lottery" states
+    games = [g for g in manager.list_games() if g.main_numbers > 0]
     game_options = {f"{g.name} ({g.key})": g.key for g in games}
     selected_game_label = st.selectbox(
         "🎰 Select Lottery",
         options=list(game_options.keys()),
-        index=list(game_options.values()).index(st.session_state.current_lottery)
+        index=list(game_options.values()).index(st.session_state.current_lottery) if st.session_state.current_lottery in game_options.values() else 0
     )
     selected_lottery = game_options[selected_game_label]
     st.session_state.current_lottery = selected_lottery
