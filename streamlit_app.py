@@ -216,7 +216,7 @@ with tab1:
     col1, col2 = st.columns([2, 1])
 
     with col1:
-        if st.button("🎲 Generate Predictions", type="primary", use_container_width=True):
+        if st.button("🎲 Generate Predictions", type="primary", width='stretch'):
             preds = generate_predictions(
                 selected_lottery, method, num_predictions, last_n_draws, retrain, lookback
             )
@@ -224,7 +224,7 @@ with tab1:
             st.success(f"Generated {len(preds)} predictions!")
 
     with col2:
-        if st.button("💾 Save to JSON", use_container_width=True):
+        if st.button("💾 Save to JSON", width='stretch'):
             if st.session_state.predictions:
                 data = {
                     "lottery": selected_lottery,
@@ -327,7 +327,7 @@ with tab2:
             'Number': hot,
             'Frequency': [freq[n] for n in hot]
         })
-        st.dataframe(hot_df, use_container_width=True, hide_index=True)
+        st.dataframe(hot_df, width='stretch', hide_index=True)
 
     with col2:
         st.markdown("**❄️ Coldest Numbers**")
@@ -335,7 +335,7 @@ with tab2:
             'Number': cold,
             'Frequency': [freq[n] for n in cold]
         })
-        st.dataframe(cold_df, use_container_width=True, hide_index=True)
+        st.dataframe(cold_df, width='stretch', hide_index=True)
 
     # Top Pairs
     st.subheader("🔗 Top Number Pairs")
@@ -347,7 +347,7 @@ with tab2:
             'Pair': [f"{a} - {b}" for (a, b), _ in top_pairs],
             'Count': [c for _, c in top_pairs]
         })
-        st.dataframe(pairs_df, use_container_width=True, hide_index=True)
+        st.dataframe(pairs_df, width='stretch', hide_index=True)
 
     # Charts
     if show_viz:
@@ -369,7 +369,7 @@ with tab2:
             yaxis_title="Frequency",
             height=400
         )
-        st.plotly_chart(fig_freq, use_container_width=True)
+        st.plotly_chart(fig_freq, width='stretch')
 
         # Sum distribution
         fig_sum = go.Figure()
@@ -386,7 +386,7 @@ with tab2:
             yaxis_title="Count",
             height=400
         )
-        st.plotly_chart(fig_sum, use_container_width=True)
+        st.plotly_chart(fig_sum, width='stretch')
 
 # Tab 3: Visualize
 with tab3:
@@ -434,7 +434,7 @@ with tab3:
                 color=list(freq.values()),
                 color_continuous_scale='RdBu'
             )
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, width='stretch')
 
             # Hot/Cold interactive
             hot, cold = dm.get_hot_cold_numbers(last_n_draws)
@@ -454,7 +454,7 @@ with tab3:
 
             fig_hc.update_layout(height=500, showlegend=False, title="Hot vs Cold Numbers")
             fig_hc.update_yaxes(autorange="reversed")
-            st.plotly_chart(fig_hc, use_container_width=True)
+            st.plotly_chart(fig_hc, width='stretch')
 
             # Pair heatmap interactive
             pairs = dm.get_pair_frequency(last_n_draws)
@@ -480,7 +480,7 @@ with tab3:
                     yaxis_title="Number",
                     height=600
                 )
-                st.plotly_chart(fig_heat, use_container_width=True)
+                st.plotly_chart(fig_heat, width='stretch')
 
             st.success("Visualizations generated!")
 
@@ -504,7 +504,7 @@ with tab4:
         })
 
     history_df = pd.DataFrame(display_data)
-    st.dataframe(history_df, use_container_width=True, hide_index=True)
+    st.dataframe(history_df, width='stretch', hide_index=True)
 
     # Download history
     csv = history_df.to_csv(index=False)
@@ -572,7 +572,7 @@ with tab5:
                 })
 
             summary_df = pd.DataFrame(summary_data)
-            st.dataframe(summary_df, use_container_width=True, hide_index=True)
+            st.dataframe(summary_df, width='stretch', hide_index=True)
 
             # Confidence comparison chart
             fig_comp = go.Figure()
@@ -590,7 +590,7 @@ with tab5:
                 yaxis_title="Confidence",
                 height=400
             )
-            st.plotly_chart(fig_comp, use_container_width=True)
+            st.plotly_chart(fig_comp, width='stretch')
 
 # Footer
 st.markdown("---")
