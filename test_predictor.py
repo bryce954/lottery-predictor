@@ -65,33 +65,32 @@ def main():
     venv_python = "/home/bryce/lottery-predictor/venv/bin/python"
     base_cmd = f"{venv_python} main.py"
 
+    # Test lotteries (sample of available ones)
+    test_lotteries = ["powerball", "mega_millions", "florida_lotto", "california_superlotto", "new_york_lotto", "euromillions"]
+
     tests = [
         # Basic commands
         (f"{base_cmd} info", "Show lottery info"),
-        (f"{base_cmd} predict --lottery powerball --method statistical --count 3", "Statistical prediction (Powerball)"),
-        (f"{base_cmd} predict --lottery florida_lotto --method statistical --count 3", "Statistical prediction (FL Lotto)"),
-        (f"{base_cmd} predict --lottery powerball --method frequency --count 2", "Frequency prediction"),
-        (f"{base_cmd} predict --lottery powerball --method cold --count 2", "Cold numbers prediction"),
-        (f"{base_cmd} predict --lottery powerball --method pairs --count 2", "Pair-based prediction"),
-        (f"{base_cmd} predict --lottery powerball --method ensemble --count 2", "Ensemble prediction"),
-
-        # Analysis commands
-        (f"{base_cmd} analyze --lottery powerball --last-n 50 --no-visualize", "Analyze Powerball (no viz)"),
-        (f"{base_cmd} analyze --lottery florida_lotto --last-n 50 --no-visualize", "Analyze FL Lotto (no viz)"),
-
-        # History commands
-        (f"{base_cmd} history --lottery powerball --count 5", "Powerball history"),
-        (f"{base_cmd} history --lottery florida_lotto --count 5", "FL Lotto history"),
-
-        # Compare commands
-        (f"{base_cmd} compare --lottery powerball --methods statistical --methods frequency --methods cold --count 2", "Compare statistical methods"),
-
-        # Visualization commands
-        (f"{base_cmd} viz --lottery powerball --last-n 30", "Generate visualizations"),
-
-        # Output to file
-        (f"{base_cmd} predict --lottery powerball --method statistical --count 3 --output test_output.json", "Save predictions to JSON"),
     ]
+
+    # Add prediction tests for each lottery
+    for lottery in test_lotteries:
+        tests.extend([
+            (f"{base_cmd} predict --lottery {lottery} --method statistical --count 2", f"Statistical prediction ({lottery})"),
+            (f"{base_cmd} predict --lottery {lottery} --method frequency --count 2", f"Frequency prediction ({lottery})"),
+            (f"{base_cmd} predict --lottery {lottery} --method cold --count 2", f"Cold numbers prediction ({lottery})"),
+            (f"{base_cmd} predict --lottery {lottery} --method pairs --count 2", f"Pair-based prediction ({lottery})"),
+            (f"{base_cmd} predict --lottery {lottery} --method ensemble --count 2", f"Ensemble prediction ({lottery})"),
+            (f"{base_cmd} analyze --lottery {lottery} --last-n 30 --no-visualize", f"Analyze {lottery} (no viz)"),
+            (f"{base_cmd} history --lottery {lottery} --count 3", f"{lottery} history"),
+            (f"{base_cmd} viz --lottery {lottery} --last-n 20", f"Generate visualizations ({lottery})"),
+        ])
+
+    # Compare commands
+    tests.append((f"{base_cmd} compare --lottery powerball --methods statistical --methods frequency --methods cold --count 2", "Compare statistical methods"))
+
+    # Output to file
+    tests.append((f"{base_cmd} predict --lottery powerball --method statistical --count 3 --output test_output.json", "Save predictions to JSON"))
 
     results = []
     for cmd, desc in tests:

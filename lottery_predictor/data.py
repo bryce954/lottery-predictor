@@ -20,29 +20,25 @@ logger = logging.getLogger(__name__)
 DATA_DIR = Path(__file__).parent.parent / "data"
 DATA_DIR.mkdir(exist_ok=True)
 
-# Lottery configurations
-LOTTERY_CONFIGS = {
-    "florida_lotto": {
-        "name": "Florida Lotto",
-        "main_numbers": 6,
-        "main_max": 53,
-        "bonus_numbers": 0,
-        "bonus_max": 0,
-        "draw_days": ["Wednesday", "Saturday"],
-        "start_date": "1988-01-06",
-        "api_url": "https://www.flalottery.com/exptkt/lotto/lotto_odds.pdf",  # Not a real API
-    },
-    "powerball": {
-        "name": "Powerball",
-        "main_numbers": 5,
-        "main_max": 69,
-        "bonus_numbers": 1,
-        "bonus_max": 26,
-        "draw_days": ["Monday", "Wednesday", "Saturday"],
-        "start_date": "1992-04-22",
-        "api_url": "https://www.powerball.com/api/v1/numbers",  # Example
-    }
-}
+# Lottery configurations - populated from universal system
+from .universal import get_universal_manager
+
+# Initialize universal manager to get all lottery configs
+_universal_manager = get_universal_manager()
+LOTTERY_CONFIGS = {}
+
+for game in _universal_manager.list_games():
+    if game.main_numbers > 0:  # Skip "no lottery" entries
+        LOTTERY_CONFIGS[game.key] = {
+            "name": game.name,
+            "main_numbers": game.main_numbers,
+            "main_max": game.main_max,
+            "bonus_numbers": game.bonus_numbers,
+            "bonus_max": game.bonus_max,
+            "draw_days": game.draw_days,
+            "start_date": game.start_date,
+            "api_url": game.website,
+        }
 
 
 class LotteryDataManager:

@@ -1,6 +1,6 @@
 """
 Main CLI Entry Point for Lottery Predictor
-AI-powered Florida Lotto & Powerball number prediction.
+AI-powered universal lottery number prediction for all US states and international games.
 """
 
 import typer
@@ -23,15 +23,18 @@ from .models import (
     get_predictor
 )
 from .visualize import LotteryVisualizer, visualize_predictions
+from .universal import get_universal_manager, list_lotteries
 
 app = typer.Typer(
     name="lottery-predictor",
-    help="🎲 AI-Powered Florida Lotto & Powerball Number Predictor",
+    help="🎲 AI-Powered Universal Lottery Number Predictor (All US States + International)",
     add_completion=False,
 )
 console = Console()
 
-LOTTERY_TYPES = ["florida_lotto", "powerball"]
+# Get all available lotteries from universal system
+_universal_manager = get_universal_manager()
+LOTTERY_TYPES = sorted([game.key for game in _universal_manager.list_games() if game.main_numbers > 0])
 
 
 def print_header(title: str):

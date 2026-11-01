@@ -9,10 +9,11 @@ from pathlib import Path
 import json
 import logging
 
-from .data import LotteryDataManager, LOTTERY_CONFIGS, DATA_DIR
-
 logger = logging.getLogger(__name__)
 
+# Data directory (defined here to avoid circular import)
+DATA_DIR = Path(__file__).parent.parent / "data"
+DATA_DIR.mkdir(exist_ok=True)
 CONFIG_FILE = DATA_DIR / "universal_lotteries.json"
 
 
@@ -108,6 +109,361 @@ BUILTIN_LOTTERIES = {
         draw_days=["Tuesday", "Friday"],
         start_date="2002-05-17",
         website="https://www.megamillions.com",
+    ),
+    # US State Lotteries
+    "california_superlotto": LotteryGame(
+        key="california_superlotto",
+        name="SuperLotto Plus (CA)",
+        main_numbers=5,
+        main_max=47,
+        bonus_numbers=1,
+        bonus_max=27,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1986-10-18",
+        website="https://www.calottery.com",
+    ),
+    "new_york_lotto": LotteryGame(
+        key="new_york_lotto",
+        name="New York Lotto (NY)",
+        main_numbers=6,
+        main_max=59,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1978-09-12",
+        website="https://www.nylottery.org",
+    ),
+    "texas_lotto": LotteryGame(
+        key="texas_lotto",
+        name="Lotto Texas (TX)",
+        main_numbers=6,
+        main_max=54,
+        draw_days=["Monday", "Wednesday", "Saturday"],
+        start_date="1992-11-07",
+        website="https://www.texaslottery.com",
+    ),
+    "georgia_fantasy5": LotteryGame(
+        key="georgia_fantasy5",
+        name="Fantasy 5 (GA)",
+        main_numbers=5,
+        main_max=42,
+        draw_days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        start_date="1994-11-14",
+        website="https://www.galottery.com",
+    ),
+    "illinois_lotto": LotteryGame(
+        key="illinois_lotto",
+        name="Illinois Lotto (IL)",
+        main_numbers=6,
+        main_max=52,
+        draw_days=["Monday", "Thursday", "Saturday"],
+        start_date="1974-07-30",
+        website="https://www.illinoislottery.com",
+    ),
+    "pennsylvania_match6": LotteryGame(
+        key="pennsylvania_match6",
+        name="Match 6 Lotto (PA)",
+        main_numbers=6,
+        main_max=49,
+        draw_days=["Monday", "Wednesday", "Friday"],
+        start_date="2004-01-28",
+        website="https://www.palottery.com",
+    ),
+    "ohio_classic_lotto": LotteryGame(
+        key="ohio_classic_lotto",
+        name="Classic Lotto (OH)",
+        main_numbers=6,
+        main_max=49,
+        draw_days=["Monday", "Wednesday", "Saturday"],
+        start_date="2007-01-22",
+        website="https://www.ohiolottery.com",
+    ),
+    "michigan_lotto47": LotteryGame(
+        key="michigan_lotto47",
+        name="Lotto 47 (MI)",
+        main_numbers=6,
+        main_max=47,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="2005-05-15",
+        website="https://www.michiganlottery.com",
+    ),
+    "new_jersey_pick6": LotteryGame(
+        key="new_jersey_pick6",
+        name="Pick-6 (NJ)",
+        main_numbers=6,
+        main_max=46,
+        draw_days=["Monday", "Thursday"],
+        start_date="1980-05-09",
+        website="https://www.njlottery.com",
+    ),
+    "virginia_lotto": LotteryGame(
+        key="virginia_lotto",
+        name="Virginia Lotto (VA)",
+        main_numbers=6,
+        main_max=38,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1988-09-13",
+        website="https://www.valottery.com",
+    ),
+    "massachusetts_megabucks": LotteryGame(
+        key="massachusetts_megabucks",
+        name="Mass Megabucks (MA)",
+        main_numbers=6,
+        main_max=44,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1982-09-15",
+        website="https://www.masslottery.com",
+    ),
+    "washington_lotto": LotteryGame(
+        key="washington_lotto",
+        name="Lotto (WA)",
+        main_numbers=6,
+        main_max=49,
+        draw_days=["Monday", "Wednesday", "Saturday"],
+        start_date="1984-07-14",
+        website="https://www.walottery.com",
+    ),
+    "colorado_lotto": LotteryGame(
+        key="colorado_lotto",
+        name="Colorado Lotto+ (CO)",
+        main_numbers=6,
+        main_max=40,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1989-01-24",
+        website="https://www.coloradolottery.com",
+    ),
+    "arizona_the_pick": LotteryGame(
+        key="arizona_the_pick",
+        name="The Pick (AZ)",
+        main_numbers=6,
+        main_max=44,
+        draw_days=["Monday", "Wednesday", "Saturday"],
+        start_date="1984-10-01",
+        website="https://www.arizonalottery.com",
+    ),
+    "indiana_hoosier_lotto": LotteryGame(
+        key="indiana_hoosier_lotto",
+        name="Hoosier Lotto (IN)",
+        main_numbers=6,
+        main_max=46,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1989-10-28",
+        website="https://www.hoosierlottery.com",
+    ),
+    "missouri_lotto": LotteryGame(
+        key="missouri_lotto",
+        name="Missouri Lotto (MO)",
+        main_numbers=6,
+        main_max=44,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1986-11-12",
+        website="https://www.molottery.com",
+    ),
+    "wisconsin_megabucks": LotteryGame(
+        key="wisconsin_megabucks",
+        name="Megabucks (WI)",
+        main_numbers=6,
+        main_max=49,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1992-04-04",
+        website="https://www.wilottery.com",
+    ),
+    "maryland_multi_match": LotteryGame(
+        key="maryland_multi_match",
+        name="Multi-Match (MD)",
+        main_numbers=6,
+        main_max=43,
+        draw_days=["Monday", "Thursday"],
+        start_date="2006-01-31",
+        website="https://www.mdlottery.com",
+    ),
+    "connecticut_lotto": LotteryGame(
+        key="connecticut_lotto",
+        name="Lotto! (CT)",
+        main_numbers=6,
+        main_max=44,
+        draw_days=["Tuesday", "Friday"],
+        start_date="1983-11-10",
+        website="https://www.ctlottery.org",
+    ),
+    "oregon_megabucks": LotteryGame(
+        key="oregon_megabucks",
+        name="Megabucks (OR)",
+        main_numbers=6,
+        main_max=48,
+        draw_days=["Monday", "Thursday"],
+        start_date="1985-11-09",
+        website="https://www.oregonlottery.org",
+    ),
+    "minnesota_gopher5": LotteryGame(
+        key="minnesota_gopher5",
+        name="Gopher 5 (MN)",
+        main_numbers=5,
+        main_max=47,
+        draw_days=["Monday", "Wednesday", "Friday"],
+        start_date="1991-04-01",
+        website="https://www.mnlotto.com",
+    ),
+    "kentucky_lotto": LotteryGame(
+        key="kentucky_lotto",
+        name="Kentucky Lotto (KY)",
+        main_numbers=6,
+        main_max=43,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1989-04-12",
+        website="https://www.kylottery.com",
+    ),
+    "tennessee_lotto": LotteryGame(
+        key="tennessee_lotto",
+        name="Tennessee Lotto (TN)",
+        main_numbers=6,
+        main_max=42,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="2004-06-23",
+        website="https://www.tnlottery.com",
+    ),
+    "louisiana_lotto": LotteryGame(
+        key="louisiana_lotto",
+        name="Louisiana Lotto (LA)",
+        main_numbers=6,
+        main_max=42,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1992-01-15",
+        website="https://www.louisianalottery.com",
+    ),
+    "iowa_lotto": LotteryGame(
+        key="iowa_lotto",
+        name="Iowa Lotto (IA)",
+        main_numbers=6,
+        main_max=44,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="1985-08-22",
+        website="https://www.ialottery.com",
+    ),
+    "oklahoma_lotto": LotteryGame(
+        key="oklahoma_lotto",
+        name="Lotto (OK)",
+        main_numbers=6,
+        main_max=44,
+        draw_days=["Wednesday", "Saturday"],
+        start_date="2005-10-12",
+        website="https://www.oklottery.com",
+    ),
+    "kansas_super_kansas_cash": LotteryGame(
+        key="kansas_super_kansas_cash",
+        name="Super Kansas Cash (KS)",
+        main_numbers=5,
+        main_max=32,
+        bonus_numbers=1,
+        bonus_max=25,
+        draw_days=["Monday", "Wednesday", "Saturday"],
+        start_date="2002-02-12",
+        website="https://www.kslottery.com",
+    ),
+    "arkansas_natural_state": LotteryGame(
+        key="arkansas_natural_state",
+        name="Natural State Jackpot (AR)",
+        main_numbers=5,
+        main_max=39,
+        draw_days=["Monday", "Wednesday", "Friday"],
+        start_date="2009-08-31",
+        website="https://www.myarkansaslottery.com",
+    ),
+    "new_mexico_roadrunner": LotteryGame(
+        key="new_mexico_roadrunner",
+        name="Roadrunner Cash (NM)",
+        main_numbers=5,
+        main_max=37,
+        draw_days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        start_date="1998-01-19",
+        website="https://www.nmlottery.com",
+    ),
+    "nebraska_pick5": LotteryGame(
+        key="nebraska_pick5",
+        name="Pick 5 (NE)",
+        main_numbers=5,
+        main_max=38,
+        draw_days=["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        start_date="2004-09-08",
+        website="https://www.nelottery.com",
+    ),
+    "idaho_weekly_grand": LotteryGame(
+        key="idaho_weekly_grand",
+        name="Weekly Grand (ID)",
+        main_numbers=5,
+        main_max=40,
+        draw_days=["Monday", "Thursday"],
+        start_date="2008-01-07",
+        website="https://www.idaholottery.com",
+    ),
+    "montana_big_sky": LotteryGame(
+        key="montana_big_sky",
+        name="Big Sky Bonus (MT)",
+        main_numbers=5,
+        main_max=28,
+        bonus_numbers=1,
+        bonus_max=17,
+        draw_days=["Monday", "Wednesday", "Saturday"],
+        start_date="2001-05-07",
+        website="https://www.montanlottery.com",
+    ),
+    "utah_no_lottery": LotteryGame(
+        key="utah_no_lottery",
+        name="No State Lottery (UT)",
+        main_numbers=0,
+        main_max=0,
+        draw_days=[],
+        start_date="1900-01-01",
+        website="",
+        notes="Utah does not have a state lottery"
+    ),
+    "nevada_no_lottery": LotteryGame(
+        key="nevada_no_lottery",
+        name="No State Lottery (NV)",
+        main_numbers=0,
+        main_max=0,
+        draw_days=[],
+        start_date="1900-01-01",
+        website="",
+        notes="Nevada does not have a state lottery"
+    ),
+    "alabama_no_lottery": LotteryGame(
+        key="alabama_no_lottery",
+        name="No State Lottery (AL)",
+        main_numbers=0,
+        main_max=0,
+        draw_days=[],
+        start_date="1900-01-01",
+        website="",
+        notes="Alabama does not have a state lottery"
+    ),
+    "mississippi_no_lottery": LotteryGame(
+        key="mississippi_no_lottery",
+        name="No State Lottery (MS)",
+        main_numbers=0,
+        main_max=0,
+        draw_days=[],
+        start_date="1900-01-01",
+        website="",
+        notes="Mississippi does not have a state lottery"
+    ),
+    "hawaii_no_lottery": LotteryGame(
+        key="hawaii_no_lottery",
+        name="No State Lottery (HI)",
+        main_numbers=0,
+        main_max=0,
+        draw_days=[],
+        start_date="1900-01-01",
+        website="",
+        notes="Hawaii does not have a state lottery"
+    ),
+    "alaska_no_lottery": LotteryGame(
+        key="alaska_no_lottery",
+        name="No State Lottery (AK)",
+        main_numbers=0,
+        main_max=0,
+        draw_days=[],
+        start_date="1900-01-01",
+        website="",
+        notes="Alaska does not have a state lottery"
     ),
     "euromillions": LotteryGame(
         key="euromillions",
@@ -248,26 +604,14 @@ class UniversalLotteryManager:
             return True
         return False
 
-    def create_data_manager(self, key: str) -> LotteryDataManager:
+    def create_data_manager(self, key: str):
         """Create a data manager for a lottery game."""
         game = self.get_game(key)
         if not game:
             raise ValueError(f"Unknown lottery: {key}")
-
-        # Temporarily add to LOTTERY_CONFIGS for compatibility
-        config = {
-            "name": game.name,
-            "main_numbers": game.main_numbers,
-            "main_max": game.main_max,
-            "bonus_numbers": game.bonus_numbers,
-            "bonus_max": game.bonus_max,
-            "draw_days": game.draw_days,
-            "start_date": game.start_date,
-            "api_url": game.website,
-        }
-
-        # Monkey-patch the config for this session
-        LOTTERY_CONFIGS[key] = config
+        # Import here to avoid circular import
+        from .data import LotteryDataManager
+        # LOTTERY_CONFIGS is now pre-populated in data.py from universal system
         return LotteryDataManager(key)
 
 
