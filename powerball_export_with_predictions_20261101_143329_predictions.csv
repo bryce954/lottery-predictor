@@ -1,0 +1,4 @@
+prediction_number,method,confidence,predicted_main_1,predicted_main_2,predicted_main_3,predicted_main_4,predicted_main_5,predicted_bonus_1
+1,ensemble_consensus,10.6%,5,8,10,14,26,13
+2,ensemble_consensus,10.6%,12,13,14,17,20,8
+3,ensemble_consensus,10.6%,3,5,11,12,16,12

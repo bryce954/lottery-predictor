@@ -150,7 +150,7 @@ python main.py predict [OPTIONS]
 Options:
   -l, --lottery TEXT     Lottery type (default: powerball)
                          Use 'info' command to see all 48+ options
-  -m, --method TEXT      Method: statistical, frequency, cold, pairs, ml, ensemble (default: ensemble)
+  -m, --method TEXT      Method: statistical, frequency, cold, pairs, ml, time_series, ensemble (default: ensemble)
   -c, --count INTEGER    Number of predictions (default: 5)
   -n, --last-n INTEGER   Historical draws to analyze (default: 200)
   -t, --train            Retrain ML models before predicting
@@ -204,6 +204,20 @@ Options:
   -l, --lottery TEXT         Lottery type (default: powerball)
   -n, --last-n INTEGER       Draws to visualize (default: 200)
   -p, --predictions FILE     JSON file with predictions to visualize
+```
+
+### `backtest` - Backtesting Framework
+```bash
+python backtest.py [OPTIONS]
+
+Options:
+  -l, --lottery TEXT         Lottery type (default: powerball)
+  -m, --methods TEXT         Methods to test (comma-separated, default: all)
+  --train-window INT         Training window size (default: 200)
+  --test-window INT          Test window size (default: 50)
+  --step INT                 Walk-forward step size (default: 10)
+  -p, --predictions INT      Predictions per iteration (default: 3)
+  -o, --output FILE          Save results to JSON
 ```
 
 ### `info` - Lottery Information
@@ -344,7 +358,7 @@ If you or someone you know has a gambling problem, please contact:
 - [ ] **Mobile-friendly** responsive design
 
 ### v1.3 - Enhanced AI/ML
-- [ ] Time-series forecasting (ARIMA, Prophet)
+- [x] Time-series forecasting (ARIMA, Prophet)
 - [ ] Transformer-based sequence models
 - [ ] Hyperparameter optimization (Optuna)
 - [ ] Model explainability (SHAP values)
@@ -358,7 +372,7 @@ If you or someone you know has a gambling problem, please contact:
 - [ ] Export to CSV/Excel/JSON
 
 ### v1.5 - Advanced Features
-- [ ] Backtesting framework with historical validation
+- [x] Backtesting framework with historical validation
 - [ ] Portfolio optimization (multiple tickets)
 - [ ] Syndicate/group play tools
 - [ ] Notification system (email, push, Discord)

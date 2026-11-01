@@ -1,0 +1,62 @@
+{
+  "lottery": "mega_millions",
+  "lottery_name": "Mega Millions (US)",
+  "exported_draws": 5,
+  "draws": [
+    {
+      "date": "2026-10-21",
+      "draw_number": 5401,
+      "main_1": 8,
+      "main_2": 22,
+      "main_3": 34,
+      "main_4": 55,
+      "main_5": 61,
+      "bonus_1": 1,
+      "jackpot": 399534172
+    },
+    {
+      "date": "2026-10-24",
+      "draw_number": 5402,
+      "main_1": 23,
+      "main_2": 38,
+      "main_3": 41,
+      "main_4": 48,
+      "main_5": 49,
+      "bonus_1": 4,
+      "jackpot": 499268560
+    },
+    {
+      "date": "2026-10-26",
+      "draw_number": 5403,
+      "main_1": 13,
+      "main_2": 15,
+      "main_3": 32,
+      "main_4": 34,
+      "main_5": 61,
+      "bonus_1": 6,
+      "jackpot": 269544884
+    },
+    {
+      "date": "2026-10-28",
+      "draw_number": 5404,
+      "main_1": 6,
+      "main_2": 43,
+      "main_3": 50,
+      "main_4": 52,
+      "main_5": 61,
+      "bonus_1": 22,
+      "jackpot": 68917403
+    },
+    {
+      "date": "2026-10-31",
+      "draw_number": 5405,
+      "main_1": 12,
+      "main_2": 22,
+      "main_3": 38,
+      "main_4": 40,
+      "main_5": 44,
+      "bonus_1": 10,
+      "jackpot": 344148966
+    }
+  ]
+}

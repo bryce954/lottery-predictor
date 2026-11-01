@@ -13,17 +13,25 @@ from typing import Optional, List
 from pathlib import Path
 import json
 import numpy as np
+import pandas as pd
 
 from .data import LotteryDataManager, get_data_manager, LOTTERY_CONFIGS
 from .models import (
     StatisticalPredictor,
     MLModelPredictor,
     EnsemblePredictor,
+    TimeSeriesPredictor,
     PredictionResult,
     get_predictor
 )
 from .visualize import LotteryVisualizer, visualize_predictions
 from .universal import get_universal_manager, list_lotteries
+
+try:
+    import openpyxl
+    HAS_OPENPYXL = True
+except ImportError:
+    HAS_OPENPYXL = False
 
 app = typer.Typer(
     name="lottery-predictor",
@@ -79,7 +87,7 @@ def print_disclaimer():
 @app.command()
 def predict(
     lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type: florida_lotto or powerball"),
-    method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method: statistical, ml, ensemble"),
+    method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method: statistical, frequency, cold, pairs, ml, time_series, ensemble"),
     count: int = typer.Option(5, "--count", "-c", help="Number of predictions to generate"),
     last_n: int = typer.Option(200, "--last-n", "-n", help="Number of historical draws to analyze"),
     train: bool = typer.Option(False, "--train", "-t", help="Retrain ML models before predicting"),
@@ -121,11 +129,23 @@ def predict(
         if method == "statistical":
             pred = StatisticalPredictor(lottery)
             predictions = pred.predict_balanced(last_n=last_n, num_predictions=count)
+        elif method == "frequency":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_frequency_based(last_n=last_n, num_predictions=count)
+        elif method == "cold":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_cold_numbers(last_n=last_n, num_predictions=count)
+        elif method == "pairs":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_pair_based(last_n=last_n, num_predictions=count)
         elif method == "ml":
             pred = MLModelPredictor(lottery)
             if not pred.is_trained:
                 pred.train()
             predictions = pred.predict(num_predictions=count)
+        elif method == "time_series":
+            pred = TimeSeriesPredictor(lottery)
+            predictions = pred.predict(num_predictions=count, last_n=last_n)
         else:  # ensemble
             pred = EnsemblePredictor(lottery)
             predictions = pred.get_consensus_prediction(num_predictions=count)
@@ -412,6 +432,129 @@ def viz(
     console.print("\n[green]Generated visualizations:[/green]")
     for f in files:
         console.print(f"  ✓ {f}")
+
+
+@app.command()
+def export(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    format: str = typer.Option("csv", "--format", "-f", help="Export format: csv, json, excel"),
+    output: str = typer.Option(None, "--output", "-o", help="Output file path"),
+    last_n: int = typer.Option(None, "--last-n", "-n", help="Number of draws to export (default: all)"),
+    include_predictions: bool = typer.Option(False, "--include-predictions", help="Include predictions in export"),
+    method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method if including predictions"),
+    count: int = typer.Option(10, "--count", "-c", help="Number of predictions to include"),
+):
+    """Export historical data and/or predictions to CSV, JSON, or Excel."""
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'. Choose from: {', '.join(LOTTERY_TYPES)}[/red]")
+        raise typer.Exit(1)
+
+    if format not in ("csv", "json", "excel"):
+        console.print(f"[red]Error: Unknown format '{format}'. Choose from: csv, json, excel[/red]")
+        raise typer.Exit(1)
+
+    if format == "excel" and not HAS_OPENPYXL:
+        console.print("[red]Error: Excel export requires openpyxl. Install with: pip install openpyxl[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"📤 Exporting {LOTTERY_CONFIGS[lottery]['name']} Data")
+
+    dm = get_data_manager(lottery)
+    df = dm.load_data()
+
+    if last_n:
+        df = df.tail(last_n)
+
+    config = LOTTERY_CONFIGS[lottery]
+
+    # Prepare data for export
+    export_data = []
+    for _, row in df.iterrows():
+        record = {
+            'date': row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date']),
+            'draw_number': row['draw_number'],
+        }
+        for i, num in enumerate(row['main_numbers']):
+            record[f'main_{i+1}'] = num
+        for i, num in enumerate(row['bonus_numbers']):
+            record[f'bonus_{i+1}'] = num
+        record['jackpot'] = row['jackpot']
+        export_data.append(record)
+
+    # Add predictions if requested
+    if include_predictions:
+        console.print(f"[cyan]Generating {count} predictions using {method} method...[/cyan]")
+        predictor = get_predictor(lottery, method)
+        if method == "statistical":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_balanced(last_n=last_n or 200, num_predictions=count)
+        elif method == "frequency":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_frequency_based(num_predictions=count)
+        elif method == "cold":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_cold_numbers(num_predictions=count)
+        elif method == "pairs":
+            pred = StatisticalPredictor(lottery)
+            predictions = pred.predict_pair_based(num_predictions=count)
+        elif method == "ml":
+            pred = MLModelPredictor(lottery)
+            if not pred.is_trained:
+                pred.train()
+            predictions = pred.predict(num_predictions=count)
+        else:  # ensemble
+            pred = EnsemblePredictor(lottery)
+            predictions = pred.get_consensus_prediction(num_predictions=count)
+
+        pred_data = []
+        for i, p in enumerate(predictions, 1):
+            pred_record = {
+                'prediction_number': i,
+                'method': p.method,
+                'confidence': f"{p.confidence:.1%}",
+            }
+            for j, num in enumerate(p.main_numbers):
+                pred_record[f'predicted_main_{j+1}'] = num
+            for j, num in enumerate(p.bonus_numbers):
+                pred_record[f'predicted_bonus_{j+1}'] = num
+            pred_data.append(pred_record)
+
+    # Determine output filename
+    if not output:
+        timestamp = pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')
+        suffix = "_with_predictions" if include_predictions else ""
+        ext = {"csv": "csv", "json": "json", "excel": "xlsx"}[format]
+        output = f"{lottery}_export{suffix}_{timestamp}.{ext}"
+
+    # Export
+    if format == "csv":
+        pd.DataFrame(export_data).to_csv(output, index=False)
+        if include_predictions:
+            pred_df = pd.DataFrame(pred_data)
+            pred_output = output.replace('.csv', '_predictions.csv')
+            pred_df.to_csv(pred_output, index=False)
+            console.print(f"[green]Predictions exported to {pred_output}[/green]")
+    elif format == "json":
+        data = {
+            'lottery': lottery,
+            'lottery_name': config['name'],
+            'exported_draws': len(export_data),
+            'draws': export_data,
+        }
+        if include_predictions:
+            data['predictions'] = pred_data
+        with open(output, 'w') as f:
+            json.dump(data, f, indent=2)
+    elif format == "excel":
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            pd.DataFrame(export_data).to_excel(writer, sheet_name='Historical Data', index=False)
+            if include_predictions:
+                pd.DataFrame(pred_data).to_excel(writer, sheet_name='Predictions', index=False)
+
+    console.print(f"[green]✓ Exported {len(export_data)} draws to {output}[/green]")
+    if include_predictions:
+        console.print(f"[green]✓ Included {count} predictions[/green]")
 
 
 @app.command()

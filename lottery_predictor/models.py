@@ -18,6 +18,20 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, log_loss
 import xgboost as xgb
 
+# Time-series forecasting
+try:
+    from statsmodels.tsa.arima.model import ARIMA
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing
+    HAS_STATSMODELS = True
+except ImportError:
+    HAS_STATSMODELS = False
+
+try:
+    from prophet import Prophet
+    HAS_PROPHET = True
+except ImportError:
+    HAS_PROPHET = False
+
 from .data import LotteryDataManager, get_data_manager
 
 logging.basicConfig(level=logging.INFO)
@@ -495,6 +509,209 @@ class DeepLearningPredictor:
         return results
 
 
+class TimeSeriesPredictor:
+    """Time-series forecasting for lottery numbers using ARIMA, Prophet, and Exponential Smoothing."""
+
+    def __init__(self, lottery_type: str = "powerball"):
+        self.lottery_type = lottery_type
+        self.dm = get_data_manager(lottery_type)
+        self.config = self.dm.config
+        self.models = {}
+        self.is_trained = False
+
+    def prepare_series(self, last_n: int = 200) -> pd.DataFrame:
+        """Prepare time series data for each number position."""
+        df = self.dm.load_data().tail(last_n).copy()
+
+        # Create a series for each position (1st, 2nd, 3rd, etc. drawn number)
+        series_data = []
+        for i, row in df.iterrows():
+            for pos, num in enumerate(row['main_numbers']):
+                series_data.append({
+                    'date': row['date'],
+                    'position': pos,
+                    'number': num
+                })
+        return pd.DataFrame(series_data)
+
+    def train_arima(self, series: pd.Series, order: Tuple = (2, 1, 2)) -> Any:
+        """Train ARIMA model on a time series."""
+        if not HAS_STATSMODELS:
+            return None
+        try:
+            model = ARIMA(series, order=order)
+            return model.fit()
+        except Exception as e:
+            logger.warning(f"ARIMA training failed: {e}")
+            return None
+
+    def train_prophet(self, df: pd.DataFrame) -> Any:
+        """Train Prophet model on time series with date column."""
+        if not HAS_PROPHET:
+            return None
+        try:
+            prophet_df = df.rename(columns={'date': 'ds', 'number': 'y'})
+            model = Prophet(daily_seasonality=False, weekly_seasonality=True, yearly_seasonality=True)
+            model.fit(prophet_df)
+            return model
+        except Exception as e:
+            logger.warning(f"Prophet training failed: {e}")
+            return None
+
+    def train_exponential_smoothing(self, series: pd.Series) -> Any:
+        """Train Exponential Smoothing model."""
+        if not HAS_STATSMODELS:
+            return None
+        try:
+            model = ExponentialSmoothing(series, trend='add', seasonal='add', seasonal_periods=52)
+            return model.fit()
+        except Exception as e:
+            logger.warning(f"Exponential Smoothing training failed: {e}")
+            return None
+
+    def train(self, last_n: int = 200) -> Dict:
+        """Train all time-series models."""
+        logger.info(f"Training time-series models for {self.config['name']}")
+
+        series_df = self.prepare_series(last_n)
+        results = {}
+
+        # Train per position
+        for pos in range(self.config['main_numbers']):
+            pos_data = series_df[series_df['position'] == pos]['number'].values
+            if len(pos_data) < 10:
+                continue
+
+            pos_series = pd.Series(pos_data)
+
+            # ARIMA
+            arima_model = self.train_arima(pos_series)
+            if arima_model:
+                self.models[f'arima_pos_{pos}'] = arima_model
+                results[f'arima_pos_{pos}'] = {'aic': arima_model.aic}
+
+            # Exponential Smoothing
+            ets_model = self.train_exponential_smoothing(pos_series)
+            if ets_model:
+                self.models[f'ets_pos_{pos}'] = ets_model
+                results[f'ets_pos_{pos}'] = {'aic': ets_model.aic}
+
+        # Prophet on all numbers combined (using date and number)
+        if HAS_PROPHET:
+            try:
+                prophet_df = series_df[['date', 'number']].rename(columns={'date': 'ds', 'number': 'y'})
+                prophet_model = self.train_prophet(prophet_df)
+                if prophet_model:
+                    self.models['prophet'] = prophet_model
+                    results['prophet'] = {'trained': True}
+            except Exception as e:
+                logger.warning(f"Prophet training failed: {e}")
+
+        self.is_trained = True
+        logger.info(f"Time-series models trained: {list(self.models.keys())}")
+        return results
+
+    def predict_arima(self, pos: int, steps: int = 1) -> Optional[float]:
+        """Get ARIMA prediction for a position."""
+        model = self.models.get(f'arima_pos_{pos}')
+        if model:
+            try:
+                forecast = model.forecast(steps=steps)
+                return float(forecast.iloc[-1])
+            except Exception:
+                return None
+        return None
+
+    def predict_ets(self, pos: int, steps: int = 1) -> Optional[float]:
+        """Get ETS prediction for a position."""
+        model = self.models.get(f'ets_pos_{pos}')
+        if model:
+            try:
+                forecast = model.forecast(steps=steps)
+                return float(forecast.iloc[-1])
+            except Exception:
+                return None
+        return None
+
+    def predict_prophet(self, future_date: pd.Timestamp) -> Optional[float]:
+        """Get Prophet prediction for a future date."""
+        model = self.models.get('prophet')
+        if model:
+            try:
+                future = pd.DataFrame({'ds': [future_date]})
+                forecast = model.predict(future)
+                return float(forecast['yhat'].iloc[0])
+            except Exception:
+                return None
+        return None
+
+    def predict(self, num_predictions: int = 5, last_n: int = 200) -> List[PredictionResult]:
+        """Generate predictions using time-series models."""
+        if not self.is_trained:
+            self.train(last_n)
+
+        if not self.models:
+            logger.warning("No time-series models trained, falling back to statistical")
+            pred = StatisticalPredictor(self.lottery_type)
+            return pred.predict_balanced(last_n=last_n, num_predictions=num_predictions)
+
+        results = []
+        next_date = pd.Timestamp.now() + pd.Timedelta(days=2)  # Approximate next draw
+
+        for _ in range(num_predictions):
+            main_numbers = []
+
+            for pos in range(self.config['main_numbers']):
+                preds = []
+
+                # ARIMA prediction
+                arima_pred = self.predict_arima(pos)
+                if arima_pred is not None:
+                    preds.append(('arima', arima_pred))
+
+                # ETS prediction
+                ets_pred = self.predict_ets(pos)
+                if ets_pred is not None:
+                    preds.append(('ets', ets_pred))
+
+                # Combine predictions (weighted average)
+                if preds:
+                    weighted = sum(p[1] for p in preds) / len(preds)
+                    num = int(round(weighted))
+                    num = max(1, min(self.config['main_max'], num))
+                else:
+                    num = np.random.randint(1, self.config['main_max'] + 1)
+
+                main_numbers.append(num)
+
+            # Ensure unique numbers
+            main_numbers = list(dict.fromkeys(main_numbers))
+            while len(main_numbers) < self.config['main_numbers']:
+                num = np.random.randint(1, self.config['main_max'] + 1)
+                if num not in main_numbers:
+                    main_numbers.append(num)
+            main_numbers = sorted(main_numbers[:self.config['main_numbers']])
+
+            # Bonus numbers
+            bonus_numbers = []
+            if self.config['bonus_numbers'] > 0:
+                bonus_numbers = sorted(np.random.choice(
+                    range(1, self.config['bonus_max'] + 1),
+                    size=self.config['bonus_numbers'],
+                    replace=False
+                ).tolist())
+
+            results.append(PredictionResult(
+                main_numbers=main_numbers,
+                bonus_numbers=bonus_numbers,
+                confidence=0.55,  # Time-series typically lower confidence
+                method="time_series",
+                metadata={"models_used": list(self.models.keys())}
+            ))
+
+        return results
+
+
 class EnsemblePredictor:
     """Combines multiple prediction strategies for best results."""
 
@@ -503,6 +720,7 @@ class EnsemblePredictor:
         self.statistical = StatisticalPredictor(lottery_type)
         self.ml = MLModelPredictor(lottery_type)
         self.dl = DeepLearningPredictor(lottery_type)
+        self.ts = TimeSeriesPredictor(lottery_type)
 
     def predict_all(self, num_each: int = 3) -> Dict[str, List[PredictionResult]]:
         """Get predictions from all methods."""
@@ -516,6 +734,9 @@ class EnsemblePredictor:
 
         # ML methods
         results['ml'] = self.ml.predict(num_predictions=num_each)
+
+        # Time-series methods
+        results['time_series'] = self.ts.predict(num_predictions=num_each)
 
         # Deep learning (optional)
         # results['dl'] = self.dl.predict(num_predictions=num_each)
@@ -534,6 +755,7 @@ class EnsemblePredictor:
             'balanced': 1.2,
             'pairs': 1.0,
             'ml': 1.5,
+            'time_series': 0.9,
         }
 
         for method, preds in all_results.items():
