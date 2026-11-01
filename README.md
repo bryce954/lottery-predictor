@@ -241,6 +241,59 @@ If you or someone you know has a gambling problem, please contact:
 - **National Problem Gambling Helpline**: 1-800-522-4700
 - **Florida Council on Compulsive Gambling**: 1-888-ADMIT-IT
 
+## 🗺️ Roadmap
+
+### v1.1 - Universal Lottery Support (In Progress)
+- [x] Universal lottery configuration system
+- [ ] Support for any lottery worldwide (Mega Millions, EuroMillions, etc.)
+- [ ] Custom lottery creation via CLI and config file
+- [ ] Import/export lottery configurations
+
+### v1.2 - Graphical Interface
+- [ ] **Streamlit Web App** - Interactive web-based GUI
+  - Real-time prediction generation
+  - Interactive charts and visualizations
+  - Lottery selection dropdown
+  - Method comparison UI
+  - History browser
+- [ ] **Desktop GUI** (Tkinter/PyQt) - Native desktop application
+- [ ] **Mobile-friendly** responsive design
+
+### v1.3 - Enhanced AI/ML
+- [ ] Time-series forecasting (ARIMA, Prophet)
+- [ ] Transformer-based sequence models
+- [ ] Hyperparameter optimization (Optuna)
+- [ ] Model explainability (SHAP values)
+- [ ] Online learning / incremental training
+
+### v1.4 - Data & Integration
+- [ ] Real API integrations (official lottery APIs)
+- [ ] Web scraping fallback for historical data
+- [ ] Data validation & anomaly detection
+- [ ] Scheduled data updates (cron/GitHub Actions)
+- [ ] Export to CSV/Excel/JSON
+
+### v1.5 - Advanced Features
+- [ ] Backtesting framework with historical validation
+- [ ] Portfolio optimization (multiple tickets)
+- [ ] Syndicate/group play tools
+- [ ] Notification system (email, push, Discord)
+- [ ] Multi-language support
+
+### v2.0 - Cloud & Scale
+- [ ] REST API (FastAPI)
+- [ ] Docker containerization
+- [ ] Kubernetes deployment configs
+- [ ] Database backend (PostgreSQL)
+- [ ] User accounts & prediction history
+- [ ] A/B testing for model versions
+
+---
+
+## 🤝 Contributing to Roadmap
+
+Have ideas? Open an issue or discussion on GitHub! Priority is driven by community feedback.
+
 ---
 
 **Remember**: The lottery is a game of chance. Play for fun, not as an investment strategy.
