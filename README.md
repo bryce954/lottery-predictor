@@ -136,6 +136,9 @@ python main.py viz --lottery powerball
 
 # Launch web GUI
 streamlit run streamlit_app.py
+
+# Launch desktop GUI (requires tkinter: sudo apt-get install python3-tk on Ubuntu/Debian)
+python tkinter_app.py
 ```
 
 ## Commands
@@ -231,6 +234,7 @@ python main.py info
 lottery-predictor/
 ├── main.py                 # Entry point
 ├── streamlit_app.py        # Streamlit web GUI
+├── tkinter_app.py          # Tkinter desktop GUI
 ├── requirements.txt        # Dependencies
 ├── setup.py               # Package setup
 ├── README.md              # This file
@@ -331,7 +335,12 @@ If you or someone you know has a gambling problem, please contact:
   - Lottery selection dropdown
   - Method comparison UI
   - History browser
-- [ ] **Desktop GUI** (Tkinter/PyQt) - Native desktop application
+- [x] **Desktop GUI** (Tkinter) - Native desktop application (`tkinter_app.py`)
+  - Lottery selection with all 42+ games
+  - Predict, Analyze, History, Compare, Visualize tabs
+  - Threaded predictions & training (non-blocking UI)
+  - Export to CSV/Excel/JSON
+  - *Requires tkinter: `sudo apt-get install python3-tk` on Ubuntu/Debian*
 - [ ] **Mobile-friendly** responsive design
 
 ### v1.3 - Enhanced AI/ML
