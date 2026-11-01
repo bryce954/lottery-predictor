@@ -54,21 +54,25 @@ st.markdown("""
         margin-bottom: 1rem;
     }
     .disclaimer {
-        background-color: #fff3cd;
-        border: 1px solid #ffc107;
+        background-color: #856404;
+        color: #ffffff;
+        border: 1px solid #6d5303;
         border-radius: 0.5rem;
         padding: 1rem;
         margin: 1rem 0;
     }
     .prediction-box {
-        background-color: #f8f9fa;
+        background-color: #ffffff;
+        color: #212529;
         border: 1px solid #dee2e6;
         border-radius: 0.5rem;
         padding: 1rem;
         margin: 0.5rem 0;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
     .metric-card {
-        background-color: #ffffff;
+        background-color: #f8f9fa;
+        color: #212529;
         border: 1px solid #e0e0e0;
         border-radius: 0.5rem;
         padding: 1rem;
