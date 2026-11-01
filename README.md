@@ -358,11 +358,11 @@ If you or someone you know has a gambling problem, please contact:
 - [ ] **Mobile-friendly** responsive design
 
 ### v1.3 - Enhanced AI/ML
-- [x] Time-series forecasting (ARIMA, Prophet)
-- [ ] Transformer-based sequence models
-- [ ] Hyperparameter optimization (Optuna)
-- [ ] Model explainability (SHAP values)
-- [ ] Online learning / incremental training
+- [x] Time-series forecasting (ARIMA, Prophet, ETS)
+- [x] Transformer-based sequence models
+- [x] Hyperparameter optimization (Optuna)
+- [x] Model explainability (SHAP values)
+- [x] Online learning / incremental training
 
 ### v1.4 - Data & Integration
 - [ ] Real API integrations (official lottery APIs)

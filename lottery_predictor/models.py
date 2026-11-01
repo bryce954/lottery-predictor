@@ -32,6 +32,27 @@ try:
 except ImportError:
     HAS_PROPHET = False
 
+# v1.3 Enhanced AI/ML: Transformer, Optuna, SHAP, Online Learning
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    HAS_TORCH = True
+except ImportError:
+    HAS_TORCH = False
+
+try:
+    import optuna
+    HAS_OPTUNA = True
+except ImportError:
+    HAS_OPTUNA = False
+
+try:
+    import shap
+    HAS_SHAP = True
+except ImportError:
+    HAS_SHAP = False
+
 from .data import LotteryDataManager, get_data_manager
 
 logging.basicConfig(level=logging.INFO)
@@ -721,6 +742,8 @@ class EnsemblePredictor:
         self.ml = MLModelPredictor(lottery_type)
         self.dl = DeepLearningPredictor(lottery_type)
         self.ts = TimeSeriesPredictor(lottery_type)
+        self.transformer = TransformerPredictor(lottery_type)
+        self.online = OnlineLearningPredictor(lottery_type)
 
     def predict_all(self, num_each: int = 3) -> Dict[str, List[PredictionResult]]:
         """Get predictions from all methods."""
@@ -737,6 +760,19 @@ class EnsemblePredictor:
 
         # Time-series methods
         results['time_series'] = self.ts.predict(num_predictions=num_each)
+
+        # v1.3: Transformer (if trained)
+        try:
+            if HAS_TORCH and self.transformer.model is not None:
+                results['transformer'] = self.transformer.predict(num_predictions=num_each)
+        except Exception:
+            pass
+
+        # v1.3: Online learning
+        try:
+            results['online_learning'] = self.online.predict(num_predictions=num_each)
+        except Exception:
+            pass
 
         # Deep learning (optional)
         # results['dl'] = self.dl.predict(num_predictions=num_each)
@@ -756,6 +792,8 @@ class EnsemblePredictor:
             'pairs': 1.0,
             'ml': 1.5,
             'time_series': 0.9,
+            'transformer': 1.1,
+            'online_learning': 1.2,
         }
 
         for method, preds in all_results.items():
@@ -785,6 +823,542 @@ class EnsemblePredictor:
         return results
 
 
+class TransformerPredictor:
+    """Transformer-based sequence model for lottery prediction (v1.3)."""
+
+    def __init__(self, lottery_type: str = "powerball"):
+        self.lottery_type = lottery_type
+        self.dm = get_data_manager(lottery_type)
+        self.config = self.dm.config
+        self.model = None
+        self.scaler = StandardScaler()
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    class TransformerModel(nn.Module):
+        """Transformer model for sequence prediction."""
+        def __init__(self, input_dim: int, output_dim: int, seq_len: int = 10,
+                     d_model: int = 128, nhead: int = 8, num_layers: int = 3):
+            super().__init__()
+            self.input_proj = nn.Linear(input_dim, d_model)
+            self.pos_encoding = nn.Parameter(torch.randn(seq_len, d_model))
+
+            encoder_layer = nn.TransformerEncoderLayer(
+                d_model=d_model, nhead=nhead, dim_feedforward=d_model * 4,
+                dropout=0.1, batch_first=True
+            )
+            self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+
+            self.output_head = nn.Sequential(
+                nn.Linear(d_model, d_model // 2),
+                nn.ReLU(),
+                nn.Dropout(0.1),
+                nn.Linear(d_model // 2, output_dim)
+            )
+
+        def forward(self, x):
+            # x shape: (batch, seq_len, input_dim)
+            x = self.input_proj(x) + self.pos_encoding.unsqueeze(0)
+            x = self.transformer(x)
+            x = x[:, -1, :]  # Take last token
+            return self.output_head(x)
+
+    def prepare_sequence_data(self, lookback: int = 10, seq_len: int = 10):
+        """Prepare sequential data for transformer."""
+        X, y = self.dm.prepare_ml_features(lookback=lookback)
+        if len(X) < seq_len + 1:
+            return None, None
+
+        X_scaled = self.scaler.fit_transform(X)
+
+        # Create sequences
+        sequences = []
+        targets = []
+        for i in range(len(X_scaled) - seq_len):
+            sequences.append(X_scaled[i:i + seq_len])
+            # Target: the numbers in the next draw
+            next_draw_idx = i + seq_len
+            targets.append(y[next_draw_idx])
+
+        return np.array(sequences), np.array(targets)
+
+    def build_model(self, input_dim: int, output_dim: int, seq_len: int = 10):
+        """Build transformer model."""
+        if not HAS_TORCH:
+            logger.warning("PyTorch not available, skipping transformer")
+            return None
+
+        self.model = self.TransformerModel(
+            input_dim=input_dim,
+            output_dim=output_dim,
+            seq_len=seq_len
+        ).to(self.device)
+        return self.model
+
+    def train(self, epochs: int = 50, batch_size: int = 32, seq_len: int = 10, lr: float = 1e-3):
+        """Train transformer model."""
+        if not HAS_TORCH:
+            return
+
+        X_seq, y_seq = self.prepare_sequence_data(seq_len=seq_len)
+        if X_seq is None:
+            logger.warning("Not enough data for transformer training")
+            return
+
+        # Convert y to multi-hot encoding
+        output_dim = self.config['main_max']
+        y_multihot = np.zeros((len(y_seq), output_dim))
+        for i, row in enumerate(y_seq):
+            indices = np.where(row == 1)[0]
+            for idx in indices:
+                y_multihot[i, idx] = 1
+
+        # Split
+        split = int(0.8 * len(X_seq))
+        X_train, X_val = X_seq[:split], X_seq[split:]
+        y_train, y_val = y_multihot[:split], y_multihot[split:]
+
+        # Build model
+        self.build_model(X_seq.shape[2], output_dim, seq_len)
+
+        criterion = nn.BCEWithLogitsLoss()
+        optimizer = optim.Adam(self.model.parameters(), lr=lr)
+        scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=5)
+
+        # Training loop
+        for epoch in range(epochs):
+            self.model.train()
+            perm = torch.randperm(len(X_train))
+            for i in range(0, len(X_train), batch_size):
+                idx = perm[i:i + batch_size]
+                xb = torch.FloatTensor(X_train[idx]).to(self.device)
+                yb = torch.FloatTensor(y_train[idx]).to(self.device)
+
+                optimizer.zero_grad()
+                out = self.model(xb)
+                loss = criterion(out, yb)
+                loss.backward()
+                optimizer.step()
+
+            # Validation
+            self.model.eval()
+            with torch.no_grad():
+                xb = torch.FloatTensor(X_val).to(self.device)
+                yb = torch.FloatTensor(y_val).to(self.device)
+                val_out = self.model(xb)
+                val_loss = criterion(val_out, yb)
+
+            scheduler.step(val_loss)
+
+            if epoch % 10 == 0:
+                logger.info(f"Transformer epoch {epoch}: train_loss={loss:.4f}, val_loss={val_loss:.4f}")
+
+        logger.info("Transformer model trained")
+
+    def predict(self, num_predictions: int = 3, seq_len: int = 10) -> List[PredictionResult]:
+        """Generate predictions using transformer."""
+        if not HAS_TORCH or self.model is None:
+            logger.warning("Transformer not trained")
+            return []
+
+        X_seq, _ = self.prepare_sequence_data(seq_len=seq_len)
+        if X_seq is None:
+            return []
+
+        self.model.eval()
+        latest_seq = torch.FloatTensor(X_seq[-1:]).to(self.device)
+
+        results = []
+        with torch.no_grad():
+            for _ in range(num_predictions):
+                logits = self.model(latest_seq)[0]
+                probs = torch.sigmoid(logits).cpu().numpy()
+
+                # Sample from distribution
+                main = sorted(np.random.choice(
+                    range(1, self.config['main_max'] + 1),
+                    size=self.config['main_numbers'],
+                    replace=False,
+                    p=probs / probs.sum() if probs.sum() > 0 else None
+                ).tolist())
+
+                bonus = []
+                if self.config['bonus_numbers'] > 0:
+                    bonus = sorted(np.random.choice(
+                        range(1, self.config['bonus_max'] + 1),
+                        size=self.config['bonus_numbers'],
+                        replace=False
+                    ).tolist())
+
+                results.append(PredictionResult(
+                    main_numbers=main,
+                    bonus_numbers=bonus,
+                    confidence=0.6,
+                    method="transformer",
+                    metadata={"model": "transformer", "seq_len": seq_len}
+                ))
+
+        return results
+
+
+class HyperparameterOptimizer:
+    """Hyperparameter optimization using Optuna (v1.3)."""
+
+    def __init__(self, lottery_type: str = "powerball"):
+        self.lottery_type = lottery_type
+        self.dm = get_data_manager(lottery_type)
+        self.config = self.dm.config
+
+    def optimize_random_forest(self, n_trials: int = 50) -> Dict:
+        """Optimize Random Forest hyperparameters."""
+        if not HAS_OPTUNA:
+            logger.warning("Optuna not available")
+            return {}
+
+        X, y = self.dm.prepare_ml_features(lookback=10)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        def objective(trial):
+            params = {
+                'n_estimators': trial.suggest_int('n_estimators', 100, 500),
+                'max_depth': trial.suggest_int('max_depth', 5, 30),
+                'min_samples_split': trial.suggest_int('min_samples_split', 2, 20),
+                'min_samples_leaf': trial.suggest_int('min_samples_leaf', 1, 10),
+                'max_features': trial.suggest_categorical('max_features', ['sqrt', 'log2', None]),
+                'random_state': 42,
+                'n_jobs': -1
+            }
+
+            model = RandomForestClassifier(**params)
+            model.fit(X_train, y_train.argmax(axis=1))
+            score = model.score(X_test, y_test.argmax(axis=1))
+            return score
+
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
+
+        logger.info(f"Best RF params: {study.best_params}")
+        logger.info(f"Best score: {study.best_value:.4f}")
+
+        return study.best_params
+
+    def optimize_xgboost(self, n_trials: int = 50) -> Dict:
+        """Optimize XGBoost hyperparameters."""
+        if not HAS_OPTUNA:
+            logger.warning("Optuna not available")
+            return {}
+
+        X, y = self.dm.prepare_ml_features(lookback=10)
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+        def objective(trial):
+            params = {
+                'n_estimators': trial.suggest_int('n_estimators', 50, 300),
+                'max_depth': trial.suggest_int('max_depth', 3, 15),
+                'learning_rate': trial.suggest_float('learning_rate', 0.01, 0.3, log=True),
+                'subsample': trial.suggest_float('subsample', 0.6, 1.0),
+                'colsample_bytree': trial.suggest_float('colsample_bytree', 0.6, 1.0),
+                'min_child_weight': trial.suggest_int('min_child_weight', 1, 10),
+                'random_state': 42,
+                'n_jobs': -1,
+                'eval_metric': 'mlogloss',
+                'verbosity': 0
+            }
+
+            model = xgb.XGBClassifier(**params)
+            model.fit(X_train, y_train.argmax(axis=1))
+            score = model.score(X_test, y_test.argmax(axis=1))
+            return score
+
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
+
+        logger.info(f"Best XGB params: {study.best_params}")
+        logger.info(f"Best score: {study.best_value:.4f}")
+
+        return study.best_params
+
+    def optimize_mlp(self, n_trials: int = 30) -> Dict:
+        """Optimize MLP hyperparameters."""
+        if not HAS_OPTUNA:
+            logger.warning("Optuna not available")
+            return {}
+
+        X, y = self.dm.prepare_ml_features(lookback=10)
+        scaler = StandardScaler()
+        X_scaled = scaler.fit_transform(X)
+        X_train, X_test, y_train, y_test = train_test_split(X_scaled, y, test_size=0.2, random_state=42)
+
+        def objective(trial):
+            n_layers = trial.suggest_int('n_layers', 2, 4)
+            hidden_sizes = []
+            for i in range(n_layers):
+                hidden_sizes.append(trial.suggest_int(f'hidden_{i}', 32, 512))
+
+            params = {
+                'hidden_layer_sizes': tuple(hidden_sizes),
+                'activation': trial.suggest_categorical('activation', ['relu', 'tanh']),
+                'alpha': trial.suggest_float('alpha', 1e-5, 1e-2, log=True),
+                'learning_rate_init': trial.suggest_float('learning_rate_init', 1e-4, 1e-2, log=True),
+                'max_iter': 200,
+                'early_stopping': True,
+                'random_state': 42
+            }
+
+            model = MLPClassifier(**params)
+            model.fit(X_train, y_train.argmax(axis=1))
+            score = model.score(X_test, y_test.argmax(axis=1))
+            return score
+
+        study = optuna.create_study(direction='maximize')
+        study.optimize(objective, n_trials=n_trials, show_progress_bar=True)
+
+        logger.info(f"Best MLP params: {study.best_params}")
+        logger.info(f"Best score: {study.best_value:.4f}")
+
+        return study.best_params
+
+
+class ModelExplainer:
+    """Model explainability using SHAP (v1.3)."""
+
+    def __init__(self, lottery_type: str = "powerball"):
+        self.lottery_type = lottery_type
+        self.dm = get_data_manager(lottery_type)
+        self.config = self.dm.config
+        self.explainers = {}
+
+    def explain_random_forest(self, model, X_sample: np.ndarray) -> Dict:
+        """Generate SHAP explanations for Random Forest."""
+        if not HAS_SHAP:
+            logger.warning("SHAP not available")
+            return {}
+
+        try:
+            explainer = shap.TreeExplainer(model)
+            shap_values = explainer.shap_values(X_sample)
+
+            # Feature importance
+            if isinstance(shap_values, list):
+                # Multi-class - average across classes
+                mean_shap = np.mean([np.abs(sv).mean(axis=0) for sv in shap_values], axis=0)
+            else:
+                mean_shap = np.abs(shap_values).mean(axis=0)
+
+            feature_names = self._get_feature_names(X_sample.shape[1])
+            importance = dict(zip(feature_names, mean_shap))
+
+            # Top features
+            top_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)[:20]
+
+            return {
+                'shap_values': shap_values,
+                'feature_importance': importance,
+                'top_features': top_features,
+                'explainer': explainer
+            }
+        except Exception as e:
+            logger.warning(f"SHAP explanation failed: {e}")
+            return {}
+
+    def explain_any_model(self, model, X_sample: np.ndarray, model_type: str = 'tree') -> Dict:
+        """Generate SHAP explanations for any model type."""
+        if not HAS_SHAP:
+            logger.warning("SHAP not available")
+            return {}
+
+        try:
+            if model_type == 'tree':
+                explainer = shap.TreeExplainer(model)
+            elif model_type == 'linear':
+                explainer = shap.LinearExplainer(model, X_sample)
+            else:
+                # Use KernelExplainer as fallback (slower)
+                explainer = shap.KernelExplainer(model.predict_proba, X_sample[:100])
+
+            shap_values = explainer.shap_values(X_sample)
+
+            if isinstance(shap_values, list):
+                mean_shap = np.mean([np.abs(sv).mean(axis=0) for sv in shap_values], axis=0)
+            else:
+                mean_shap = np.abs(shap_values).mean(axis=0)
+
+            feature_names = self._get_feature_names(X_sample.shape[1])
+            importance = dict(zip(feature_names, mean_shap))
+            top_features = sorted(importance.items(), key=lambda x: x[1], reverse=True)[:20]
+
+            return {
+                'shap_values': shap_values,
+                'feature_importance': importance,
+                'top_features': top_features
+            }
+        except Exception as e:
+            logger.warning(f"SHAP explanation failed: {e}")
+            return {}
+
+    def _get_feature_names(self, n_features: int) -> List[str]:
+        """Generate feature names based on data preparation."""
+        names = []
+        main_max = self.config['main_max']
+        bonus_max = self.config['bonus_max']
+
+        # Features: frequency counts for each number position + recency + sum + even/odd + high/low
+        # This matches the prepare_ml_features in data.py
+        lookback = 10
+        for i in range(lookback):
+            for j in range(main_max):
+                names.append(f'draw_{i}_num_{j+1}_freq')
+            for j in range(bonus_max):
+                names.append(f'draw_{i}_bonus_{j+1}_freq')
+
+        # Additional features: sum, even_count, high_count for each draw
+        for i in range(lookback):
+            names.append(f'draw_{i}_sum')
+            names.append(f'draw_{i}_even')
+            names.append(f'draw_{i}_high')
+
+        return names[:n_features]
+
+    def plot_summary(self, shap_values, X_sample: np.ndarray):
+        """Plot SHAP summary plot."""
+        if not HAS_SHAP:
+            return
+        try:
+            feature_names = self._get_feature_names(X_sample.shape[1])
+            shap.summary_plot(shap_values, X_sample, feature_names=feature_names, show=False)
+        except Exception as e:
+            logger.warning(f"SHAP plot failed: {e}")
+
+
+class OnlineLearningPredictor:
+    """Online/incremental learning for continuous model updates (v1.3)."""
+
+    def __init__(self, lottery_type: str = "powerball"):
+        self.lottery_type = lottery_type
+        self.dm = get_data_manager(lottery_type)
+        self.config = self.dm.config
+        self.models = {}
+        self.scaler = StandardScaler()
+        self.is_initialized = False
+        self.update_buffer = []  # Buffer for batch updates
+
+    def initialize(self):
+        """Initialize models for online learning."""
+        from sklearn.linear_model import SGDClassifier
+        from sklearn.naive_bayes import MultinomialNB
+        from sklearn.ensemble import RandomForestClassifier
+
+        # Use models that support partial_fit
+        self.models = {
+            'sgd_logistic': SGDClassifier(loss='log_loss', random_state=42, max_iter=1000),
+            'sgd_hinge': SGDClassifier(loss='hinge', random_state=42, max_iter=1000),
+            'naive_bayes': MultinomialNB(),
+            # Random Forest doesn't support partial_fit, retrain periodically
+            'random_forest': RandomForestClassifier(n_estimators=100, max_depth=10, random_state=42, n_jobs=-1)
+        }
+
+        # Get initial training data
+        X, y = self.dm.prepare_ml_features(lookback=10)
+        if len(X) > 0:
+            X_scaled = self.scaler.fit_transform(X)
+            # Initialize with first batch
+            for name, model in self.models.items():
+                if hasattr(model, 'partial_fit'):
+                    classes = np.arange(self.config['main_max'])
+                    model.partial_fit(X_scaled, y.argmax(axis=1), classes=classes)
+                else:
+                    model.fit(X_scaled, y.argmax(axis=1))
+
+            self.is_initialized = True
+            logger.info("Online learning models initialized")
+
+    def update(self, new_draws: List[Dict]):
+        """Update models with new draw data."""
+        if not self.is_initialized:
+            self.initialize()
+
+        # Add new draws to buffer
+        self.update_buffer.extend(new_draws)
+
+        # Update periodically (every 10 new draws)
+        if len(self.update_buffer) >= 10:
+            self._retrain_incremental()
+            self.update_buffer = []
+
+    def _retrain_incremental(self):
+        """Incremental retrain with buffered data."""
+        # Reload all data and retrain incremental models
+        X, y = self.dm.prepare_ml_features(lookback=10)
+        if len(X) == 0:
+            return
+
+        X_scaled = self.scaler.transform(X)
+
+        for name, model in self.models.items():
+            if hasattr(model, 'partial_fit'):
+                classes = np.arange(self.config['main_max'])
+                model.partial_fit(X_scaled, y.argmax(axis=1), classes=classes)
+            elif name == 'random_forest':
+                # Retrain RF periodically
+                model.fit(X_scaled, y.argmax(axis=1))
+
+        logger.info(f"Online models updated with {len(X)} samples")
+
+    def predict(self, num_predictions: int = 3) -> List[PredictionResult]:
+        """Generate predictions using online models."""
+        if not self.is_initialized:
+            self.initialize()
+
+        X, _ = self.dm.prepare_ml_features(lookback=10)
+        if len(X) == 0:
+            return []
+
+        latest = self.scaler.transform(X[-1:].reshape(1, -1))
+
+        results = []
+        for _ in range(num_predictions):
+            predictions = []
+            for name, model in self.models.items():
+                if hasattr(model, 'predict_proba'):
+                    proba = model.predict_proba(latest)[0]
+                    pred = np.random.choice(
+                        len(proba),
+                        size=self.config['main_numbers'],
+                        replace=False,
+                        p=proba
+                    )
+                else:
+                    pred = model.predict(latest)
+                    pred = np.random.choice(
+                        self.config['main_max'],
+                        size=self.config['main_numbers'],
+                        replace=False
+                    )
+                predictions.extend([p + 1 for p in pred])
+
+            # Ensemble voting
+            from collections import Counter
+            counter = Counter(predictions)
+            main = sorted([n for n, _ in counter.most_common(self.config['main_numbers'])])
+
+            bonus = []
+            if self.config['bonus_numbers'] > 0:
+                bonus = sorted(np.random.choice(
+                    range(1, self.config['bonus_max'] + 1),
+                    size=self.config['bonus_numbers'],
+                    replace=False
+                ).tolist())
+
+            results.append(PredictionResult(
+                main_numbers=main,
+                bonus_numbers=bonus,
+                confidence=0.65,
+                method="online_learning",
+                metadata={"models_used": list(self.models.keys())}
+            ))
+
+        return results
+
+
 def get_predictor(lottery_type: str, method: str = "ensemble") -> Any:
     """Factory function to get predictor."""
     if method == "statistical":
@@ -793,8 +1367,18 @@ def get_predictor(lottery_type: str, method: str = "ensemble") -> Any:
         return MLModelPredictor(lottery_type)
     elif method == "dl":
         return DeepLearningPredictor(lottery_type)
+    elif method == "time_series":
+        return TimeSeriesPredictor(lottery_type)
+    elif method == "transformer":
+        return TransformerPredictor(lottery_type)
+    elif method == "online_learning":
+        return OnlineLearningPredictor(lottery_type)
     elif method == "ensemble":
         return EnsemblePredictor(lottery_type)
+    elif method == "optuna":
+        return HyperparameterOptimizer(lottery_type)
+    elif method == "shap":
+        return ModelExplainer(lottery_type)
     else:
         return EnsemblePredictor(lottery_type)
 

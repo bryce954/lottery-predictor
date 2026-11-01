@@ -21,9 +21,14 @@ from .models import (
     MLModelPredictor,
     EnsemblePredictor,
     TimeSeriesPredictor,
+    TransformerPredictor,
+    OnlineLearningPredictor,
+    HyperparameterOptimizer,
+    ModelExplainer,
     PredictionResult,
     get_predictor
 )
+from sklearn.preprocessing import StandardScaler
 from .visualize import LotteryVisualizer, visualize_predictions
 from .universal import get_universal_manager, list_lotteries
 
@@ -87,7 +92,7 @@ def print_disclaimer():
 @app.command()
 def predict(
     lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type: florida_lotto or powerball"),
-    method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method: statistical, frequency, cold, pairs, ml, time_series, ensemble"),
+    method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method: statistical, frequency, cold, pairs, ml, time_series, transformer, online_learning, ensemble"),
     count: int = typer.Option(5, "--count", "-c", help="Number of predictions to generate"),
     last_n: int = typer.Option(200, "--last-n", "-n", help="Number of historical draws to analyze"),
     train: bool = typer.Option(False, "--train", "-t", help="Retrain ML models before predicting"),
@@ -146,6 +151,15 @@ def predict(
         elif method == "time_series":
             pred = TimeSeriesPredictor(lottery)
             predictions = pred.predict(num_predictions=count, last_n=last_n)
+        elif method == "transformer":
+            pred = TransformerPredictor(lottery)
+            if pred.model is None:
+                progress.update(task, description="Training transformer model...")
+                pred.train()
+            predictions = pred.predict(num_predictions=count)
+        elif method == "online_learning":
+            pred = OnlineLearningPredictor(lottery)
+            predictions = pred.predict(num_predictions=count)
         else:  # ensemble
             pred = EnsemblePredictor(lottery)
             predictions = pred.get_consensus_prediction(num_predictions=count)
@@ -373,6 +387,17 @@ def compare(
             if not pred.is_trained:
                 pred.train()
             preds = pred.predict(num_predictions=count)
+        elif method == "time_series":
+            pred = TimeSeriesPredictor(lottery)
+            preds = pred.predict(num_predictions=count)
+        elif method == "transformer":
+            pred = TransformerPredictor(lottery)
+            if pred.model is None:
+                pred.train()
+            preds = pred.predict(num_predictions=count)
+        elif method == "online_learning":
+            pred = OnlineLearningPredictor(lottery)
+            preds = pred.predict(num_predictions=count)
         else:  # ensemble
             pred = EnsemblePredictor(lottery)
             preds = pred.get_consensus_prediction(num_predictions=count)
@@ -432,6 +457,201 @@ def viz(
     console.print("\n[green]Generated visualizations:[/green]")
     for f in files:
         console.print(f"  ✓ {f}")
+
+
+@app.command()
+def optimize(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    model: str = typer.Option("random_forest", "--model", help="Model to optimize: random_forest, xgboost, mlp"),
+    trials: int = typer.Option(50, "--trials", "-t", help="Number of optimization trials"),
+):
+    """Optimize hyperparameters using Optuna (v1.3)."""
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    if not HAS_OPTUNA:
+        console.print("[red]Optuna not installed. Install with: pip install optuna[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"🔧 Hyperparameter Optimization - {LOTTERY_CONFIGS[lottery]['name']}")
+
+    optimizer = HyperparameterOptimizer(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task(f"Optimizing {model}...", total=None)
+
+        if model == "random_forest":
+            best_params = optimizer.optimize_random_forest(n_trials=trials)
+        elif model == "xgboost":
+            best_params = optimizer.optimize_xgboost(n_trials=trials)
+        elif model == "mlp":
+            best_params = optimizer.optimize_mlp(n_trials=trials)
+        else:
+            console.print(f"[red]Unknown model: {model}[/red]")
+            raise typer.Exit(1)
+
+        progress.update(task, description="Optimization complete!")
+
+    console.print("\n[bold]Best Parameters:[/bold]")
+    table = Table(show_header=True)
+    table.add_column("Parameter", style="cyan")
+    table.add_column("Value", style="green")
+    for param, value in best_params.items():
+        table.add_row(param, str(value))
+    console.print(table)
+
+    # Save best params
+    import json
+    output = f"{lottery}_{model}_best_params.json"
+    with open(output, 'w') as f:
+        json.dump(best_params, f, indent=2)
+    console.print(f"\n[green]Best parameters saved to {output}[/green]")
+
+
+@app.command()
+def explain(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    model: str = typer.Option("random_forest", "--model", help="Model to explain: random_forest, mlp, xgboost"),
+    samples: int = typer.Option(100, "--samples", "-s", help="Number of samples for explanation"),
+):
+    """Explain model predictions using SHAP (v1.3)."""
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    if not HAS_SHAP:
+        console.print("[red]SHAP not installed. Install with: pip install shap[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"🔍 Model Explainability - {LOTTERY_CONFIGS[lottery]['name']}")
+
+    explainer = ModelExplainer(lottery)
+    dm = get_data_manager(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Preparing data...", total=None)
+
+        X, y = dm.prepare_ml_features(lookback=10)
+        if len(X) < samples:
+            samples = len(X)
+        X_sample = X[-samples:]
+        X_scaled = StandardScaler().fit_transform(X_sample)
+
+        progress.update(task, description=f"Training {model}...")
+
+        # Train model
+        if model == "random_forest":
+            from sklearn.ensemble import RandomForestClassifier
+            clf = RandomForestClassifier(n_estimators=200, max_depth=15, random_state=42, n_jobs=-1)
+            clf.fit(X_scaled, y[-samples:].argmax(axis=1))
+        elif model == "mlp":
+            from sklearn.neural_network import MLPClassifier
+            clf = MLPClassifier(hidden_layer_sizes=(256, 128, 64), max_iter=300, random_state=42, early_stopping=True)
+            clf.fit(X_scaled, y[-samples:].argmax(axis=1))
+        elif model == "xgboost":
+            import xgboost as xgb
+            clf = xgb.XGBClassifier(n_estimators=200, max_depth=10, random_state=42, n_jobs=-1, eval_metric='mlogloss', verbosity=0)
+            clf.fit(X_scaled, y[-samples:].argmax(axis=1))
+        else:
+            console.print(f"[red]Unknown model: {model}[/red]")
+            raise typer.Exit(1)
+
+        progress.update(task, description="Generating SHAP explanations...")
+
+        # Get SHAP explanations
+        result = explainer.explain_any_model(clf, X_scaled, model_type='tree')
+
+        progress.update(task, description="Done!", completed=True)
+
+    if result:
+        console.print("\n[bold]Top 20 Important Features:[/bold]")
+        table = Table(show_header=True)
+        table.add_column("Rank", width=6)
+        table.add_column("Feature", style="cyan")
+        table.add_column("SHAP Importance", style="green")
+
+        for i, (feat, imp) in enumerate(result['top_features'], 1):
+            table.add_row(str(i), feat, f"{imp:.6f}")
+        console.print(table)
+
+        console.print(f"\n[green]SHAP analysis complete for {model}[/green]")
+    else:
+        console.print("[yellow]Could not generate SHAP explanations[/yellow]")
+
+
+@app.command()
+def train_transformer(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    epochs: int = typer.Option(50, "--epochs", "-e", help="Training epochs"),
+    seq_len: int = typer.Option(10, "--seq-len", help="Sequence length"),
+    batch_size: int = typer.Option(32, "--batch-size", "-b", help="Batch size"),
+):
+    """Train Transformer model (v1.3)."""
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    if not HAS_TORCH:
+        console.print("[red]PyTorch not installed. Install with: pip install torch[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"🤖 Training Transformer - {LOTTERY_CONFIGS[lottery]['name']}")
+
+    predictor = TransformerPredictor(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Training transformer...", total=None)
+        predictor.train(epochs=epochs, batch_size=batch_size, seq_len=seq_len)
+        progress.update(task, description="Training complete!")
+
+    console.print("[green]Transformer model trained![/green]")
+
+
+@app.command()
+def online_update(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+):
+    """Update online learning models with latest data (v1.3)."""
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    print_header(f"🔄 Online Learning Update - {LOTTERY_CONFIGS[lottery]['name']}")
+
+    predictor = OnlineLearningPredictor(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Updating online models...", total=None)
+        predictor.initialize()
+        # Get recent draws as "new" data
+        dm = get_data_manager(lottery)
+        recent = dm.get_recent_draws(20)
+        new_draws = recent.to_dict('records')
+        predictor.update(new_draws)
+        progress.update(task, description="Update complete!")
+
+    console.print("[green]Online models updated![/green]")
+
+    # Test prediction
+    preds = predictor.predict(3)
+    print_predictions(preds, lottery)
 
 
 @app.command()
@@ -502,6 +722,17 @@ def export(
             pred = MLModelPredictor(lottery)
             if not pred.is_trained:
                 pred.train()
+            predictions = pred.predict(num_predictions=count)
+        elif method == "time_series":
+            pred = TimeSeriesPredictor(lottery)
+            predictions = pred.predict(num_predictions=count, last_n=last_n or 200)
+        elif method == "transformer":
+            pred = TransformerPredictor(lottery)
+            if pred.model is None:
+                pred.train()
+            predictions = pred.predict(num_predictions=count)
+        elif method == "online_learning":
+            pred = OnlineLearningPredictor(lottery)
             predictions = pred.predict(num_predictions=count)
         else:  # ensemble
             pred = EnsemblePredictor(lottery)
