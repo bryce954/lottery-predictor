@@ -186,7 +186,14 @@ python tkinter_app.py
 | **Installation** | `pip install -e .` | Same + `streamlit` | Same + `python3-tk` | Same + `fastapi`, `uvicorn` | Docker engine |
 | **Run Command** | `python main.py predict` | `streamlit run streamlit_app.py` | `python tkinter_app.py` | `python main.py serve` | `docker compose up` |
 | **Access** | Terminal | Browser (localhost:8501) | Native window | Browser (localhost:8000/docs) | Any container runtime |
-| **Mobile Friendly** | ✅ SSH/Termux | ✅ Responsive web | ❌ Desktop only | ✅ REST clients | ✅ Cloud deploy |
+| **Mobile Friendly** | ✅ SSH/Termux | ✅ Responsive web + **PWA** | ❌ Desktop only | ✅ REST clients | ✅ Cloud deploy |
+| **PWA Support** | ❌ N/A | ✅ **Manifest + SW + Icons** | ❌ N/A | ❌ N/A | ✅ With nginx |
+| **Offline Capable** | ✅ CLI works offline | ✅ **Service Worker** | ✅ Native | ❌ Requires network | ✅ With SW |
+| **Installable App** | ❌ | ✅ **Add to Home Screen** | ✅ Native | ❌ | ✅ Container |
+| **Touch Optimized** | ❌ | ✅ **Mobile CSS + Gestures** | ❌ | ❌ | ❌ |
+| **Bottom Navigation** | ❌ | ✅ **PWA Mode** | ❌ | ❌ | ❌ |
+| **Swipe Gestures** | ❌ | ✅ **Tab Swiping** | ❌ | ❌ | ❌ |
+| **Push Notifications** | ❌ | ✅ **Framework Ready** | ❌ | ❌ | ✅ With service |
 | **Predictions** | ✅ All methods | ✅ All methods | ✅ All methods | ✅ All methods | ✅ All methods |
 | **Analysis/Charts** | ✅ Static (matplotlib) | ✅ Interactive (Plotly) | ✅ Static (matplotlib) | ✅ JSON data | ✅ All |
 | **Training Models** | ✅ Yes | ✅ Yes | ✅ Yes (threaded) | ✅ Yes | ✅ Yes |
@@ -196,15 +203,20 @@ python tkinter_app.py
 | **Portfolio/Syndicate (v1.5)** | ✅ Commands | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ All |
 | **Notifications (v1.5)** | ✅ Commands | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ All |
 | **Multi-language (v1.5)** | ✅ Commands | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Quick Pick (v1.8)** | ✅ `quick-pick` | ✅ **Built-in Tab** | ❌ Not yet | ❌ Not yet | ✅ All |
 | **User Accounts (v2.0)** | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ Database | ✅ PostgreSQL |
 | **A/B Testing (v2.0)** | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ Database | ✅ All |
 | **Scheduled Updates** | ✅ `run-scheduler` | ❌ Not yet | ❌ Not yet | ✅ Background tasks | ✅ Cron/K8s CronJob |
 | **Location Detection** | ✅ `--detect-state` | ✅ Button in sidebar | ✅ Button in settings | ❌ Not yet | ❌ Not yet |
-| **Production Ready** | Development | Development | Development | ✅ With auth/DB | ✅ Production grade |
+| **Real API Data (v2.1)** | ✅ `fetch-real-api` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ❌ Not yet |
+| **History Archive (v2.1)** | ✅ `browse-history` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ❌ Not yet |
+| **Draw Calendar (v2.1)** | ✅ `draw-calendar` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ❌ Not yet |
+| **Production Ready** | Development | **Development + PWA** | Development | ✅ With auth/DB | ✅ Production grade |
 
 **Quick Recommendation:**
 - **Developers/Automation** → CLI or REST API
 - **Interactive Exploration** → Streamlit Web GUI (also works on mobile browser)
+- **Mobile Users** → **Streamlit PWA** (install from browser, works offline!)
 - **Desktop Users** → Tkinter Desktop GUI
 - **Production/Team/Cloud** → Docker/Kubernetes with FastAPI
 
@@ -623,38 +635,44 @@ If you or someone you know has a gambling problem, please contact:
 - [x] **Alphabetical State Sorting** - US state lotteries sorted A-Z in docs
 - [x] **Official Website Links** - Direct links to lottery official sites in all interfaces
 
-### v1.7 - Validation & Analytics 📋
-- [ ] **Results Verification** - Auto-fetch actual draw results & compare against past predictions
-  - Scheduled job to fetch winning numbers after each draw
+### v1.7 - Validation & Analytics ✅
+- [x] **Results Verification** - Auto-fetch actual draw results & compare against past predictions
+  - CLI: `verify` command with walk-forward backtest
   - Accuracy tracking per method (statistical, ML, ensemble, etc.)
   - Hit rate reports: matches per tier (jackpot, 2nd prize, 3rd prize, etc.)
-- [ ] **Odds Calculator** - Exact odds, expected value, prize tiers for each game
-  - Show probability for each prize tier
+- [x] **Odds Calculator** - Exact odds, expected value, prize tiers for each game
+  - CLI: `odds` command shows exact odds, EV, prize tiers
   - Expected value calculation (EV = Σ prize × probability)
-  - Break-even analysis
-- [ ] **Pattern Analysis** - Advanced statistical pattern detection
-  - Consecutive numbers frequency
-  - Odd/even split distribution
-  - High/low number distribution
-  - Decade analysis (1-10, 11-20, etc.)
-  - Sum distribution with normal curve fit
-- [ ] **Statistical Significance Testing** - Compare methods vs random baseline
-  - Monte Carlo simulation for p-values
+  - Break-even jackpot analysis
+- [x] **Pattern Analysis** - Advanced statistical pattern detection
+  - CLI: `pattern` command for consecutive numbers, odd/even, high/low, decades, sum stats
+  - Chi-square goodness-of-fit tests
+  - Deviation from expected distributions
+- [x] **Statistical Significance Testing** - Compare methods vs random baseline
+  - CLI: `compare` command with paired t-test
+  - CLI: `full-validation` complete suite (patterns + odds + significance)
   - Confidence intervals for prediction accuracy
 
-### v1.8 - Mobile & PWA 📱
-- [ ] **Progressive Web App (PWA)** - Install Streamlit as native mobile app
-  - Service worker for offline capability
-  - App manifest for home screen installation
-  - Push notifications for draw reminders
-- [ ] **Mobile-Optimized UI** - Touch-friendly responsive design
-  - Swipe gestures for tabs
-  - Larger touch targets
-  - Bottom navigation bar
-- [ ] **Quick Pick Generator** - True random number generator for manual entry
-  - Hardware entropy source (where available)
+### v1.8 - Mobile & PWA 📱 ✅
+- [x] **Progressive Web App (PWA)** - Install Streamlit as native mobile app
+  - Service worker for offline capability (`sw.js`)
+  - App manifest for home screen installation (`manifest.json`)
+  - Push notifications for draw reminders (framework ready)
+  - PWA meta tags injected in Streamlit app
+  - Icons generated for all required sizes (72x72 to 512x512)
+- [x] **Mobile-Optimized UI** - Touch-friendly responsive design
+  - Swipe gestures for tab navigation
+  - Larger touch targets (56px minimum) on mobile
+  - Bottom navigation bar (visible in PWA standalone mode)
+  - Responsive layout with stacked columns on mobile
+  - Landscape mode optimization
+  - Dark mode support
+  - Touch feedback animations
+- [x] **Quick Pick Generator** - True random number generator for manual entry
+  - Hardware entropy source (os.urandom / secrets module)
   - Multiple sets generation
-  - Export to wallet/passbook
+  - Export to JSON, CSV, TXT
+  - CLI: `python main.py quick-pick --count 5 --lottery powerball --export json`
 
 ### v2.0 - Cloud & Scale ✅
 - [x] REST API (FastAPI)
@@ -664,18 +682,21 @@ If you or someone you know has a gambling problem, please contact:
 - [x] User accounts & prediction history
 - [x] A/B testing for model versions
 
-### v2.1 - Real Data & Production 🔌
-- [ ] **Real API Integrations** - Replace simulated data with official sources
+### v2.1 - Real Data & Production 🔌 ✅
+- [x] **Real API Integrations** - Replace simulated data with official sources
   - State lottery official APIs (where available)
   - Third-party aggregators (LotteryPost, etc.)
   - Web scraping as fallback with rate limiting
-- [ ] **Historical Results Archive** - Browse past winning numbers
+  - CLI: `fetch-real-api` command with multiple sources
+- [x] **Historical Results Archive** - Browse past winning numbers
   - Search by date range, lottery, number pattern
   - Export results to CSV/Excel
-- [ ] **Draw Calendar** - Upcoming draw dates/times with countdown
+  - CLI: `browse-history` command with filters & export
+- [x] **Draw Calendar** - Upcoming draw dates/times with countdown
   - Timezone-aware scheduling
   - `.ics` export for calendar apps
   - Next draw countdown timer
+  - CLI: `draw-calendar` command with countdown & export
 
 ### v2.2 - User Experience & Social 👥
 - [ ] **User Profiles & Preferences** - Save favorites, settings, notification config
