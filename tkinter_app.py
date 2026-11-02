@@ -128,29 +128,33 @@ class LotteryPredictorApp:
         self.lottery_combo.grid(row=0, column=1, padx=5, pady=5, sticky=tk.W)
         self.lottery_combo.bind('<<ComboboxSelected>>', self._on_lottery_change)
 
+        # Detect location button
+        ttk.Button(settings_frame, text="📍 Detect My Location",
+                   command=self._detect_location, width=20).grid(row=0, column=2, padx=5, pady=5)
+
         # Method selection
-        ttk.Label(settings_frame, text="🔮 Method:").grid(row=0, column=2, padx=15, pady=5, sticky=tk.W)
+        ttk.Label(settings_frame, text="🔮 Method:").grid(row=0, column=3, padx=15, pady=5, sticky=tk.W)
         self.method_var = tk.StringVar(value="ensemble")
         method_combo = ttk.Combobox(settings_frame, textvariable=self.method_var,
                                      state="readonly", width=20)
         method_combo['values'] = [
             "ensemble", "statistical", "frequency", "cold", "pairs", "ml"
         ]
-        method_combo.grid(row=0, column=3, padx=5, pady=5, sticky=tk.W)
+        method_combo.grid(row=0, column=4, padx=5, pady=5, sticky=tk.W)
 
         # Number of predictions
-        ttk.Label(settings_frame, text="Count:").grid(row=0, column=4, padx=15, pady=5, sticky=tk.W)
+        ttk.Label(settings_frame, text="Count:").grid(row=0, column=5, padx=15, pady=5, sticky=tk.W)
         self.count_var = tk.IntVar(value=5)
-        ttk.Spinbox(settings_frame, from_=1, to=20, textvariable=self.count_var, width=5).grid(row=0, column=5, padx=5, pady=5)
+        ttk.Spinbox(settings_frame, from_=1, to=20, textvariable=self.count_var, width=5).grid(row=0, column=6, padx=5, pady=5)
 
         # Historical draws
-        ttk.Label(settings_frame, text="Last N Draws:").grid(row=0, column=6, padx=15, pady=5, sticky=tk.W)
+        ttk.Label(settings_frame, text="Last N Draws:").grid(row=0, column=7, padx=15, pady=5, sticky=tk.W)
         self.last_n_var = tk.IntVar(value=200)
-        ttk.Spinbox(settings_frame, from_=50, to=2000, increment=50, textvariable=self.last_n_var, width=7).grid(row=0, column=7, padx=5, pady=5)
+        ttk.Spinbox(settings_frame, from_=50, to=2000, increment=50, textvariable=self.last_n_var, width=7).grid(row=0, column=8, padx=5, pady=5)
 
         # Lottery info display
         self.info_var = tk.StringVar()
-        ttk.Label(settings_frame, textvariable=self.info_var, style='Info.TLabel').grid(row=1, column=0, columnspan=8, pady=(5, 0), sticky=tk.W)
+        ttk.Label(settings_frame, textvariable=self.info_var, style='Info.TLabel').grid(row=1, column=0, columnspan=9, pady=(5, 0), sticky=tk.W)
 
     def _build_predict_tab(self):
         """Build the Predict tab."""
@@ -379,9 +383,10 @@ class LotteryPredictorApp:
         game = self.universal_manager.get_game(self.current_lottery)
         if game:
             bonus = f" + {game.bonus_numbers} bonus (1-{game.bonus_max})" if game.bonus_numbers > 0 else ""
+            website = f" | Website: {game.website}" if game.website else ""
             self.info_var.set(
                 f"{game.name} | Main: {game.main_numbers} numbers (1-{game.main_max}){bonus} | "
-                f"Draws: {', '.join(game.draw_days)} | Since: {game.start_date}"
+                f"Draws: {', '.join(game.draw_days)} | Since: {game.start_date}{website}"
             )
 
     def _on_lottery_change(self, event=None):
@@ -394,6 +399,44 @@ class LotteryPredictorApp:
         self._load_lottery_info()
         self._clear_predictions()
         self.status_var.set(f"Selected: {selection}")
+
+    def _detect_location(self):
+        """Auto-detect user's state from IP and select appropriate lottery."""
+        self.status_var.set("Detecting your location...")
+        self.root.update()
+
+        def run_detection():
+            try:
+                from lottery_predictor.universal import auto_select_lottery, detect_state_from_ip
+                detected = auto_select_lottery()
+                state = detect_state_from_ip()
+                if detected and state:
+                    # Find the lottery in the combobox values
+                    for g in self.valid_lotteries:
+                        if g.key == detected:
+                            self.root.after(0, lambda: self._on_location_detected(g, state))
+                            return
+                    self.root.after(0, lambda: self._on_location_failed("Detected lottery not in list"))
+                else:
+                    self.root.after(0, lambda: self._on_location_failed("Could not detect location"))
+            except Exception as e:
+                self.root.after(0, lambda: self._on_location_failed(str(e)))
+
+        threading.Thread(target=run_detection, daemon=True).start()
+
+    def _on_location_detected(self, game, state):
+        """Handle successful location detection."""
+        self.current_lottery = game.key
+        self.lottery_var.set(f"{game.name} ({game.key})")
+        self._load_lottery_info()
+        self._clear_predictions()
+        self.status_var.set(f"Detected: {state} → {game.name}")
+        messagebox.showinfo("Location Detected", f"Detected location: {state}\nSelected: {game.name}")
+
+    def _on_location_failed(self, error):
+        """Handle failed location detection."""
+        self.status_var.set("Location detection failed")
+        messagebox.showwarning("Location Detection Failed", f"Could not detect your location:\n{error}\n\nUsing current selection.")
 
     def _clear_predictions(self):
         """Clear prediction display."""

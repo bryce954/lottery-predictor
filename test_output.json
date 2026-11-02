@@ -4,58 +4,58 @@
   "predictions": [
     {
       "main_numbers": [
-        23,
-        36,
+        24,
+        30,
+        32,
         38,
-        39,
-        68
-      ],
-      "bonus_numbers": [
-        21
-      ],
-      "confidence": 0.65,
-      "method": "balanced_statistical",
-      "metadata": {
-        "target_sum": 173.11,
-        "actual_sum": 204,
-        "last_n_draws": 200
-      }
-    },
-    {
-      "main_numbers": [
-        4,
-        23,
-        40,
-        41,
         59
       ],
       "bonus_numbers": [
-        24
+        17
       ],
       "confidence": 0.65,
       "method": "balanced_statistical",
       "metadata": {
         "target_sum": 173.11,
-        "actual_sum": 167,
+        "actual_sum": 183,
         "last_n_draws": 200
       }
     },
     {
       "main_numbers": [
-        12,
-        21,
-        48,
-        56,
-        62
+        14,
+        15,
+        37,
+        40,
+        59
       ],
       "bonus_numbers": [
-        4
+        19
       ],
       "confidence": 0.65,
       "method": "balanced_statistical",
       "metadata": {
         "target_sum": 173.11,
-        "actual_sum": 199,
+        "actual_sum": 165,
+        "last_n_draws": 200
+      }
+    },
+    {
+      "main_numbers": [
+        11,
+        17,
+        18,
+        42,
+        59
+      ],
+      "bonus_numbers": [
+        19
+      ],
+      "confidence": 0.65,
+      "method": "balanced_statistical",
+      "metadata": {
+        "target_sum": 173.11,
+        "actual_sum": 147,
         "last_n_draws": 200
       }
     }

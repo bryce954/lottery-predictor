@@ -641,6 +641,83 @@ def get_lottery(key: str) -> Optional[LotteryGame]:
     return get_universal_manager().get_game(key)
 
 
+# State detection utilities
+# Maps US state abbreviations to lottery keys
+STATE_TO_LOTTERY = {
+    "AL": None, "AK": None, "AZ": "arizona_the_pick", "AR": "arkansas_natural_state",
+    "CA": "california_superlotto", "CO": "colorado_lotto", "CT": "connecticut_lotto",
+    "DE": None, "FL": "florida_lotto", "GA": "georgia_fantasy5", "HI": None,
+    "ID": "idaho_weekly_grand", "IL": "illinois_lotto", "IN": "indiana_hoosier_lotto",
+    "IA": "iowa_lotto", "KS": "kansas_super_kansas_cash", "KY": "kentucky_lotto",
+    "LA": "louisiana_lotto", "ME": None, "MD": "maryland_multi_match", "MA": "massachusetts_megabucks",
+    "MI": "michigan_lotto47", "MN": "minnesota_gopher5", "MS": None, "MO": "missouri_lotto",
+    "MT": "montana_big_sky", "NE": "nebraska_pick5", "NV": None, "NH": None,
+    "NJ": "new_jersey_pick6", "NM": "new_mexico_roadrunner", "NY": "new_york_lotto",
+    "NC": None, "ND": None, "OH": "ohio_classic_lotto", "OK": "oklahoma_lotto",
+    "OR": "oregon_megabucks", "PA": "pennsylvania_match6", "RI": None, "SC": None,
+    "SD": None, "TN": "tennessee_lotto", "TX": "texas_lotto", "UT": None,
+    "VT": None, "VA": "virginia_lotto", "WA": "washington_lotto", "WV": None,
+    "WI": "wisconsin_megabucks", "WY": None,
+    # Multi-state (available everywhere)
+    "MULTI": ["powerball", "mega_millions"],
+}
+
+
+def detect_state_from_ip() -> Optional[str]:
+    """
+    Detect user's US state from IP address using free geolocation API.
+    Returns state abbreviation (e.g., 'CA') or None if detection fails.
+    """
+    try:
+        import requests
+        # Use ipapi.co (free, no API key needed, 1000 requests/day)
+        response = requests.get("https://ipapi.co/json/", timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            country = data.get("country_code", "")
+            region = data.get("region", "")  # State abbreviation
+            if country == "US" and region:
+                return region.upper()
+    except Exception:
+        pass
+    return None
+
+
+def get_lottery_for_state(state_abbr: str) -> List[str]:
+    """
+    Get lottery keys for a given US state abbreviation.
+    Returns list of lottery keys (state lottery + multi-state games).
+    """
+    state = state_abbr.upper()
+    lotteries = []
+
+    # Add state-specific lottery if exists
+    if state in STATE_TO_LOTTERY and STATE_TO_LOTTERY[state]:
+        lotteries.append(STATE_TO_LOTTERY[state])
+
+    # Always add multi-state games
+    lotteries.extend(STATE_TO_LOTTERY.get("MULTI", []))
+
+    return lotteries
+
+
+def auto_select_lottery() -> Optional[str]:
+    """
+    Automatically detect user's state and return the primary lottery key.
+    Returns the state-specific lottery key, or first multi-state game as fallback.
+    """
+    state = detect_state_from_ip()
+    if state:
+        lotteries = get_lottery_for_state(state)
+        if lotteries:
+            # Return state-specific lottery first, then multi-state
+            state_specific = [l for l in lotteries if l not in STATE_TO_LOTTERY.get("MULTI", [])]
+            if state_specific:
+                return state_specific[0]
+            return lotteries[0] if lotteries else "powerball"
+    return "powerball"  # Default fallback
+
+
 if __name__ == "__main__":
     # Demo
     mgr = UniversalLotteryManager()

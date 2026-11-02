@@ -132,6 +132,25 @@ with st.sidebar:
     selected_lottery = game_options[selected_game_label]
     st.session_state.current_lottery = selected_lottery
 
+    # Auto-detect location button
+    if st.button("📍 Detect My Location", use_container_width=True):
+        with st.spinner("Detecting your location..."):
+            try:
+                from lottery_predictor.universal import auto_select_lottery, detect_state_from_ip
+                detected = auto_select_lottery()
+                state = detect_state_from_ip()
+                if detected and state:
+                    # Find the index of the detected lottery
+                    if detected in game_options.values():
+                        detected_label = [k for k, v in game_options.items() if v == detected][0]
+                        st.session_state.current_lottery = detected
+                        st.success(f"Detected: {state} → {detected_label}")
+                        st.rerun()
+                else:
+                    st.warning("Could not detect location. Using current selection.")
+            except Exception as e:
+                st.error(f"Location detection failed: {e}")
+
     game = manager.get_game(selected_lottery)
 
     # Show lottery info
@@ -142,6 +161,10 @@ with st.sidebar:
     - Draws: {', '.join(game.draw_days)}
     - Since: {game.start_date}
     """)
+
+    # Official website link
+    if game.website:
+        st.markdown(f"🔗 [Official Website]({game.website})", unsafe_allow_html=True)
 
     # Prediction settings
     st.subheader("🔮 Prediction Settings")

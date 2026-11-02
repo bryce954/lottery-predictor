@@ -36,38 +36,38 @@ An intelligent lottery number prediction system using historical data analysis, 
 ### US State Lotteries (35+)
 | Lottery | Key | Main Numbers | Bonus Numbers | Draw Days |
 |---------|-----|-------------|---------------|-----------|
-| SuperLotto Plus (CA) | `california_superlotto` | 5 (1-47) | 1 (1-27) | Wed, Sat |
-| New York Lotto | `new_york_lotto` | 6 (1-59) | None | Wed, Sat |
-| Lotto Texas | `texas_lotto` | 6 (1-54) | None | Mon, Wed, Sat |
-| Fantasy 5 (GA) | `georgia_fantasy5` | 5 (1-42) | None | Daily |
-| Illinois Lotto | `illinois_lotto` | 6 (1-52) | None | Mon, Thu, Sat |
-| Match 6 (PA) | `pennsylvania_match6` | 6 (1-49) | None | Mon, Wed, Fri |
-| Classic Lotto (OH) | `ohio_classic_lotto` | 6 (1-49) | None | Mon, Wed, Sat |
-| Lotto 47 (MI) | `michigan_lotto47` | 6 (1-47) | None | Wed, Sat |
-| Pick-6 (NJ) | `new_jersey_pick6` | 6 (1-46) | None | Mon, Thu |
-| Virginia Lotto | `virginia_lotto` | 6 (1-38) | None | Wed, Sat |
-| Mass Megabucks (MA) | `massachusetts_megabucks` | 6 (1-44) | None | Wed, Sat |
-| Lotto (WA) | `washington_lotto` | 6 (1-49) | None | Mon, Wed, Sat |
-| Colorado Lotto+ | `colorado_lotto` | 6 (1-40) | None | Wed, Sat |
 | The Pick (AZ) | `arizona_the_pick` | 6 (1-44) | None | Mon, Wed, Sat |
-| Hoosier Lotto (IN) | `indiana_hoosier_lotto` | 6 (1-46) | None | Wed, Sat |
-| Missouri Lotto | `missouri_lotto` | 6 (1-44) | None | Wed, Sat |
-| Megabucks (WI) | `wisconsin_megabucks` | 6 (1-49) | None | Wed, Sat |
-| Multi-Match (MD) | `maryland_multi_match` | 6 (1-43) | None | Mon, Thu |
-| Lotto! (CT) | `connecticut_lotto` | 6 (1-44) | None | Tue, Fri |
-| Megabucks (OR) | `oregon_megabucks` | 6 (1-48) | None | Mon, Thu |
-| Gopher 5 (MN) | `minnesota_gopher5` | 5 (1-47) | None | Mon, Wed, Fri |
-| Kentucky Lotto | `kentucky_lotto` | 6 (1-43) | None | Wed, Sat |
-| Tennessee Lotto | `tennessee_lotto` | 6 (1-42) | None | Wed, Sat |
-| Louisiana Lotto | `louisiana_lotto` | 6 (1-42) | None | Wed, Sat |
-| Iowa Lotto | `iowa_lotto` | 6 (1-44) | None | Wed, Sat |
-| Lotto (OK) | `oklahoma_lotto` | 6 (1-44) | None | Wed, Sat |
-| Super Kansas Cash | `kansas_super_kansas_cash` | 5 (1-32) | 1 (1-25) | Mon, Wed, Sat |
 | Natural State Jackpot (AR) | `arkansas_natural_state` | 5 (1-39) | None | Mon, Wed, Fri |
-| Roadrunner Cash (NM) | `new_mexico_roadrunner` | 5 (1-37) | None | Daily |
-| Pick 5 (NE) | `nebraska_pick5` | 5 (1-38) | None | Daily |
+| SuperLotto Plus (CA) | `california_superlotto` | 5 (1-47) | 1 (1-27) | Wed, Sat |
+| Colorado Lotto+ | `colorado_lotto` | 6 (1-40) | None | Wed, Sat |
+| Lotto! (CT) | `connecticut_lotto` | 6 (1-44) | None | Tue, Fri |
+| Fantasy 5 (GA) | `georgia_fantasy5` | 5 (1-42) | None | Daily |
 | Weekly Grand (ID) | `idaho_weekly_grand` | 5 (1-40) | None | Mon, Thu |
+| Illinois Lotto | `illinois_lotto` | 6 (1-52) | None | Mon, Thu, Sat |
+| Hoosier Lotto (IN) | `indiana_hoosier_lotto` | 6 (1-46) | None | Wed, Sat |
+| Iowa Lotto | `iowa_lotto` | 6 (1-44) | None | Wed, Sat |
+| Super Kansas Cash | `kansas_super_kansas_cash` | 5 (1-32) | 1 (1-25) | Mon, Wed, Sat |
+| Kentucky Lotto | `kentucky_lotto` | 6 (1-43) | None | Wed, Sat |
+| Louisiana Lotto | `louisiana_lotto` | 6 (1-42) | None | Wed, Sat |
+| Mass Megabucks (MA) | `massachusetts_megabucks` | 6 (1-44) | None | Wed, Sat |
+| Multi-Match (MD) | `maryland_multi_match` | 6 (1-43) | None | Mon, Thu |
+| Megabucks (MI) | `michigan_lotto47` | 6 (1-47) | None | Wed, Sat |
+| Gopher 5 (MN) | `minnesota_gopher5` | 5 (1-47) | None | Mon, Wed, Fri |
+| Missouri Lotto | `missouri_lotto` | 6 (1-44) | None | Wed, Sat |
 | Big Sky Bonus (MT) | `montana_big_sky` | 5 (1-28) | 1 (1-17) | Mon, Wed, Sat |
+| Pick 5 (NE) | `nebraska_pick5` | 5 (1-38) | None | Daily |
+| Roadrunner Cash (NM) | `new_mexico_roadrunner` | 5 (1-37) | None | Daily |
+| Pick-6 (NJ) | `new_jersey_pick6` | 6 (1-46) | None | Mon, Thu |
+| New York Lotto | `new_york_lotto` | 6 (1-59) | None | Wed, Sat |
+| Classic Lotto (OH) | `ohio_classic_lotto` | 6 (1-49) | None | Mon, Wed, Sat |
+| Lotto (OK) | `oklahoma_lotto` | 6 (1-44) | None | Wed, Sat |
+| Megabucks (OR) | `oregon_megabucks` | 6 (1-48) | None | Mon, Thu |
+| Match 6 (PA) | `pennsylvania_match6` | 6 (1-49) | None | Mon, Wed, Fri |
+| Tennessee Lotto | `tennessee_lotto` | 6 (1-42) | None | Wed, Sat |
+| Lotto Texas | `texas_lotto` | 6 (1-54) | None | Mon, Wed, Sat |
+| Virginia Lotto | `virginia_lotto` | 6 (1-38) | None | Wed, Sat |
+| Lotto (WA) | `washington_lotto` | 6 (1-49) | None | Mon, Wed, Sat |
+| Megabucks (WI) | `wisconsin_megabucks` | 6 (1-49) | None | Wed, Sat |
 
 *States without lotteries: AL, AK, HI, MS, NV, UT (listed in system for completeness)*
 
@@ -144,7 +144,69 @@ python tkinter_app.py
 python main.py update-data --lottery powerball
 python main.py validate-data --lottery powerball
 python main.py generate-workflow
+
+# v1.3 Enhanced ML commands
+python main.py optimize --lottery powerball
+python main.py explain --lottery powerball
+python main.py train-transformer --lottery powerball
+python main.py online-update --lottery powerball
+
+# v1.5 Advanced Features commands
+python main.py portfolio --lottery powerball --budget 20
+python main.py syndicate --name "My Group" --members "Alice:alice@email.com:0.5,Bob:bob@email.com:0.5"
+python main.py notify --lottery powerball --email user@example.com
+python main.py language --lang es
+
+# v2.0 Cloud & Scale commands
+python main.py serve --host 0.0.0.0 --port 8000
+python main.py generate-deployment --type all
+python main.py init-db
+
+# NEW: Location auto-detection
+python main.py predict --detect-state
+python main.py predict --lottery auto
+python main.py analyze --detect-state
+
+# NEW: Full history analysis
+python main.py predict --all-history
+python main.py analyze --all-history
+python main.py viz --all-history
+
+# Launch web GUI
+streamlit run streamlit_app.py
+
+# Launch desktop GUI (requires tkinter: sudo apt-get install python3-tk on Ubuntu/Debian)
+python tkinter_app.py
 ```
+
+## 📋 Version / Interface Comparison Table
+
+| Feature | CLI (`main.py`) | Streamlit Web GUI | Tkinter Desktop GUI | FastAPI REST API | Docker/K8s |
+|---------|----------------|-------------------|---------------------|------------------|------------|
+| **Installation** | `pip install -e .` | Same + `streamlit` | Same + `python3-tk` | Same + `fastapi`, `uvicorn` | Docker engine |
+| **Run Command** | `python main.py predict` | `streamlit run streamlit_app.py` | `python tkinter_app.py` | `python main.py serve` | `docker compose up` |
+| **Access** | Terminal | Browser (localhost:8501) | Native window | Browser (localhost:8000/docs) | Any container runtime |
+| **Mobile Friendly** | ✅ SSH/Termux | ✅ Responsive web | ❌ Desktop only | ✅ REST clients | ✅ Cloud deploy |
+| **Predictions** | ✅ All methods | ✅ All methods | ✅ All methods | ✅ All methods | ✅ All methods |
+| **Analysis/Charts** | ✅ Static (matplotlib) | ✅ Interactive (Plotly) | ✅ Static (matplotlib) | ✅ JSON data | ✅ All |
+| **Training Models** | ✅ Yes | ✅ Yes | ✅ Yes (threaded) | ✅ Yes | ✅ Yes |
+| **Backtesting** | ✅ `backtest.py` | ✅ Tab | ✅ Tab | ❌ Not yet | ❌ Not yet |
+| **Data Export** | ✅ CSV/JSON/Excel | ✅ CSV/JSON/Excel | ✅ CSV/JSON/Excel | ✅ JSON | ✅ All |
+| **Data Updates (v1.4)** | ✅ Commands | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ Cron/GitHub Actions |
+| **Portfolio/Syndicate (v1.5)** | ✅ Commands | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Notifications (v1.5)** | ✅ Commands | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Multi-language (v1.5)** | ✅ Commands | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ All |
+| **User Accounts (v2.0)** | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ Database | ✅ PostgreSQL |
+| **A/B Testing (v2.0)** | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ Database | ✅ All |
+| **Scheduled Updates** | ✅ `run-scheduler` | ❌ Not yet | ❌ Not yet | ✅ Background tasks | ✅ Cron/K8s CronJob |
+| **Location Detection** | ✅ `--detect-state` | ✅ Button in sidebar | ✅ Button in settings | ❌ Not yet | ❌ Not yet |
+| **Production Ready** | Development | Development | Development | ✅ With auth/DB | ✅ Production grade |
+
+**Quick Recommendation:**
+- **Developers/Automation** → CLI or REST API
+- **Interactive Exploration** → Streamlit Web GUI (also works on mobile browser)
+- **Desktop Users** → Tkinter Desktop GUI
+- **Production/Team/Cloud** → Docker/Kubernetes with FastAPI
 
 ## Commands
 
@@ -155,12 +217,15 @@ python main.py predict [OPTIONS]
 Options:
   -l, --lottery TEXT     Lottery type (default: powerball)
                          Use 'info' command to see all 48+ options
+                         Use 'auto' or --detect-state for location-based detection
   -m, --method TEXT      Method: statistical, frequency, cold, pairs, ml, time_series, ensemble (default: ensemble)
   -c, --count INTEGER    Number of predictions (default: 5)
-  -n, --last-n INTEGER   Historical draws to analyze (default: 200)
+  -n, --last-n INTEGER   Historical draws to analyze (default: 200, ignored if --all-history)
   -t, --train            Retrain ML models before predicting
   -v, --visualize        Generate visualization charts
   -o, --output FILE      Save predictions to JSON file
+      --all-history      Use all historical data from lottery start date
+      --detect-state     Auto-detect lottery from your location (IP geolocation)
 ```
 
 ### `analyze` - Historical Analysis
@@ -169,8 +234,11 @@ python main.py analyze [OPTIONS]
 
 Options:
   -l, --lottery TEXT     Lottery type (default: powerball)
-  -n, --last-n INTEGER   Draws to analyze (default: 200)
+                         Use 'auto' or --detect-state for location-based detection
+  -n, --last-n INTEGER   Draws to analyze (default: 200, ignored if --all-history)
   --visualize/--no-visualize  Generate charts (default: True)
+      --all-history      Use all historical data from lottery start date
+      --detect-state     Auto-detect lottery from your location (IP geolocation)
 ```
 
 ### `train` - Train ML Models
@@ -207,8 +275,9 @@ python main.py viz [OPTIONS]
 
 Options:
   -l, --lottery TEXT         Lottery type (default: powerball)
-  -n, --last-n INTEGER       Draws to visualize (default: 200)
+  -n, --last-n INTEGER       Draws to visualize (default: 200, ignored if --all-history)
   -p, --predictions FILE     JSON file with predictions to visualize
+      --all-history          Use all historical data from lottery start date
 ```
 
 ### `backtest` - Backtesting Framework
@@ -251,6 +320,8 @@ Options:
 ```bash
 python main.py generate-workflow
 ```
+
+**Note:** This generates `.github/workflows/update_lottery_data.yml` locally. You must manually copy it to your GitHub repository (Settings → Actions → General → Allow all actions) due to GitHub OAuth scope limitations.
 
 ### `run-scheduler` - Run Scheduled Updater (v1.4)
 ```bash
@@ -421,14 +492,52 @@ For production use, you can implement real API fetching in `data.py` by adding o
 
 ## Requirements
 
+### Core (Required)
 - Python 3.9+
 - pandas, numpy
 - scikit-learn
 - xgboost
 - matplotlib, seaborn
 - rich, typer
-- streamlit, plotly (for web GUI)
-- tensorflow (optional, for deep learning)
+
+### Web GUI (Streamlit)
+- streamlit>=1.28.0
+- plotly>=5.17.0
+
+### Desktop GUI (Tkinter)
+- tkinter (system package: `sudo apt-get install python3-tk` on Ubuntu/Debian)
+
+### Data Export
+- openpyxl>=3.1.0
+
+### v1.3 Enhanced ML (Optional)
+- optuna>=3.4.0 (hyperparameter optimization)
+- shap>=0.42.0 (model explainability)
+- torch>=2.0.0 (Transformer models)
+
+### v1.4 Data Integration
+- aiohttp>=3.9.0 (async API clients)
+- beautifulsoup4>=4.12.0 (web scraping)
+- lxml>=4.9.0 (HTML parsing)
+- schedule>=1.2.0 (scheduled tasks)
+- brotli>=1.1.0 (compression)
+
+### v1.5 Advanced Features
+- (uses core + optional v1.3 deps)
+
+### v2.0 Cloud & Scale
+- fastapi>=0.104.0
+- uvicorn>=0.24.0
+- sqlalchemy>=2.0.0 (database)
+- redis>=5.0.0 (caching)
+
+### Development
+- pytest>=7.4.0
+
+### Install All at Once
+```bash
+pip install -r requirements.txt
+```
 
 ## Running the Test Suite
 
@@ -470,13 +579,15 @@ If you or someone you know has a gambling problem, please contact:
   - Lottery selection dropdown
   - Method comparison UI
   - History browser
+  - **Works on mobile browsers** (responsive design)
 - [x] **Desktop GUI** (Tkinter) - Native desktop application (`tkinter_app.py`)
   - Lottery selection with all 42+ games
   - Predict, Analyze, History, Compare, Visualize tabs
   - Threaded predictions & training (non-blocking UI)
-  - Export to CSV/Excel/JSON
+  - Export to CSV/JSON/Excel
   - *Requires tkinter: `sudo apt-get install python3-tk` on Ubuntu/Debian*
-- [ ] **Mobile-friendly** responsive design
+- [ ] **Mobile APK** - Not available (Python project, not native mobile)
+  - **Use Streamlit Web GUI on mobile browser** at `http://your-ip:8501`
 
 ### v1.3 - Enhanced AI/ML
 - [x] Time-series forecasting (ARIMA, Prophet, ETS)
@@ -506,6 +617,18 @@ If you or someone you know has a gambling problem, please contact:
 - [x] Database backend (PostgreSQL/SQLite)
 - [x] User accounts & prediction history
 - [x] A/B testing for model versions
+
+### v1.6 - UX Enhancements ✅
+- [x] **Location Auto-Detection** - IP geolocation to auto-select state lottery
+  - CLI: `--detect-state` / `--auto` / `--lottery auto`
+  - Streamlit: "📍 Detect My Location" button in sidebar
+  - Tkinter: "📍 Detect My Location" button in settings panel
+  - Maps 50 US states to their specific lottery games + multi-state games
+- [x] **Full History Analysis** - Analyze all draws from lottery start date
+  - CLI: `--all-history` / `--from-start` flag for predict, analyze, viz commands
+  - Uses all available historical data (e.g., 5400+ draws for Powerball since 1992)
+  - Shows date range of analyzed data
+- [x] **Alphabetical State Sorting** - US state lotteries sorted A-Z in docs
 
 ---
 

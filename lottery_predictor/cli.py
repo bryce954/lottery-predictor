@@ -104,21 +104,46 @@ def print_disclaimer():
 
 @app.command()
 def predict(
-    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type: florida_lotto or powerball"),
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type (use 'auto' for location detection)"),
     method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method: statistical, frequency, cold, pairs, ml, time_series, transformer, online_learning, ensemble"),
     count: int = typer.Option(5, "--count", "-c", help="Number of predictions to generate"),
-    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of historical draws to analyze"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of historical draws to analyze (ignored if --all-history is used)"),
+    all_history: bool = typer.Option(False, "--all-history", "--from-start", help="Use all historical data from lottery start date"),
+    detect_state: bool = typer.Option(False, "--detect-state", "--auto", help="Auto-detect lottery from your location (IP geolocation)"),
     train: bool = typer.Option(False, "--train", "-t", help="Retrain ML models before predicting"),
     visualize: bool = typer.Option(False, "--visualize", "-v", help="Generate visualization charts"),
     output: Optional[str] = typer.Option(None, "--output", "-o", help="Save predictions to JSON file"),
 ):
     """Generate lottery number predictions using AI and statistical analysis."""
 
+    # Auto-detect state if requested
+    if detect_state or lottery == "auto":
+        from .universal import auto_select_lottery, detect_state_from_ip
+        console.print("[cyan]Detecting your location...[/cyan]")
+        detected = auto_select_lottery()
+        if detected:
+            lottery = detected
+            state = detect_state_from_ip()
+            if state:
+                console.print(f"[green]Detected location: {state} → Using {LOTTERY_CONFIGS[lottery]['name']}[/green]")
+            else:
+                console.print(f"[yellow]Location detection unavailable, using default: {LOTTERY_CONFIGS[lottery]['name']}[/yellow]")
+        else:
+            console.print("[yellow]Location detection failed, using default: Powerball[/yellow]")
+            lottery = "powerball"
+
     if lottery not in LOTTERY_TYPES:
         console.print(f"[red]Error: Unknown lottery type '{lottery}'. Choose from: {', '.join(LOTTERY_TYPES)}[/red]")
         raise typer.Exit(1)
 
+    # Use all history if requested
+    effective_last_n = None if all_history else last_n
+
     print_header(f"🎲 {LOTTERY_CONFIGS[lottery]['name']} Predictor")
+    if all_history:
+        dm = get_data_manager(lottery)
+        df = dm.load_data()
+        console.print(f"[cyan]Using all {len(df)} historical draws from {df['date'].min().strftime('%Y-%m-%d')}[/cyan]")
     print_disclaimer()
 
     with Progress(
@@ -146,16 +171,16 @@ def predict(
 
         if method == "statistical":
             pred = StatisticalPredictor(lottery)
-            predictions = pred.predict_balanced(last_n=last_n, num_predictions=count)
+            predictions = pred.predict_balanced(last_n=effective_last_n, num_predictions=count)
         elif method == "frequency":
             pred = StatisticalPredictor(lottery)
-            predictions = pred.predict_frequency_based(last_n=last_n, num_predictions=count)
+            predictions = pred.predict_frequency_based(last_n=effective_last_n, num_predictions=count)
         elif method == "cold":
             pred = StatisticalPredictor(lottery)
-            predictions = pred.predict_cold_numbers(last_n=last_n, num_predictions=count)
+            predictions = pred.predict_cold_numbers(last_n=effective_last_n, num_predictions=count)
         elif method == "pairs":
             pred = StatisticalPredictor(lottery)
-            predictions = pred.predict_pair_based(last_n=last_n, num_predictions=count)
+            predictions = pred.predict_pair_based(last_n=effective_last_n, num_predictions=count)
         elif method == "ml":
             pred = MLModelPredictor(lottery)
             if not pred.is_trained:
@@ -163,7 +188,7 @@ def predict(
             predictions = pred.predict(num_predictions=count)
         elif method == "time_series":
             pred = TimeSeriesPredictor(lottery)
-            predictions = pred.predict(num_predictions=count, last_n=last_n)
+            predictions = pred.predict(num_predictions=count, last_n=effective_last_n)
         elif method == "transformer":
             pred = TransformerPredictor(lottery)
             if pred.model is None:
@@ -186,7 +211,7 @@ def predict(
     if visualize:
         console.print("\n[cyan]Generating visualizations...[/cyan]")
         viz = LotteryVisualizer(lottery)
-        viz.generate_all_visualizations(last_n)
+        viz.generate_all_visualizations(effective_last_n or 200)
         visualize_predictions(predictions, lottery)
         console.print(f"[green]Visualizations saved to visualizations/[/green]")
 
@@ -213,29 +238,53 @@ def predict(
 
 @app.command()
 def analyze(
-    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
-    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of draws to analyze"),
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type (use 'auto' for location detection)"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of draws to analyze (ignored if --all-history is used)"),
+    all_history: bool = typer.Option(False, "--all-history", "--from-start", help="Use all historical data from lottery start date"),
+    detect_state: bool = typer.Option(False, "--detect-state", "--auto", help="Auto-detect lottery from your location (IP geolocation)"),
     visualize: bool = typer.Option(True, "--visualize/--no-visualize", help="Generate charts"),
 ):
     """Analyze historical lottery data and show statistics."""
+
+    # Auto-detect state if requested
+    if detect_state or lottery == "auto":
+        from .universal import auto_select_lottery, detect_state_from_ip
+        console.print("[cyan]Detecting your location...[/cyan]")
+        detected = auto_select_lottery()
+        if detected:
+            lottery = detected
+            state = detect_state_from_ip()
+            if state:
+                console.print(f"[green]Detected location: {state} → Using {LOTTERY_CONFIGS[lottery]['name']}[/green]")
+            else:
+                console.print(f"[yellow]Location detection unavailable, using default: {LOTTERY_CONFIGS[lottery]['name']}[/yellow]")
+        else:
+            console.print("[yellow]Location detection failed, using default: Powerball[/yellow]")
+            lottery = "powerball"
 
     if lottery not in LOTTERY_TYPES:
         console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
         raise typer.Exit(1)
 
+    effective_last_n = None if all_history else last_n
+
     print_header(f"📊 {LOTTERY_CONFIGS[lottery]['name']} Analysis")
 
     dm = get_data_manager(lottery)
     df = dm.load_data()
-    df = df.tail(last_n)
+    if effective_last_n:
+        df = df.tail(effective_last_n)
+
+    if all_history:
+        console.print(f"[cyan]Using all {len(df)} historical draws from {df['date'].min().strftime('%Y-%m-%d')}[/cyan]")
 
     # Basic stats
     console.print(f"\n[bold]Total Draws Analyzed:[/bold] {len(df)}")
     console.print(f"[bold]Date Range:[/bold] {df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}")
 
     # Frequency table
-    freq = dm.get_number_frequency(last_n)
-    hot, cold = dm.get_hot_cold_numbers(last_n)
+    freq = dm.get_number_frequency(effective_last_n)
+    hot, cold = dm.get_hot_cold_numbers(effective_last_n)
 
     table = Table(title="🔥 Hot & Cold Numbers", show_header=True)
     table.add_column("Rank", width=6)
@@ -436,7 +485,8 @@ def compare(
 @app.command()
 def viz(
     lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
-    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of draws to visualize"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of draws to visualize (ignored if --all-history is used)"),
+    all_history: bool = typer.Option(False, "--all-history", "--from-start", help="Use all historical data from lottery start date"),
     predictions_file: Optional[str] = typer.Option(None, "--predictions", "-p", help="JSON file with predictions to visualize"),
 ):
     """Generate visualization charts."""
@@ -445,10 +495,16 @@ def viz(
         console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
         raise typer.Exit(1)
 
+    effective_last_n = None if all_history else last_n
+
     print_header(f"📈 Generating Visualizations for {LOTTERY_CONFIGS[lottery]['name']}")
+    if all_history:
+        dm = get_data_manager(lottery)
+        df = dm.load_data()
+        console.print(f"[cyan]Using all {len(df)} historical draws from {df['date'].min().strftime('%Y-%m-%d')}[/cyan]")
 
     viz = LotteryVisualizer(lottery)
-    files = viz.generate_all_visualizations(last_n)
+    files = viz.generate_all_visualizations(effective_last_n or 200)
 
     if predictions_file and Path(predictions_file).exists():
         with open(predictions_file) as f:
@@ -806,6 +862,10 @@ def info():
     """Show information about supported lotteries."""
     print_header("🎲 Supported Lotteries")
 
+    # Use universal manager to get website info
+    from .universal import get_universal_manager
+    manager = get_universal_manager()
+
     for key, config in LOTTERY_CONFIGS.items():
         table = Table(title=config['name'], show_header=False)
         table.add_column("Property", style="cyan")
@@ -816,6 +876,11 @@ def info():
             table.add_row("Bonus Numbers", f"{config['bonus_numbers']} (1-{config['bonus_max']})")
         table.add_row("Draw Days", ", ".join(config['draw_days']))
         table.add_row("First Draw", config['start_date'])
+
+        # Add official website link
+        game = manager.get_game(key)
+        if game and game.website:
+            table.add_row("Website", game.website)
 
         console.print(table)
         console.print()
