@@ -29,13 +29,21 @@ from .models import (
     PredictionResult,
     get_predictor
 )
+from .validation import (
+    PatternAnalyzer,
+    OddsCalculator,
+    ResultsVerifier,
+    SignificanceTester
+)
 from sklearn.preprocessing import StandardScaler
 from .visualize import LotteryVisualizer, visualize_predictions
 from .universal import get_universal_manager, list_lotteries
 from .data_integration import (
     DataIntegrator, DataValidator, ScheduledUpdater,
     update_lottery_data, update_all_lotteries,
-    save_github_workflow, run_scheduled_updater
+    save_github_workflow, run_scheduled_updater,
+    RealAPIClient, HistoricalResultsArchive, DrawCalendar,
+    fetch_real_api_data, browse_historical_results, get_draw_calendar
 )
 from .advanced import (
     PortfolioOptimizer, SyndicateManager, Syndicate, SyndicateMember,
@@ -1408,6 +1416,629 @@ def init_db(
         console.print(f"[red]Error: {e}[/red]")
         console.print("Install with: pip install sqlalchemy")
         raise typer.Exit(1)
+
+
+if __name__ == "__main__":
+    app()
+
+
+# v1.7 Validation & Analytics Commands
+
+@app.command()
+def pattern(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Number of draws to analyze"),
+    all_history: bool = typer.Option(False, "--all-history", "--from-start", help="Use all historical data"),
+):
+    """Analyze number patterns (consecutive, odd/even, high/low, decades) (v1.7)."""
+    print_header(f"📊 Pattern Analysis - {LOTTERY_CONFIGS[lottery]['name']} (v1.7)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    effective_last_n = None if all_history else last_n
+    if all_history:
+        dm = get_data_manager(lottery)
+        df = dm.load_data()
+        console.print(f"[cyan]Using all {len(df)} historical draws from {df['date'].min().strftime('%Y-%m-%d')}[/cyan]")
+
+    analyzer = PatternAnalyzer(lottery)
+
+    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+        task = progress.add_task("Analyzing patterns...", total=None)
+
+        # Consecutive analysis
+        progress.update(task, description="Analyzing consecutive numbers...")
+        cons = analyzer.analyze_consecutive_numbers(effective_last_n)
+
+        # Odd/Even analysis
+        progress.update(task, description="Analyzing odd/even distribution...")
+        odd_even = analyzer.analyze_odd_even(effective_last_n)
+
+        # High/Low analysis
+        progress.update(task, description="Analyzing high/low distribution...")
+        high_low = analyzer.analyze_high_low(effective_last_n)
+
+        # Decade analysis
+        progress.update(task, description="Analyzing decade distribution...")
+        decades = analyzer.analyze_decades(effective_last_n)
+
+        # Sum distribution
+        progress.update(task, description="Analyzing sum distribution...")
+        sums = analyzer.analyze_sum_distribution(effective_last_n)
+
+        progress.update(task, description="Done!", completed=True)
+
+    # Display results
+    console.print("\n[bold]📈 Consecutive Numbers Analysis:[/bold]")
+    console.print(f"  Total draws: {cons['total_draws']}")
+    console.print(f"  Observed avg consecutive: {cons['observed_avg_consecutive']}")
+    console.print(f"  Expected avg consecutive: {cons['expected_consecutive_pairs']}")
+    for k, v in cons['consecutive_percentages'].items():
+        console.print(f"  {k} consecutive: {v:.1f}%")
+
+    console.print("\n[bold]🔢 Odd/Even Distribution:[/bold]")
+    console.print(f"  Chi-square p-value: {odd_even['chi2_statistic']['p_value']}")
+    table = Table(show_header=True)
+    table.add_column("Pattern", style="cyan")
+    table.add_column("Observed %", style="green")
+    table.add_column("Expected", style="yellow")
+    for pattern, pct in odd_even['observed_percentages'].items():
+        exp = odd_even['expected_counts'].get(pattern, 0)
+        table.add_row(pattern, f"{pct:.1f}%", str(exp))
+    console.print(table)
+
+    console.print("\n[bold]⬆️⬇️ High/Low Distribution:[/bold]")
+    console.print(f"  Mid-point: {high_low['mid_point']}")
+    console.print(f"  Chi-square p-value: {high_low['chi2_statistic']['p_value']}")
+    table = Table(show_header=True)
+    table.add_column("Pattern", style="cyan")
+    table.add_column("Observed %", style="green")
+    table.add_column("Expected", style="yellow")
+    for pattern, pct in high_low['observed_percentages'].items():
+        exp = high_low['expected_counts'].get(pattern, 0)
+        table.add_row(pattern, f"{pct:.1f}%", str(exp))
+    console.print(table)
+
+    console.print("\n[bold]📊 Decade Distribution:[/bold]")
+    console.print(f"  Expected per draw: {decades['expected_per_draw']}")
+    table = Table(show_header=True)
+    table.add_column("Decade", style="cyan")
+    table.add_column("Avg/Draw", style="green")
+    table.add_column("Deviation", style="yellow")
+    for decade, avg in decades['avg_per_draw'].items():
+        dev = decades['deviation_from_expected'][decade]
+        table.add_row(decade, f"{avg:.2f}", f"{dev:+.2f}")
+    console.print(table)
+
+    console.print("\n[bold]➕ Sum Distribution:[/bold]")
+    for k, v in sums.items():
+        console.print(f"  {k}: {v}")
+
+
+@app.command()
+def odds(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    jackpot: float = typer.Option(0, "--jackpot", "-j", help="Current jackpot amount"),
+    ticket_cost: float = typer.Option(2.0, "--cost", help="Ticket cost"),
+):
+    """Calculate exact odds, prize tiers, and expected value (v1.7)."""
+    print_header(f"🎯 Odds Calculator - {LOTTERY_CONFIGS[lottery]['name']} (v1.7)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    calc = OddsCalculator(lottery)
+    result = calc.full_odds_analysis(current_jackpot=jackpot, ticket_cost=ticket_cost)
+
+    console.print(f"\n[bold]Jackpot Odds:[/bold] {result.jackpot_odds_str}")
+    console.print(f"[bold]Expected Value (net):[/bold] ${result.expected_value:.4f}")
+    console.print(f"[bold]Break-even Jackpot:[/bold] ${result.break_even_jackpot:,.0f}")
+
+    console.print("\n[bold]Prize Tiers:[/bold]")
+    table = Table(show_header=True)
+    table.add_column("Tier", style="cyan")
+    table.add_column("Match", style="green")
+    table.add_column("Odds", style="yellow")
+    table.add_column("Probability", style="blue")
+
+    for tier in result.prize_tiers:
+        table.add_row(
+            tier['tier'],
+            f"{tier['main_match']} main + {tier['bonus_match']} bonus",
+            tier['odds_str'],
+            f"{tier['probability']:.2e}"
+        )
+    console.print(table)
+
+
+@app.command()
+def verify(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    method: str = typer.Option("ensemble", "--method", "-m", help="Method to verify"),
+    num_predictions: int = typer.Option(5, "--count", "-c", help="Predictions per trial"),
+    train_window: int = typer.Option(200, "--train-window", help="Training window"),
+    test_window: int = typer.Option(50, "--test-window", help="Test window"),
+    step: int = typer.Option(10, "--step", help="Walk-forward step"),
+):
+    """Backtest a prediction method against historical data (v1.7)."""
+    print_header(f"✅ Backtest Verification - {LOTTERY_CONFIGS[lottery]['name']} (v1.7)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    verifier = ResultsVerifier(lottery)
+
+    with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+        task = progress.add_task(f"Running walk-forward backtest for {method}...", total=None)
+        result = verifier.backtest_method(
+            method=method,
+            num_predictions=num_predictions,
+            train_window=train_window,
+            test_window=test_window,
+            step=step
+        )
+        progress.update(task, description="Done!", completed=True)
+
+    console.print(f"\n[bold]Method:[/bold] {result.method}")
+    console.print(f"[bold]Total Predictions:[/bold] {result.total_predictions}")
+    console.print(f"[bold]Draws Verified:[/bold] {result.total_draws_verified}")
+    console.print(f"[bold]Hit Rate:[/bold] {result.hit_rate:.2f}%")
+    console.print(f"[bold]ROI (estimate):[/bold] {result.roi:.2f}%")
+
+    console.print("\n[bold]Matches by Tier:[/bold]")
+    table = Table(show_header=True)
+    table.add_column("Match", style="cyan")
+    table.add_column("Count", style="green")
+    table.add_column("Accuracy %", style="yellow")
+    for match, count in result.matches_by_tier.items():
+        acc = result.accuracy_by_tier.get(f"match_{match}", 0)
+        table.add_row(f"{match}", str(count), f"{acc:.2f}%")
+    console.print(table)
+
+
+@app.command()
+def compare(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    method_a: str = typer.Option("ensemble", "--method-a", help="First method"),
+    method_b: str = typer.Option("statistical", "--method-b", help="Second method (or 'random')"),
+    trials: int = typer.Option(100, "--trials", "-t", help="Number of trials"),
+):
+    """Compare two methods statistically (v1.7)."""
+    print_header(f"📊 Method Comparison - {LOTTERY_CONFIGS[lottery]['name']} (v1.7)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    tester = SignificanceTester(lottery)
+
+    if method_b.lower() == "random":
+        console.print(f"[cyan]Comparing {method_a} vs random selection...[/cyan]")
+        result = tester.compare_vs_random(method_a, num_trials=trials)
+    else:
+        console.print(f"[cyan]Comparing {method_a} vs {method_b}...[/cyan]")
+        result = tester.compare_methods(method_a, method_b, num_trials=trials)
+
+    console.print(f"\n[bold]Test:[/bold] {result.test_type}")
+    console.print(f"[bold]Method A:[/bold] {result.method_a}")
+    console.print(f"[bold]Method B:[/bold] {result.method_b}")
+    console.print(f"[bold]p-value:[/bold] {result.p_value}")
+    console.print(f"[bold]Significant (p<0.05):[/bold] {'✓ Yes' if result.significant else '✗ No'}")
+    console.print(f"[bold]Effect Size (Cohen's d):[/bold] {result.effect_size}")
+    console.print(f"[bold]95% CI:[/bold] [{result.confidence_interval[0]}, {result.confidence_interval[1]}]")
+
+    if result.significant:
+        if result.method_b == "random":
+            console.print(f"\n[green]✓ {method_a} significantly outperforms random selection![/green]")
+        elif result.effect_size > 0:
+            console.print(f"\n[green]✓ {method_a} significantly outperforms {method_b}[/green]")
+        else:
+            console.print(f"\n[yellow]⚠ {method_b} significantly outperforms {method_a}[/yellow]")
+    else:
+        console.print(f"\n[yellow]No significant difference between methods[/yellow]")
+
+
+@app.command()
+def full_validation(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    last_n: int = typer.Option(200, "--last-n", "-n", help="Draws to analyze"),
+):
+    """Run complete validation suite: patterns, odds, and significance (v1.7)."""
+    print_header(f"🔬 Full Validation Suite - {LOTTERY_CONFIGS[lottery]['name']} (v1.7)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    # Pattern analysis
+    console.print("\n[bold cyan]=== Pattern Analysis ===[/bold cyan]")
+    analyzer = PatternAnalyzer(lottery)
+    patterns = analyzer.full_analysis(last_n)
+    console.print(f"Total draws: {patterns.total_draws}")
+    console.print(f"Avg consecutive: {patterns.consecutive_analysis['observed_avg_consecutive']} (expected: {patterns.consecutive_analysis['expected_consecutive_pairs']})")
+    console.print(f"Sum mean: {patterns.sum_distribution['mean']}, std: {patterns.sum_distribution['std']}")
+
+    # Odds calculation
+    console.print("\n[bold cyan]=== Odds Analysis ===[/bold cyan]")
+    calc = OddsCalculator(lottery)
+    odds = calc.full_odds_analysis()
+    console.print(f"Jackpot odds: {odds.jackpot_odds_str}")
+    console.print(f"Expected value (net): ${odds.expected_value:.4f}")
+    console.print(f"Break-even jackpot: ${odds.break_even_jackpot:,.0f}")
+
+    # Method significance vs random
+    console.print("\n[bold cyan]=== Method Significance vs Random ===[/bold cyan]")
+    tester = SignificanceTester(lottery)
+    for method in ["statistical", "frequency", "cold", "pairs", "ml", "ensemble"]:
+        try:
+            result = tester.compare_vs_random(method, num_trials=50)
+            status = "✓ SIGNIFICANT" if result.significant else "✗ not significant"
+            console.print(f"  {method:20s} p={result.p_value:.4f} d={result.effect_size:+.3f} {status}")
+        except Exception as e:
+            console.print(f"  {method:20s} Error: {e}")
+
+    console.print("\n[green]✓ Full validation complete[/green]")
+
+
+@app.command()
+def quick_pick(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    count: int = typer.Option(5, "--count", "-c", help="Number of quick picks to generate"),
+    use_entropy: bool = typer.Option(False, "--entropy", "-e", help="Use hardware entropy (os.urandom)"),
+    export: Optional[str] = typer.Option(None, "--export", help="Export to file (csv, json, txt)"),
+):
+    """Generate true random quick picks for manual lottery entry (v1.8)."""
+    print_header(f"🎲 Quick Pick Generator - {LOTTERY_CONFIGS[lottery]['name']} (v1.8)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    config = LOTTERY_CONFIGS[lottery]
+    main_max = config['main_max']
+    main_n = config['main_numbers']
+    bonus_max = config['bonus_max']
+    bonus_n = config['bonus_numbers']
+
+    import secrets
+    import os
+
+    # Choose random source
+    if use_entropy:
+        # Use os.urandom for hardware entropy
+        rng = secrets.SystemRandom()
+        entropy_source = "Hardware entropy (os.urandom)"
+    else:
+        # Use secrets module (cryptographically secure)
+        rng = secrets.SystemRandom()
+        entropy_source = "CSPRNG (secrets module)"
+
+    console.print(f"[cyan]Entropy source: {entropy_source}[/cyan]")
+
+    quick_picks = []
+    for i in range(count):
+        main_numbers = sorted(rng.sample(range(1, main_max + 1), main_n))
+        if bonus_n > 0:
+            bonus_numbers = sorted(rng.sample(range(1, bonus_max + 1), bonus_n))
+        else:
+            bonus_numbers = []
+
+        quick_picks.append({
+            "set": i + 1,
+            "main": main_numbers,
+            "bonus": bonus_numbers
+        })
+
+    # Display results
+    table = Table(title=f"🎲 Quick Picks for {config['name']}", show_header=True, header_style="bold magenta")
+    table.add_column("Set #", style="dim", width=6)
+    table.add_column("Main Numbers", style="green", width=35)
+    table.add_column("Bonus Numbers", style="yellow", width=20)
+
+    for pick in quick_picks:
+        main_str = "  ".join(f"[bold]{n:2d}[/bold]" for n in pick["main"])
+        bonus_str = "  ".join(f"[bold]{n:2d}[/bold]" for n in pick["bonus"]) if pick["bonus"] else "N/A"
+        table.add_row(str(pick["set"]), main_str, bonus_str)
+
+    console.print(table)
+
+    # Export if requested
+    if export:
+        import json
+        import csv
+
+        ext = export.lower().split('.')[-1] if '.' in export else export.lower()
+
+        if ext == 'json':
+            with open(export, 'w') as f:
+                json.dump({
+                    "lottery": lottery,
+                    "lottery_name": config['name'],
+                    "entropy_source": entropy_source,
+                    "generated_at": pd.Timestamp.now().isoformat(),
+                    "quick_picks": quick_picks
+                }, f, indent=2)
+        elif ext == 'csv':
+            with open(export, 'w', newline='') as f:
+                writer = csv.writer(f)
+                writer.writerow(["Set", "Main Numbers", "Bonus Numbers"])
+                for pick in quick_picks:
+                    writer.writerow([
+                        pick["set"],
+                        " ".join(str(n) for n in pick["main"]),
+                        " ".join(str(n) for n in pick["bonus"])
+                    ])
+        elif ext == 'txt':
+            with open(export, 'w') as f:
+                f.write(f"Quick Picks for {config['name']}\n")
+                f.write(f"Entropy Source: {entropy_source}\n")
+                f.write(f"Generated: {pd.Timestamp.now()}\n\n")
+                for pick in quick_picks:
+                    f.write(f"Set {pick['set']}: Main: {' '.join(str(n) for n in pick['main'])}")
+                    if pick["bonus"]:
+                        f.write(f"  Bonus: {' '.join(str(n) for n in pick['bonus'])}")
+                    f.write("\n")
+
+        console.print(f"\n[green]✓ Exported {count} quick picks to {export}[/green]")
+
+    # Disclaimer
+    console.print(Panel(
+        "[bold yellow]⚠️ DISCLAIMER[/bold yellow]\n\n"
+        "These are true random numbers generated for entertainment purposes only. "
+        "They have no predictive power and do not increase your chances of winning. "
+        "The lottery is a game of chance. Play responsibly.",
+        title="Disclaimer",
+        border_style="yellow"
+    ))
+
+
+# v2.1 Real Data & Production Commands
+
+@app.command()
+def fetch_real_api(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    source: str = typer.Option("auto", "--source", "-s", help="API source: auto, powerball, mega_millions, lotteryapi"),
+    save: bool = typer.Option(True, "--save/--no-save", help="Save fetched data to local storage"),
+):
+    """Fetch real-time lottery data from official APIs (v2.1)."""
+    print_header(f"🌐 Fetch Real API Data - {LOTTERY_CONFIGS[lottery]['name']} (v2.1)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    print_disclaimer()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task(f"Fetching data from {source}...", total=None)
+        result = asyncio.run(fetch_real_api_data(lottery, source, save))
+        progress.update(task, description="Done!", completed=True)
+
+    # Handle error response
+    if 'error' in result:
+        console.print(f"\n[red]Error: {result['error']}[/red]")
+        return
+
+    console.print(f"\n[bold]Results:[/bold]")
+    console.print(f"  Total Fetched: {result.get('total_fetched', 0)}")
+    console.print(f"  Valid: {result.get('valid', 0)}")
+    console.print(f"  Saved: {result.get('saved', 0)}")
+    console.print(f"  Invalid: {result.get('invalid', 0)}")
+
+    if result.get('errors'):
+        console.print(f"\n[yellow]Errors (first 10):[/yellow]")
+        for err in result['errors'][:10]:
+            console.print(f"  - {err}")
+
+    if result.get('anomalies'):
+        console.print(f"\n[yellow]Anomalies Detected:[/yellow]")
+        for a in result['anomalies'][:5]:
+            console.print(f"  - {a['type']}: {a['details']}")
+
+
+@app.command()
+def browse_history(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    start_date: Optional[str] = typer.Option(None, "--start", help="Start date (YYYY-MM-DD)"),
+    end_date: Optional[str] = typer.Option(None, "--end", help="End date (YYYY-MM-DD)"),
+    numbers: Optional[str] = typer.Option(None, "--numbers", "-n", help="Comma-separated numbers to search for"),
+    min_matches: int = typer.Option(1, "--min-matches", help="Minimum number matches"),
+    pattern: Optional[str] = typer.Option(None, "--pattern", help="Pattern: consecutive, odd_even, sum_range"),
+    count: int = typer.Option(20, "--count", "-c", help="Number of results to show"),
+    export: Optional[str] = typer.Option(None, "--export", "-e", help="Export to file (csv, json, excel)"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+):
+    """Browse and search historical lottery results (v2.1)."""
+    print_header(f"📜 Historical Results Archive - {LOTTERY_CONFIGS[lottery]['name']} (v2.1)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    # Parse numbers if provided
+    search_numbers = None
+    if numbers:
+        try:
+            search_numbers = [int(n.strip()) for n in numbers.split(',')]
+        except ValueError:
+            console.print("[red]Error: Invalid numbers format. Use comma-separated integers.[/red]")
+            raise typer.Exit(1)
+
+    # Parse dates
+    from datetime import datetime
+    start = None
+    end = None
+    if start_date:
+        try:
+            start = datetime.strptime(start_date, "%Y-%m-%d")
+        except ValueError:
+            console.print("[red]Error: Invalid start date format. Use YYYY-MM-DD.[/red]")
+            raise typer.Exit(1)
+    if end_date:
+        try:
+            end = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            console.print("[red]Error: Invalid end date format. Use YYYY-MM-DD.[/red]")
+            raise typer.Exit(1)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Searching historical data...", total=None)
+        results = browse_historical_results(
+            lottery_key=lottery,
+            start_date=start.strftime('%Y-%m-%d') if start else None,
+            end_date=end.strftime('%Y-%m-%d') if end else None,
+            numbers=search_numbers,
+            exact=False,
+            export=output,
+            format=export or 'csv'
+        )
+        progress.update(task, description="Done!", completed=True)
+
+    # Handle error response
+    if isinstance(results, dict) and 'error' in results:
+        console.print(f"\n[red]Error: {results['error']}[/red]")
+        return
+
+    # Handle export response
+    if isinstance(results, dict) and 'exported' in results:
+        console.print(f"\n[green]✓ Exported {results['exported']} draws to {results['export_path']}[/green]")
+        return
+
+    # Extract actual results from the response
+    if isinstance(results, dict):
+        actual_results = results.get('sample', [])
+    else:
+        actual_results = results
+
+    if not actual_results:
+        console.print("[yellow]No results found matching criteria.[/yellow]")
+        return
+
+    # Display results
+    console.print(f"\n[bold]Found {len(actual_results)} matching draws:[/bold]")
+
+    table = Table(show_header=True)
+    table.add_column("Date", style="cyan")
+    table.add_column("Draw #", style="dim")
+    table.add_column("Main Numbers", style="green")
+    table.add_column("Bonus", style="yellow")
+    table.add_column("Jackpot", style="magenta")
+    if search_numbers:
+        table.add_column("Matches", style="red")
+
+    for r in actual_results:
+        main_str = "  ".join(f"{n:2d}" for n in r['main_numbers'])
+        bonus_str = "  ".join(f"{n:2d}" for n in r['bonus_numbers']) if r['bonus_numbers'] else "N/A"
+        jackpot_str = f"${r['jackpot']:,}" if r['jackpot'] > 0 else "N/A"
+
+        row = [
+            r['date'].strftime('%Y-%m-%d') if hasattr(r['date'], 'strftime') else str(r['date']),
+            str(r.get('draw_number', 'N/A')),
+            main_str,
+            bonus_str,
+            jackpot_str,
+        ]
+        if search_numbers:
+            row.append(str(r.get('matches', 0)))
+        table.add_row(*row)
+
+    console.print(table)
+
+
+@app.command()
+def draw_calendar(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    days: int = typer.Option(30, "--days", "-d", help="Number of days ahead to show"),
+    export_ics: Optional[str] = typer.Option(None, "--export-ics", help="Export to .ics calendar file"),
+    timezone: str = typer.Option("local", "--timezone", "-z", help="Timezone (local, UTC, or IANA zone like America/New_York)"),
+):
+    """Show upcoming draw calendar with countdown and .ics export (v2.1)."""
+    print_header(f"📅 Draw Calendar - {LOTTERY_CONFIGS[lottery]['name']} (v2.1)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Generating draw calendar...", total=None)
+        result = get_draw_calendar(lottery, count=days, export_ics=export_ics)
+        progress.update(task, description="Done!", completed=True)
+
+    console.print(f"\n[bold]Upcoming Draws (next {days}):[/bold]")
+    schedule = result.get('schedule', {})
+    console.print(f"[dim]Timezone: {schedule.get('timezone', 'Unknown')}[/dim]\n")
+
+    draws = result.get('upcoming_draws', [])
+    if not draws:
+        console.print("[yellow]No upcoming draws found in this period.[/yellow]")
+        return
+
+    table = Table(show_header=True)
+    table.add_column("Date", style="cyan")
+    table.add_column("Time", style="green")
+    table.add_column("Draw #", style="dim")
+    table.add_column("Days Until", style="yellow")
+    table.add_column("Countdown", style="red")
+
+    for draw in draws:
+        countdown = ""
+        if draw.get('days_until', 0) == 0:
+            countdown = "[bold red]TODAY![/bold red]"
+        elif draw.get('days_until', 0) == 1:
+            countdown = "[bold yellow]TOMORROW[/bold yellow]"
+        else:
+            countdown = f"{draw.get('days_until', 0)} days"
+
+        table.add_row(
+            draw['date'] if isinstance(draw['date'], str) else draw['date'].strftime('%Y-%m-%d'),
+            draw.get('time', schedule.get('time', 'TBD')),
+            str(draw.get('draw_number', 'TBD')),
+            str(draw.get('days_until', 0)),
+            countdown
+        )
+
+    console.print(table)
+
+    if export_ics:
+        console.print(f"\n[green]✓ Calendar exported to {export_ics}[/green]")
+        console.print("[cyan]Import this .ics file into Google Calendar, Outlook, Apple Calendar, etc.[/cyan]")
+
+    # Show next draw prominently
+    next_draw = result.get('next_draw')
+    if next_draw:
+        next_date = next_draw['date']
+        if not isinstance(next_date, str):
+            next_date = next_date.strftime('%A, %B %d, %Y')
+        else:
+            # Parse string date and format nicely
+            try:
+                from datetime import datetime
+                next_date = datetime.strptime(next_date, '%Y-%m-%d').strftime('%A, %B %d, %Y')
+            except:
+                pass
+        console.print(Panel(
+            f"[bold]Next Draw:[/bold] {next_date} at {next_draw.get('time', schedule.get('time', 'TBD'))}\n"
+            f"[bold]Days Until:[/bold] {next_draw.get('days_until', 0)} days\n"
+            f"[bold]Draw Number:[/bold] {next_draw.get('draw_number', 'TBD')}",
+            title="🎯 Next Draw",
+            border_style="green"
+        ))
 
 
 if __name__ == "__main__":
