@@ -629,6 +629,83 @@ If you or someone you know has a gambling problem, please contact:
   - Uses all available historical data (e.g., 5400+ draws for Powerball since 1992)
   - Shows date range of analyzed data
 - [x] **Alphabetical State Sorting** - US state lotteries sorted A-Z in docs
+- [x] **Official Website Links** - Direct links to lottery official sites in all interfaces
+
+### v1.7 - Validation & Analytics 📋
+- [ ] **Results Verification** - Auto-fetch actual draw results & compare against past predictions
+  - Scheduled job to fetch winning numbers after each draw
+  - Accuracy tracking per method (statistical, ML, ensemble, etc.)
+  - Hit rate reports: matches per tier (jackpot, 2nd prize, 3rd prize, etc.)
+- [ ] **Odds Calculator** - Exact odds, expected value, prize tiers for each game
+  - Show probability for each prize tier
+  - Expected value calculation (EV = Σ prize × probability)
+  - Break-even analysis
+- [ ] **Pattern Analysis** - Advanced statistical pattern detection
+  - Consecutive numbers frequency
+  - Odd/even split distribution
+  - High/low number distribution
+  - Decade analysis (1-10, 11-20, etc.)
+  - Sum distribution with normal curve fit
+- [ ] **Statistical Significance Testing** - Compare methods vs random baseline
+  - Monte Carlo simulation for p-values
+  - Confidence intervals for prediction accuracy
+
+### v1.8 - Mobile & PWA 📱
+- [ ] **Progressive Web App (PWA)** - Install Streamlit as native mobile app
+  - Service worker for offline capability
+  - App manifest for home screen installation
+  - Push notifications for draw reminders
+- [ ] **Mobile-Optimized UI** - Touch-friendly responsive design
+  - Swipe gestures for tabs
+  - Larger touch targets
+  - Bottom navigation bar
+- [ ] **Quick Pick Generator** - True random number generator for manual entry
+  - Hardware entropy source (where available)
+  - Multiple sets generation
+  - Export to wallet/passbook
+
+### v2.1 - Real Data & Production 🔌
+- [ ] **Real API Integrations** - Replace simulated data with official sources
+  - State lottery official APIs (where available)
+  - Third-party aggregators (LotteryPost, etc.)
+  - Web scraping as fallback with rate limiting
+- [ ] **Historical Results Archive** - Browse past winning numbers
+  - Search by date range, lottery, number pattern
+  - Export results to CSV/Excel
+- [ ] **Draw Calendar** - Upcoming draw dates/times with countdown
+  - Timezone-aware scheduling
+  - `.ics` export for calendar apps
+  - Next draw countdown timer
+
+### v2.2 - User Experience & Social 👥
+- [ ] **User Profiles & Preferences** - Save favorites, settings, notification config
+  - Favorite lotteries & methods
+  - Default prediction count & history depth
+  - Notification channels (email, Discord, Pushbullet)
+- [ ] **Syndicate Web UI** - Manage groups, shares, payouts in Streamlit/Tkinter
+  - Create/join syndicates
+  - Track contributions & distributions
+  - Automated payout calculations
+- [ ] **Social Features** - Share predictions, community pools, leaderboards
+  - Anonymous prediction sharing
+  - Accuracy leaderboards
+  - Community prediction pools
+
+### v3.0 - Intelligence & Automation 🤖
+- [ ] **Model Performance Dashboard** - Track accuracy over time, detect drift
+  - Per-method performance charts
+  - Model retraining triggers
+  - A/B testing results visualization
+- [ ] **Budget Tracker** - Track spending vs. winnings over time
+  - Per-lottery spending reports
+  - ROI calculations
+  - Tax estimator (federal/state)
+- [ ] **Multi-Draw Predictions** - Predict for multiple upcoming draws
+  - Rolling prediction windows
+  - Confidence decay modeling
+- [ ] **Voice Assistant Integration** - "Hey Siri/Google, give me Powerball numbers"
+  - Shortcuts/Intent support
+  - Read aloud predictions
 
 ---
 
