@@ -36,9 +36,54 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS
+# PWA Meta Tags and Mobile Optimization
+st.markdown("""
+<!-- PWA Meta Tags -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#00d4aa">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LottoPredict">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- Service Worker Registration -->
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('sw.js')
+            .then(function(registration) {
+                console.log('ServiceWorker registered:', registration.scope);
+                registration.addEventListener('updatefound', function() {
+                    var newWorker = registration.installing;
+                    newWorker.addEventListener('statechange', function() {
+                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                            // New content available, show update notification
+                            if (confirm('New version available! Reload to update?')) {
+                                window.location.reload();
+                            }
+                        }
+                    });
+                });
+            })
+            .catch(function(error) {
+                console.log('ServiceWorker registration failed:', error);
+            });
+    });
+}
+
+// Detect standalone mode (PWA installed)
+if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
+    document.body.classList.add('pwa-mode');
+}
+</script>
+""", unsafe_allow_html=True)
+
+# Custom CSS with Mobile Optimization
 st.markdown("""
 <style>
+    /* Base styles */
     .main-header {
         font-size: 2.5rem;
         font-weight: bold;
@@ -86,7 +131,335 @@ st.markdown("""
         padding-left: 20px;
         padding-right: 20px;
     }
+
+    /* ===== MOBILE OPTIMIZATION ===== */
+    @media (max-width: 768px) {
+        /* Larger touch targets */
+        .stButton > button {
+            height: 56px !important;
+            font-size: 1.1rem !important;
+            padding: 0 24px !important;
+        }
+
+        .stSelectbox > div > div {
+            height: 56px !important;
+            font-size: 1.1rem !important;
+        }
+
+        .stSlider > div > div > div > div {
+            height: 48px !important;
+        }
+
+        .stNumberInput > div > div > input {
+            height: 56px !important;
+            font-size: 1.1rem !important;
+        }
+
+        /* Tabs - larger touch targets */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            height: 56px !important;
+            min-width: 120px !important;
+            font-size: 1rem !important;
+            padding: 0 16px !important;
+        }
+
+        /* Sidebar - full width on mobile */
+        .css-1d391kg, .css-1lcbmhc, .css-17lntkn {
+            min-width: 100% !important;
+        }
+
+        /* Prediction boxes - larger text */
+        .prediction-box {
+            padding: 1.5rem !important;
+            margin: 1rem 0 !important;
+        }
+
+        .prediction-box p {
+            font-size: 1.8rem !important;
+            letter-spacing: 4px !important;
+        }
+
+        .prediction-box h4 {
+            font-size: 1.3rem !important;
+        }
+
+        /* Metrics - larger touch targets */
+        .stMetric {
+            padding: 1rem !important;
+        }
+
+        .stMetric label {
+            font-size: 1rem !important;
+        }
+
+        .stMetric div[data-testid="stMetricValue"] {
+            font-size: 2rem !important;
+        }
+
+        /* Headers */
+        .main-header {
+            font-size: 1.8rem !important;
+        }
+
+        .sub-header {
+            font-size: 1.3rem !important;
+        }
+
+        /* Columns stack on mobile */
+        .stColumns {
+            flex-direction: column !important;
+        }
+
+        .stColumns > div {
+            width: 100% !important;
+            min-width: 100% !important;
+        }
+
+        /* Dataframes - horizontal scroll */
+        .stDataFrame {
+            overflow-x: auto !important;
+        }
+
+        /* Expander - larger touch target */
+        .streamlit-expanderHeader {
+            padding: 1rem !important;
+            font-size: 1.1rem !important;
+        }
+
+        /* File uploader */
+        .stFileUploader > div {
+            padding: 2rem !important;
+        }
+
+        /* Radio/Checkbox - larger */
+        .stRadio > div, .stCheckbox > div {
+            padding: 0.5rem 0 !important;
+        }
+
+        .stRadio label, .stCheckbox label {
+            font-size: 1.1rem !important;
+            padding: 0.5rem !important;
+        }
+    }
+
+    /* ===== BOTTOM NAVIGATION FOR PWA MODE ===== */
+    @media (max-width: 768px) {
+        .bottom-nav {
+            display: none;
+        }
+
+        .pwa-mode .bottom-nav {
+            display: flex !important;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1a1a2e;
+            border-top: 1px solid #333;
+            z-index: 9999;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
+        }
+
+        .bottom-nav a {
+            color: #888;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 12px;
+            min-width: 60px;
+            transition: color 0.2s;
+        }
+
+        .bottom-nav a.active, .bottom-nav a:hover {
+            color: #00d4aa;
+        }
+
+        .bottom-nav svg {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+        }
+
+        .bottom-nav span {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        /* Add padding to bottom of page for nav */
+        .pwa-mode .main .block-container {
+            padding-bottom: 80px !important;
+        }
+    }
+
+    /* ===== SWIPE GESTURE SUPPORT ===== */
+    .swipe-container {
+        touch-action: pan-y;
+    }
+
+    .swipe-container:hover {
+        cursor: grab;
+    }
+
+    .swipe-container:active {
+        cursor: grabbing;
+    }
+
+    /* ===== PWA MODE STYLES ===== */
+    .pwa-mode .main-header {
+        padding-top: 1rem;
+    }
+
+    .pwa-mode .stAppHeader {
+        display: none !important;
+    }
+
+    /* ===== TOUCH FEEDBACK ===== */
+    @media (hover: none) and (pointer: coarse) {
+        .stButton > button:active,
+        .stTabs [data-baseweb="tab"]:active,
+        .stSelectbox > div:active {
+            transform: scale(0.98);
+            transition: transform 0.1s;
+        }
+    }
+
+    /* ===== LANDSCAPE MOBILE ===== */
+    @media (max-height: 500px) and (orientation: landscape) {
+        .main-header {
+            font-size: 1.5rem !important;
+            margin-bottom: 0.5rem !important;
+        }
+
+        .stTabs [data-baseweb="tab"] {
+            height: 44px !important;
+        }
+
+        .stButton > button {
+            height: 44px !important;
+        }
+    }
+
+    /* ===== DARK MODE SUPPORT ===== */
+    @media (prefers-color-scheme: dark) {
+        .prediction-box {
+            background-color: #2d2d3a;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+
+        .metric-card {
+            background-color: #2d2d3a;
+            border-color: #444;
+            color: #e0e0e0;
+        }
+    }
 </style>
+
+<!-- Bottom Navigation for PWA -->
+<div class="bottom-nav" role="navigation" aria-label="Main navigation">
+    <a href="/" class="nav-item" data-tab="predict" aria-label="Predictions">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+        <span>Predict</span>
+    </a>
+    <a href="/?tab=quickpick" class="nav-item" data-tab="quickpick" aria-label="Quick Pick">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 6v6l4 2"/>
+        </svg>
+        <span>Quick Pick</span>
+    </a>
+    <a href="/?tab=analyze" class="nav-item" data-tab="analyze" aria-label="Analysis">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 20V10M12 20V4M6 20v-6"/>
+        </svg>
+        <span>Analyze</span>
+    </a>
+    <a href="/?tab=settings" class="nav-item" data-tab="settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>Settings</span>
+    </a>
+</div>
+
+<script>
+// Bottom navigation active state
+document.addEventListener('DOMContentLoaded', function() {
+    const navItems = document.querySelectorAll('.nav-item');
+    const currentPath = window.location.pathname + window.location.search;
+
+    navItems.forEach(item => {
+        const href = item.getAttribute('href');
+        if (currentPath.includes(href.replace('/', '')) || (href === '/' && currentPath === '/')) {
+            item.classList.add('active');
+        }
+
+        item.addEventListener('click', function(e) {
+            navItems.forEach(i => i.classList.remove('active'));
+            this.classList.add('active');
+        });
+    });
+});
+
+// Swipe gesture for tabs
+let touchStartX = 0;
+let touchEndX = 0;
+
+document.addEventListener('touchstart', function(e) {
+    touchStartX = e.changedTouches[0].screenX;
+}, { passive: true });
+
+document.addEventListener('touchend', function(e) {
+    touchEndX = e.changedTouches[0].screenX;
+    handleSwipe();
+}, { passive: true });
+
+function handleSwipe() {
+    const swipeThreshold = 50;
+    const diff = touchStartX - touchEndX;
+
+    if (Math.abs(diff) > swipeThreshold) {
+        const tabs = document.querySelectorAll('.stTabs [data-baseweb="tab"]');
+        const activeTab = document.querySelector('.stTabs [data-baseweb="tab"][aria-selected="true"]');
+
+        if (activeTab && tabs.length > 1) {
+            const activeIndex = Array.from(tabs).indexOf(activeTab);
+            let newIndex;
+
+            if (diff > 0) {
+                // Swipe left - next tab
+                newIndex = (activeIndex + 1) % tabs.length;
+            } else {
+                // Swipe right - previous tab
+                newIndex = (activeIndex - 1 + tabs.length) % tabs.length;
+            }
+
+            tabs[newIndex].click();
+        }
+    }
+}
+
+// Prevent zoom on double tap for inputs
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function(e) {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+        e.preventDefault();
+    }
+    lastTouchEnd = now;
+}, { passive: false });
+</script>
 """, unsafe_allow_html=True)
 
 # Initialize session state
@@ -190,12 +563,13 @@ with st.sidebar:
         lookback = st.slider("Lookback Window (ML)", 5, 20, 10)
 
 # Main tabs
-tab1, tab2, tab3, tab4, tab5 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
     "🎯 Predict",
     "📊 Analyze",
     "📈 Visualize",
     "📜 History",
-    "⚔️ Compare"
+    "⚔️ Compare",
+    "👤 Profile & Social"
 ])
 
 # Helper functions
@@ -618,6 +992,420 @@ with tab5:
                 height=400
             )
             st.plotly_chart(fig_comp, width='stretch')
+
+# Tab 6: Profile & Social
+with tab6:
+    st.markdown('<div class="sub-header">👤 User Profile & Social</div>', unsafe_allow_html=True)
+
+    # Import user profile manager
+    try:
+        from lottery_predictor.advanced import UserProfileManager, SocialManager
+        user_manager = UserProfileManager()
+        social_manager = SocialManager()
+    except Exception as e:
+        st.error(f"Could not load user features: {e}")
+        user_manager = None
+        social_manager = None
+
+    if user_manager:
+        # Initialize session state for user
+        if 'current_user' not in st.session_state:
+            st.session_state.current_user = None
+
+        # Load persisted current user
+        if st.session_state.current_user is None and user_manager.current_user:
+            st.session_state.current_user = user_manager.current_user
+
+        # Login/Register section
+        if st.session_state.current_user is None:
+            st.subheader("🔐 Login / Create Profile")
+
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.markdown("**Existing User**")
+                usernames = user_manager.list_profiles()
+                if usernames:
+                    login_user = st.selectbox("Select User", usernames, key="login_user")
+                    if st.button("Login", type="primary", use_container_width=True):
+                        if user_manager.set_current_user(login_user):
+                            st.session_state.current_user = login_user
+                            st.success(f"Logged in as {login_user}")
+                            st.rerun()
+                        else:
+                            st.error("Login failed")
+                else:
+                    st.info("No users found. Create a new profile.")
+
+            with col2:
+                st.markdown("**Create New Profile**")
+                new_username = st.text_input("Username", key="new_username")
+                new_email = st.text_input("Email (optional)", key="new_email")
+                if st.button("Create Profile", type="secondary", use_container_width=True):
+                    if new_username:
+                        try:
+                            profile = user_manager.create_profile(new_username, new_email if new_email else None)
+                            user_manager.set_current_user(new_username)
+                            st.session_state.current_user = new_username
+                            st.success(f"Profile created for {new_username}")
+                            st.rerun()
+                        except ValueError as e:
+                            st.error(str(e))
+                    else:
+                        st.error("Please enter a username")
+
+        else:
+            # User is logged in - show profile
+            profile = user_manager.get_current_profile()
+            if profile:
+                st.success(f"Logged in as **{profile.username}**")
+
+                if st.button("🚪 Logout", use_container_width=True):
+                    user_manager.current_user = None
+                    user_manager._save_current_user()
+                    st.session_state.current_user = None
+                    st.rerun()
+
+                # Profile tabs
+                prof_tab1, prof_tab2, prof_tab3, prof_tab4, prof_tab5 = st.tabs([
+                    "📋 Profile", "⭐ Favorites", "⚙️ Preferences", "📤 Share", "🏆 Leaderboard"
+                ])
+
+                with prof_tab1:
+                    st.subheader("📋 Your Profile")
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.write(f"**Username:** {profile.username}")
+                        st.write(f"**Email:** {profile.email or 'Not set'}")
+                        st.write(f"**Member since:** {profile.created_at[:10]}")
+                        st.write(f"**Last login:** {profile.last_login[:10] if profile.last_login else 'Never'}")
+                    with col2:
+                        st.write(f"**Total Predictions:** {len(profile.prediction_history)}")
+                        st.write(f"**Syndicates:** {len(profile.syndicate_memberships)}")
+                        st.write(f"**Total Spent:** ${profile.total_spent:.2f}")
+                        st.write(f"**Total Won:** ${profile.total_won:.2f}")
+                        roi = user_manager.get_roi(profile.username)
+                        if roi is not None:
+                            st.write(f"**ROI:** {roi:+.2f}%")
+
+                with prof_tab2:
+                    st.subheader("⭐ Favorite Lotteries")
+
+                    # Add favorite
+                    games = [g for g in manager.list_games() if g.main_numbers > 0]
+                    game_options = {f"{g.name} ({g.key})": g.key for g in games}
+
+                    col1, col2 = st.columns([3, 1])
+                    with col1:
+                        fav_lottery = st.selectbox("Add Favorite", options=list(game_options.keys()), key="add_fav")
+                    with col2:
+                        if st.button("➕ Add", use_container_width=True):
+                            selected_key = game_options[fav_lottery]
+                            if user_manager.add_favorite_lottery(profile.username, selected_key):
+                                st.success(f"Added {fav_lottery} to favorites!")
+                                st.rerun()
+
+                    # Show favorites
+                    if profile.preferences.favorite_lotteries:
+                        st.markdown("**Your Favorites:**")
+                        for fav in profile.preferences.favorite_lotteries:
+                            col1, col2 = st.columns([4, 1])
+                            with col1:
+                                st.write(f"⭐ {LOTTERY_CONFIGS[fav]['name']} ({fav})")
+                            with col2:
+                                if st.button("🗑️", key=f"remove_{fav}", use_container_width=True):
+                                    if user_manager.remove_favorite_lottery(profile.username, fav):
+                                        st.success(f"Removed {fav} from favorites")
+                                        st.rerun()
+                    else:
+                        st.info("No favorites yet. Add some above!")
+
+                with prof_tab3:
+                    st.subheader("⚙️ Preferences")
+
+                    col1, col2 = st.columns(2)
+
+                    with col1:
+                        # Default lottery
+                        default_lottery = st.selectbox(
+                            "Default Lottery",
+                            options=list(game_options.keys()),
+                            index=list(game_options.values()).index(profile.preferences.default_lottery) if profile.preferences.default_lottery in game_options.values() else 0,
+                            key="pref_default_lottery"
+                        )
+
+                        # Default method
+                        methods = ["ensemble", "statistical", "frequency", "cold", "pairs", "ml", "time_series", "transformer", "online_learning"]
+                        method_labels = {
+                            "ensemble": "🎯 Ensemble",
+                            "statistical": "📊 Statistical",
+                            "frequency": "🔥 Frequency",
+                            "cold": "❄️ Cold Numbers",
+                            "pairs": "🔗 Pair-Based",
+                            "ml": "🤖 Machine Learning",
+                            "time_series": "📈 Time Series",
+                            "transformer": "🔮 Transformer",
+                            "online_learning": "🔄 Online Learning"
+                        }
+                        default_method = st.selectbox(
+                            "Default Method",
+                            options=methods,
+                            format_func=lambda x: method_labels.get(x, x),
+                            index=methods.index(profile.preferences.default_method) if profile.preferences.default_method in methods else 0,
+                            key="pref_default_method"
+                        )
+
+                        # Default count
+                        default_count = st.number_input(
+                            "Default Prediction Count",
+                            min_value=1, max_value=20,
+                            value=profile.preferences.default_prediction_count,
+                            key="pref_default_count"
+                        )
+
+                    with col2:
+                        # Language
+                        from lottery_predictor.advanced import I18nManager
+                        langs = I18nManager.get_available_languages()
+                        lang_labels = {"en": "English", "es": "Español", "fr": "Français", "de": "Deutsch", "zh": "中文"}
+                        language = st.selectbox(
+                            "Language",
+                            options=langs,
+                            format_func=lambda x: lang_labels.get(x, x),
+                            index=langs.index(profile.preferences.language) if profile.preferences.language in langs else 0,
+                            key="pref_language"
+                        )
+
+                        # Theme
+                        theme = st.selectbox(
+                            "Theme",
+                            options=["system", "light", "dark"],
+                            index=["system", "light", "dark"].index(profile.preferences.theme) if profile.preferences.theme in ["system", "light", "dark"] else 0,
+                            key="pref_theme"
+                        )
+
+                        # Auto-detect
+                        auto_detect = st.checkbox(
+                            "Auto-detect lottery from location",
+                            value=profile.preferences.auto_detect_state,
+                            key="pref_auto_detect"
+                        )
+
+                        # All history
+                        all_history = st.checkbox(
+                            "Use all historical data by default",
+                            value=profile.preferences.use_all_history,
+                            key="pref_all_history"
+                        )
+
+                    if st.button("💾 Save Preferences", type="primary", use_container_width=True):
+                        updates = {}
+                        if game_options[default_lottery] != profile.preferences.default_lottery:
+                            updates["default_lottery"] = game_options[default_lottery]
+                        if default_method != profile.preferences.default_method:
+                            updates["default_method"] = default_method
+                        if default_count != profile.preferences.default_prediction_count:
+                            updates["default_prediction_count"] = default_count
+                        if language != profile.preferences.language:
+                            updates["language"] = language
+                        if theme != profile.preferences.theme:
+                            updates["theme"] = theme
+                        if auto_detect != profile.preferences.auto_detect_state:
+                            updates["auto_detect_state"] = auto_detect
+                        if all_history != profile.preferences.use_all_history:
+                            updates["use_all_history"] = all_history
+
+                        if updates:
+                            if user_manager.update_preferences(profile.username, **updates):
+                                st.success("Preferences saved!")
+                                st.rerun()
+                            else:
+                                st.error("Failed to save preferences")
+                        else:
+                            st.info("No changes to save")
+
+                with prof_tab4:
+                    st.subheader("📤 Share Predictions")
+
+                    share_lottery = st.selectbox(
+                        "Lottery",
+                        options=list(game_options.keys()),
+                        index=list(game_options.values()).index(selected_lottery) if selected_lottery in game_options.values() else 0,
+                        key="share_lottery"
+                    )
+
+                    share_method = st.selectbox(
+                        "Method",
+                        options=methods,
+                        format_func=lambda x: method_labels.get(x, x),
+                        key="share_method"
+                    )
+
+                    share_count = st.number_input("Number of Predictions", min_value=1, max_value=10, value=3, key="share_count")
+                    share_anonymous = st.checkbox("Share Anonymously", key="share_anonymous")
+
+                    if st.button("📤 Generate & Share", type="primary", use_container_width=True):
+                        with st.spinner("Generating predictions..."):
+                            try:
+                                lottery_key = game_options[share_lottery]
+
+                                # Generate predictions
+                                from lottery_predictor.models import get_predictor, StatisticalPredictor, MLModelPredictor, TimeSeriesPredictor, EnsemblePredictor
+
+                                if share_method == "statistical":
+                                    pred = StatisticalPredictor(lottery_key)
+                                    predictions = pred.predict_balanced(num_predictions=share_count)
+                                elif share_method == "frequency":
+                                    pred = StatisticalPredictor(lottery_key)
+                                    predictions = pred.predict_frequency_based(num_predictions=share_count)
+                                elif share_method == "cold":
+                                    pred = StatisticalPredictor(lottery_key)
+                                    predictions = pred.predict_cold_numbers(num_predictions=share_count)
+                                elif share_method == "pairs":
+                                    pred = StatisticalPredictor(lottery_key)
+                                    predictions = pred.predict_pair_based(num_predictions=share_count)
+                                elif share_method == "ml":
+                                    pred = MLModelPredictor(lottery_key)
+                                    if not pred.is_trained:
+                                        pred.train()
+                                    predictions = pred.predict(num_predictions=share_count)
+                                elif share_method == "time_series":
+                                    pred = TimeSeriesPredictor(lottery_key)
+                                    predictions = pred.predict(num_predictions=share_count)
+                                elif share_method == "transformer":
+                                    from lottery_predictor.models import TransformerPredictor
+                                    pred = TransformerPredictor(lottery_key)
+                                    if pred.model is None:
+                                        pred.train()
+                                    predictions = pred.predict(num_predictions=share_count)
+                                elif share_method == "online_learning":
+                                    from lottery_predictor.models import OnlineLearningPredictor
+                                    pred = OnlineLearningPredictor(lottery_key)
+                                    predictions = pred.predict(num_predictions=share_count)
+                                else:  # ensemble
+                                    pred = EnsemblePredictor(lottery_key)
+                                    predictions = pred.get_consensus_prediction(num_predictions=share_count)
+
+                                # Convert to dict
+                                pred_dicts = [
+                                    {
+                                        "main_numbers": [int(n) for n in p.main_numbers],
+                                        "bonus_numbers": [int(n) for n in p.bonus_numbers] if p.bonus_numbers else [],
+                                        "confidence": float(p.confidence),
+                                        "method": p.method,
+                                        "metadata": p.metadata
+                                    }
+                                    for p in predictions
+                                ]
+
+                                # Share
+                                username = "Anonymous" if share_anonymous else profile.username
+                                shared = social_manager.share_prediction(
+                                    username=username,
+                                    lottery=lottery_key,
+                                    method=share_method,
+                                    predictions=pred_dicts,
+                                    is_anonymous=share_anonymous
+                                )
+
+                                st.success(f"Prediction shared! Share ID: {shared.id}")
+
+                                # Show preview
+                                for i, p in enumerate(pred_dicts, 1):
+                                    bonus_str = ' - '.join(f"{n:2d}" for n in p["bonus_numbers"]) if p["bonus_numbers"] else 'N/A'
+                                    st.markdown(f"""
+                                    <div class="prediction-box">
+                                        <strong>#{i}:</strong> {' - '.join(f"{n:2d}" for n in p["main_numbers"])}
+                                        | Bonus: {bonus_str} | Confidence: {p["confidence"]:.1%}
+                                    </div>
+                                    """, unsafe_allow_html=True)
+                            except Exception as e:
+                                st.error(f"Error sharing prediction: {e}")
+
+                with prof_tab5:
+                    st.subheader("🏆 Accuracy Leaderboard")
+
+                    leaderboard_filter = st.selectbox(
+                        "Filter by Lottery",
+                        options=["All"] + list(game_options.values()),
+                        format_func=lambda x: "All Lotteries" if x == "All" else LOTTERY_CONFIGS.get(x, {}).get('name', x),
+                        key="lb_filter"
+                    )
+
+                    lb_data = social_manager.get_leaderboard(
+                        lottery=None if leaderboard_filter == "All" else leaderboard_filter,
+                        limit=20
+                    )
+
+                    if lb_data:
+                        lb_df = pd.DataFrame(lb_data)
+                        lb_df['Rank'] = range(1, len(lb_df) + 1)
+                        lb_df = lb_df[['Rank', 'username', 'total_predictions', 'correct_predictions', 'accuracy']]
+                        lb_df.columns = ['Rank', 'Username', 'Total Predictions', 'Correct', 'Accuracy %']
+                        st.dataframe(lb_df, width='stretch', hide_index=True)
+                    else:
+                        st.info("No leaderboard data yet. Share predictions and verify them to compete!")
+
+    # Community Pools section (visible to all)
+    st.markdown("---")
+    st.subheader("🤝 Community Prediction Pools")
+
+    if social_manager:
+        # Create pool form
+        with st.expander("📝 Create New Pool"):
+            if st.session_state.current_user:
+                pool_name = st.text_input("Pool Name", key="pool_name")
+                pool_lottery = st.selectbox(
+                    "Lottery",
+                    options=list(game_options.keys()),
+                    key="pool_lottery"
+                )
+                pool_budget = st.number_input("Budget ($)", min_value=10.0, max_value=10000.0, value=100.0, step=10.0, key="pool_budget")
+                pool_ticket_cost = st.number_input("Ticket Cost ($)", min_value=1.0, max_value=10.0, value=2.0, step=0.5, key="pool_ticket_cost")
+
+                if st.button("Create Pool", type="primary", use_container_width=True):
+                    if pool_name:
+                        pool = social_manager.create_community_pool(
+                            name=pool_name,
+                            lottery=game_options[pool_lottery],
+                            budget=pool_budget,
+                            ticket_cost=pool_ticket_cost,
+                            creator=st.session_state.current_user
+                        )
+                        st.success(f"Pool created! ID: {pool['id']}")
+                        st.rerun()
+                    else:
+                        st.error("Please enter a pool name")
+            else:
+                st.warning("Please login to create a pool")
+
+        # List pools
+        pools = social_manager.list_pools(status="open")
+        if pools:
+            st.markdown("**Open Pools:**")
+            for pool in pools:
+                with st.container():
+                    col1, col2, col3, col4 = st.columns([2, 1, 1, 1])
+                    with col1:
+                        st.write(f"**{pool['name']}** (ID: {pool['id']})")
+                        st.caption(f"Lottery: {LOTTERY_CONFIGS.get(pool['lottery'], {}).get('name', pool['lottery'])} | Budget: ${pool['budget']:.2f}")
+                    with col2:
+                        st.write(f"Participants: {len(pool['participants'])}")
+                    with col3:
+                        st.write(f"Created by: {pool['creator']}")
+                    with col4:
+                        if st.session_state.current_user:
+                            contribution = st.number_input("Contribution", min_value=5.0, max_value=pool['budget'], value=10.0, step=5.0, key=f"contrib_{pool['id']}")
+                            if st.button("Join", key=f"join_{pool['id']}", use_container_width=True):
+                                if social_manager.join_pool(pool['id'], st.session_state.current_user, contribution):
+                                    st.success(f"Joined {pool['name']}!")
+                                    st.rerun()
+                                else:
+                                    st.error("Could not join pool")
+                        else:
+                            st.button("Login to Join", disabled=True, use_container_width=True)
+        else:
+            st.info("No open community pools. Create one above!")
 
 # Footer
 st.markdown("---")

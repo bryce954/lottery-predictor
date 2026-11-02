@@ -820,3 +820,551 @@ class I18nManager:
 
 # Import here to avoid circular imports
 from .models import StatisticalPredictor, MLModelPredictor
+
+
+# ============================================================================
+# v2.2 - User Experience & Social: User Profiles & Preferences
+# ============================================================================
+
+@dataclass
+class UserPreferences:
+    """User preferences for lottery predictor."""
+    favorite_lotteries: List[str] = field(default_factory=list)
+    default_lottery: str = "powerball"
+    default_method: str = "ensemble"
+    default_prediction_count: int = 5
+    default_history_depth: int = 200
+    language: str = "en"
+    theme: str = "system"  # light, dark, system
+    notifications: Dict[str, Any] = field(default_factory=lambda: {
+        "email_enabled": False,
+        "email_address": None,
+        "discord_enabled": False,
+        "discord_webhook": None,
+        "pushbullet_enabled": False,
+        "pushbullet_token": None,
+        "smtp_server": None,
+        "smtp_port": 587,
+        "smtp_user": None,
+        "smtp_pass": None,
+    })
+    auto_detect_state: bool = True
+    use_all_history: bool = False
+
+
+@dataclass
+class UserProfile:
+    """User profile with preferences and history."""
+    username: str
+    email: Optional[str] = None
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    last_login: Optional[str] = None
+    preferences: UserPreferences = field(default_factory=UserPreferences)
+    prediction_history: List[Dict] = field(default_factory=list)
+    syndicate_memberships: List[str] = field(default_factory=list)
+    total_spent: float = 0.0
+    total_won: float = 0.0
+
+    def add_prediction_record(self, lottery: str, method: str, predictions: List[Dict]):
+        """Add a prediction to history."""
+        record = {
+            "timestamp": datetime.now().isoformat(),
+            "lottery": lottery,
+            "method": method,
+            "predictions": predictions
+        }
+        self.prediction_history.append(record)
+        # Keep only last 1000 records
+        if len(self.prediction_history) > 1000:
+            self.prediction_history = self.prediction_history[-1000:]
+
+    def get_favorite_lotteries(self) -> List[str]:
+        """Get user's favorite lotteries, fall back to defaults."""
+        if self.preferences.favorite_lotteries:
+            return self.preferences.favorite_lotteries
+        return ["powerball", "mega_millions", "florida_lotto"]
+
+
+class UserProfileManager:
+    """Manage user profiles and preferences."""
+
+    def __init__(self, storage_path: str = "user_profiles"):
+        self.storage_path = Path(storage_path)
+        self.storage_path.mkdir(exist_ok=True)
+        self.current_user_file = self.storage_path / ".current_user"
+        self.profiles: Dict[str, UserProfile] = {}
+        self.current_user: Optional[str] = None
+        self._load_all_profiles()
+        self._load_current_user()
+
+    def _get_profile_path(self, username: str) -> Path:
+        """Get file path for user profile."""
+        safe_name = "".join(c for c in username if c.isalnum() or c in "-_")
+        return self.storage_path / f"{safe_name}.json"
+
+    def _load_all_profiles(self):
+        """Load all profiles from disk."""
+        for profile_file in self.storage_path.glob("*.json"):
+            try:
+                with open(profile_file, 'r') as f:
+                    data = json.load(f)
+                profile = self._deserialize_profile(data)
+                self.profiles[profile.username] = profile
+            except Exception as e:
+                print(f"Warning: Failed to load profile {profile_file}: {e}")
+
+    def _load_current_user(self):
+        """Load current user from disk."""
+        if self.current_user_file.exists():
+            try:
+                with open(self.current_user_file, 'r') as f:
+                    self.current_user = f.read().strip()
+            except Exception:
+                pass
+
+    def _save_current_user(self):
+        """Save current user to disk."""
+        try:
+            with open(self.current_user_file, 'w') as f:
+                f.write(self.current_user or "")
+        except Exception:
+            pass
+
+    def _deserialize_profile(self, data: Dict) -> UserProfile:
+        """Deserialize profile from dict."""
+        prefs_data = data.get("preferences", {})
+        prefs = UserPreferences(
+            favorite_lotteries=prefs_data.get("favorite_lotteries", []),
+            default_lottery=prefs_data.get("default_lottery", "powerball"),
+            default_method=prefs_data.get("default_method", "ensemble"),
+            default_prediction_count=prefs_data.get("default_prediction_count", 5),
+            default_history_depth=prefs_data.get("default_history_depth", 200),
+            language=prefs_data.get("language", "en"),
+            theme=prefs_data.get("theme", "system"),
+            notifications=prefs_data.get("notifications", UserPreferences().notifications),
+            auto_detect_state=prefs_data.get("auto_detect_state", True),
+            use_all_history=prefs_data.get("use_all_history", False),
+        )
+
+        profile = UserProfile(
+            username=data["username"],
+            email=data.get("email"),
+            created_at=data.get("created_at", datetime.now().isoformat()),
+            last_login=data.get("last_login"),
+            preferences=prefs,
+            prediction_history=data.get("prediction_history", []),
+            syndicate_memberships=data.get("syndicate_memberships", []),
+            total_spent=data.get("total_spent", 0.0),
+            total_won=data.get("total_won", 0.0),
+        )
+        return profile
+
+    def _serialize_profile(self, profile: UserProfile) -> Dict:
+        """Serialize profile to dict."""
+        return {
+            "username": profile.username,
+            "email": profile.email,
+            "created_at": profile.created_at,
+            "last_login": profile.last_login,
+            "preferences": {
+                "favorite_lotteries": profile.preferences.favorite_lotteries,
+                "default_lottery": profile.preferences.default_lottery,
+                "default_method": profile.preferences.default_method,
+                "default_prediction_count": profile.preferences.default_prediction_count,
+                "default_history_depth": profile.preferences.default_history_depth,
+                "language": profile.preferences.language,
+                "theme": profile.preferences.theme,
+                "notifications": profile.preferences.notifications,
+                "auto_detect_state": profile.preferences.auto_detect_state,
+                "use_all_history": profile.preferences.use_all_history,
+            },
+            "prediction_history": profile.prediction_history,
+            "syndicate_memberships": profile.syndicate_memberships,
+            "total_spent": profile.total_spent,
+            "total_won": profile.total_won,
+        }
+
+    def create_profile(self, username: str, email: Optional[str] = None) -> UserProfile:
+        """Create a new user profile."""
+        if username in self.profiles:
+            raise ValueError(f"Profile '{username}' already exists")
+
+        profile = UserProfile(username=username, email=email)
+        self.profiles[username] = profile
+        self._save_profile(profile)
+        return profile
+
+    def get_profile(self, username: str) -> Optional[UserProfile]:
+        """Get user profile by username."""
+        return self.profiles.get(username)
+
+    def get_or_create_profile(self, username: str, email: Optional[str] = None) -> UserProfile:
+        """Get existing profile or create new one."""
+        profile = self.profiles.get(username)
+        if not profile:
+            profile = self.create_profile(username, email)
+        return profile
+
+    def set_current_user(self, username: str) -> bool:
+        """Set current active user."""
+        if username in self.profiles:
+            self.current_user = username
+            self._save_current_user()
+            # Update last login
+            self.profiles[username].last_login = datetime.now().isoformat()
+            self._save_profile(self.profiles[username])
+            return True
+        return False
+
+    def get_current_profile(self) -> Optional[UserProfile]:
+        """Get current active user profile."""
+        if self.current_user:
+            return self.profiles.get(self.current_user)
+        return None
+
+    def _save_profile(self, profile: UserProfile):
+        """Save profile to disk."""
+        profile_path = self._get_profile_path(profile.username)
+        with open(profile_path, 'w') as f:
+            json.dump(self._serialize_profile(profile), f, indent=2)
+
+    def update_preferences(self, username: str, **kwargs) -> bool:
+        """Update user preferences."""
+        profile = self.profiles.get(username)
+        if not profile:
+            return False
+
+        prefs = profile.preferences
+        for key, value in kwargs.items():
+            if hasattr(prefs, key):
+                setattr(prefs, key, value)
+
+        self._save_profile(profile)
+        return True
+
+    def add_favorite_lottery(self, username: str, lottery: str) -> bool:
+        """Add lottery to user's favorites."""
+        profile = self.profiles.get(username)
+        if not profile:
+            return False
+
+        if lottery not in profile.preferences.favorite_lotteries:
+            profile.preferences.favorite_lotteries.append(lottery)
+            self._save_profile(profile)
+        return True
+
+    def remove_favorite_lottery(self, username: str, lottery: str) -> bool:
+        """Remove lottery from user's favorites."""
+        profile = self.profiles.get(username)
+        if not profile:
+            return False
+
+        if lottery in profile.preferences.favorite_lotteries:
+            profile.preferences.favorite_lotteries.remove(lottery)
+            self._save_profile(profile)
+        return True
+
+    def add_syndicate_membership(self, username: str, syndicate_name: str) -> bool:
+        """Add syndicate membership to user."""
+        profile = self.profiles.get(username)
+        if not profile:
+            return False
+
+        if syndicate_name not in profile.syndicate_memberships:
+            profile.syndicate_memberships.append(syndicate_name)
+            self._save_profile(profile)
+        return True
+
+    def record_spending(self, username: str, amount: float):
+        """Record spending for user."""
+        profile = self.profiles.get(username)
+        if profile:
+            profile.total_spent += amount
+            self._save_profile(profile)
+
+    def record_winnings(self, username: str, amount: float):
+        """Record winnings for user."""
+        profile = self.profiles.get(username)
+        if profile:
+            profile.total_won += amount
+            self._save_profile(profile)
+
+    def get_roi(self, username: str) -> Optional[float]:
+        """Calculate ROI for user."""
+        profile = self.profiles.get(username)
+        if not profile or profile.total_spent == 0:
+            return None
+        return ((profile.total_won - profile.total_spent) / profile.total_spent) * 100
+
+    def list_profiles(self) -> List[str]:
+        """List all usernames."""
+        return list(self.profiles.keys())
+
+    def delete_profile(self, username: str) -> bool:
+        """Delete user profile."""
+        if username not in self.profiles:
+            return False
+
+        profile_path = self._get_profile_path(username)
+        if profile_path.exists():
+            profile_path.unlink()
+
+        del self.profiles[username]
+        if self.current_user == username:
+            self.current_user = None
+        return True
+
+
+# ============================================================================
+# Social Features: Prediction Sharing & Leaderboards
+# ============================================================================
+
+@dataclass
+class SharedPrediction:
+    """A shared prediction for community features."""
+    id: str
+    username: str
+    lottery: str
+    method: str
+    predictions: List[Dict]
+    timestamp: str
+    is_anonymous: bool = False
+    likes: int = 0
+    comments: List[Dict] = field(default_factory=list)
+
+    def to_dict(self) -> Dict:
+        return {
+            "id": self.id,
+            "username": self.username,
+            "lottery": self.lottery,
+            "method": self.method,
+            "predictions": self.predictions,
+            "timestamp": self.timestamp,
+            "is_anonymous": self.is_anonymous,
+            "likes": self.likes,
+            "comments": self.comments
+        }
+
+
+class SocialManager:
+    """Manage social features: sharing, leaderboards, community pools."""
+
+    def __init__(self, storage_path: str = "social_data"):
+        self.storage_path = Path(storage_path)
+        self.storage_path.mkdir(exist_ok=True)
+        self.shared_predictions: List[SharedPrediction] = []
+        self.leaderboard: Dict[str, Dict] = {}  # username -> stats
+        self._load_data()
+
+    def _load_data(self):
+        """Load social data from disk."""
+        shared_file = self.storage_path / "shared_predictions.json"
+        if shared_file.exists():
+            try:
+                with open(shared_file, 'r') as f:
+                    data = json.load(f)
+                self.shared_predictions = [SharedPrediction(**p) for p in data]
+            except Exception:
+                pass
+
+        leaderboard_file = self.storage_path / "leaderboard.json"
+        if leaderboard_file.exists():
+            try:
+                with open(leaderboard_file, 'r') as f:
+                    self.leaderboard = json.load(f)
+            except Exception:
+                pass
+
+    def _save_shared_predictions(self):
+        """Save shared predictions to disk."""
+        shared_file = self.storage_path / "shared_predictions.json"
+        with open(shared_file, 'w') as f:
+            json.dump([p.to_dict() for p in self.shared_predictions], f, indent=2)
+
+    def _save_leaderboard(self):
+        """Save leaderboard to disk."""
+        leaderboard_file = self.storage_path / "leaderboard.json"
+        with open(leaderboard_file, 'w') as f:
+            json.dump(self.leaderboard, f, indent=2)
+
+    def share_prediction(
+        self,
+        username: str,
+        lottery: str,
+        method: str,
+        predictions: List[Dict],
+        is_anonymous: bool = False
+    ) -> SharedPrediction:
+        """Share a prediction with the community."""
+        import uuid
+        prediction_id = str(uuid.uuid4())[:8]
+
+        shared = SharedPrediction(
+            id=prediction_id,
+            username=username if not is_anonymous else "Anonymous",
+            lottery=lottery,
+            method=method,
+            predictions=predictions,
+            timestamp=datetime.now().isoformat(),
+            is_anonymous=is_anonymous
+        )
+
+        self.shared_predictions.append(shared)
+        # Keep only last 500 shared predictions
+        if len(self.shared_predictions) > 500:
+            self.shared_predictions = self.shared_predictions[-500:]
+
+        self._save_shared_predictions()
+        return shared
+
+    def like_prediction(self, prediction_id: str) -> bool:
+        """Like a shared prediction."""
+        for pred in self.shared_predictions:
+            if pred.id == prediction_id:
+                pred.likes += 1
+                self._save_shared_predictions()
+                return True
+        return False
+
+    def add_comment(self, prediction_id: str, username: str, comment: str) -> bool:
+        """Add comment to a shared prediction."""
+        for pred in self.shared_predictions:
+            if pred.id == prediction_id:
+                pred.comments.append({
+                    "username": username,
+                    "comment": comment,
+                    "timestamp": datetime.now().isoformat()
+                })
+                self._save_shared_predictions()
+                return True
+        return False
+
+    def get_shared_predictions(
+        self,
+        lottery: Optional[str] = None,
+        limit: int = 20
+    ) -> List[SharedPrediction]:
+        """Get shared predictions, optionally filtered by lottery."""
+        results = self.shared_predictions
+        if lottery:
+            results = [p for p in results if p.lottery == lottery]
+        return results[-limit:]
+
+    def get_leaderboard(self, lottery: Optional[str] = None, limit: int = 10) -> List[Dict]:
+        """Get accuracy leaderboard."""
+        # Calculate accuracy stats for each user
+        stats = []
+        for username, data in self.leaderboard.items():
+            total = data.get("total_predictions", 0)
+            if total == 0:
+                continue
+
+            correct = data.get("correct_predictions", 0)
+            accuracy = (correct / total * 100) if total > 0 else 0
+
+            stats.append({
+                "username": username,
+                "total_predictions": total,
+                "correct_predictions": correct,
+                "accuracy": round(accuracy, 2),
+                "lottery": lottery or "all"
+            })
+
+        # Sort by accuracy descending
+        stats.sort(key=lambda x: x["accuracy"], reverse=True)
+        return stats[:limit]
+
+    def record_prediction_result(self, username: str, lottery: str, was_correct: bool):
+        """Record prediction result for leaderboard."""
+        if username not in self.leaderboard:
+            self.leaderboard[username] = {
+                "total_predictions": 0,
+                "correct_predictions": 0
+            }
+
+        self.leaderboard[username]["total_predictions"] += 1
+        if was_correct:
+            self.leaderboard[username]["correct_predictions"] += 1
+
+        self._save_leaderboard()
+
+    def create_community_pool(
+        self,
+        name: str,
+        lottery: str,
+        budget: float,
+        ticket_cost: float = 2.0,
+        creator: str = "system"
+    ) -> Dict:
+        """Create a community prediction pool."""
+        import uuid
+        pool_id = str(uuid.uuid4())[:8]
+
+        pool = {
+            "id": pool_id,
+            "name": name,
+            "lottery": lottery,
+            "budget": budget,
+            "ticket_cost": ticket_cost,
+            "creator": creator,
+            "participants": [],
+            "tickets": [],
+            "created_at": datetime.now().isoformat(),
+            "status": "open"
+        }
+
+        pool_file = self.storage_path / f"pool_{pool_id}.json"
+        with open(pool_file, 'w') as f:
+            json.dump(pool, f, indent=2)
+
+        return pool
+
+    def join_pool(self, pool_id: str, username: str, contribution: float) -> bool:
+        """Join a community pool."""
+        pool_file = self.storage_path / f"pool_{pool_id}.json"
+        if not pool_file.exists():
+            return False
+
+        with open(pool_file, 'r') as f:
+            pool = json.load(f)
+
+        if pool["status"] != "open":
+            return False
+
+        # Check if user already in pool
+        for p in pool["participants"]:
+            if p["username"] == username:
+                return False
+
+        pool["participants"].append({
+            "username": username,
+            "contribution": contribution,
+            "joined_at": datetime.now().isoformat()
+        })
+
+        with open(pool_file, 'w') as f:
+            json.dump(pool, f, indent=2)
+
+        return True
+
+    def get_pool(self, pool_id: str) -> Optional[Dict]:
+        """Get pool details."""
+        pool_file = self.storage_path / f"pool_{pool_id}.json"
+        if not pool_file.exists():
+            return None
+
+        with open(pool_file, 'r') as f:
+            return json.load(f)
+
+    def list_pools(self, status: Optional[str] = None) -> List[Dict]:
+        """List all community pools."""
+        pools = []
+        for pool_file in self.storage_path.glob("pool_*.json"):
+            try:
+                with open(pool_file, 'r') as f:
+                    pool = json.load(f)
+                if status is None or pool.get("status") == status:
+                    pools.append(pool)
+            except Exception:
+                pass
+        return pools

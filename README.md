@@ -172,6 +172,23 @@ python main.py predict --all-history
 python main.py analyze --all-history
 python main.py viz --all-history
 
+# NEW: v2.1 Real Data & Production commands
+python main.py fetch-real-api --lottery powerball
+python main.py browse-history --lottery powerball --start 2024-01-01 --end 2024-12-31
+python main.py draw-calendar --lottery powerball --days 30 --export-ics calendar.ics
+
+# NEW: v2.2 User Experience & Social commands
+python main.py user-create --username myuser --email me@example.com
+python main.py user-login --username myuser
+python main.py user-profile
+python main.py user-prefs --default-lottery mega_millions --default-method statistical --theme dark
+python main.py user-favorites --add powerball --add mega_millions
+python main.py user-stats
+python main.py share-prediction --lottery powerball --method ensemble --count 3
+python main.py leaderboard --limit 10
+python main.py community-pool --create --name "My Pool" --lottery powerball --budget 100
+python main.py community-pools --status all
+
 # Launch web GUI
 streamlit run streamlit_app.py
 
@@ -211,6 +228,11 @@ python tkinter_app.py
 | **Real API Data (v2.1)** | ✅ `fetch-real-api` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ❌ Not yet |
 | **History Archive (v2.1)** | ✅ `browse-history` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ❌ Not yet |
 | **Draw Calendar (v2.1)** | ✅ `draw-calendar` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ❌ Not yet |
+| **User Profiles (v2.2)** | ✅ `user-create/login/profile` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ With DB |
+| **Favorites & Preferences (v2.2)** | ✅ `user-prefs/favorites` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ With DB |
+| **Share Predictions (v2.2)** | ✅ `share-prediction` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Leaderboards (v2.2)** | ✅ `leaderboard` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Community Pools (v2.2)** | ✅ `community-pool` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ All |
 | **Production Ready** | Development | **Development + PWA** | Development | ✅ With auth/DB | ✅ Production grade |
 
 **Quick Recommendation:**
@@ -424,6 +446,104 @@ python main.py init-db [OPTIONS]
 
 Options:
   --url TEXT               Database URL (default: sqlite:///lottery_predictor.db)
+```
+
+### `user-create` - Create User Profile (v2.2)
+```bash
+python main.py user-create [OPTIONS]
+
+Options:
+  -u, --username TEXT      Username (required)
+  -e, --email TEXT         Email address (optional)
+```
+
+### `user-login` - Login to User Profile (v2.2)
+```bash
+python main.py user-login [OPTIONS]
+
+Options:
+  -u, --username TEXT      Username (required)
+```
+
+### `user-profile` - Show/Manage Current Profile (v2.2)
+```bash
+python main.py user-profile [OPTIONS]
+
+Options:
+  --show/--hide            Show current profile (default: True)
+  --logout                 Logout current user
+```
+
+### `user-prefs` - Update User Preferences (v2.2)
+```bash
+python main.py user-prefs [OPTIONS]
+
+Options:
+  --default-lottery TEXT   Default lottery (e.g., powerball, mega_millions)
+  --default-method TEXT    Default method: statistical, frequency, cold, pairs, ml, time_series, transformer, online_learning, ensemble
+  --default-count INT      Default prediction count (1-100)
+  --lang TEXT              Language: en, es, fr, de, zh
+  --theme TEXT             Theme: light, dark, system
+  --auto-detect/--no-auto-detect  Auto-detect lottery from location
+  --all-history/--no-all-history  Use all historical data by default
+```
+
+### `user-favorites` - Manage Favorite Lotteries (v2.2)
+```bash
+python main.py user-favorites [OPTIONS]
+
+Options:
+  -a, --add TEXT           Add lottery to favorites
+  -r, --remove TEXT        Remove lottery from favorites
+  -l, --list               List favorites
+```
+
+### `user-stats` - Show User Statistics & ROI (v2.2)
+```bash
+python main.py user-stats
+```
+
+### `share-prediction` - Share Prediction with Community (v2.2)
+```bash
+python main.py share-prediction [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Lottery type (required)
+  -m, --method TEXT        Prediction method (default: ensemble)
+  -c, --count INT          Number of predictions to share (default: 3)
+  --anonymous              Share anonymously
+```
+
+### `leaderboard` - Show Accuracy Leaderboard (v2.2)
+```bash
+python main.py leaderboard [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Filter by lottery
+  --limit INT              Number of entries to show (default: 10)
+```
+
+### `community-pool` - Create/Join Community Pools (v2.2)
+```bash
+python main.py community-pool [OPTIONS]
+
+Options:
+  --create                 Create a new pool
+  -j, --join TEXT          Join pool by ID
+  -l, --list               List open pools
+  -n, --name TEXT          Pool name (for create)
+  --lottery TEXT           Lottery type (for create)
+  -b, --budget FLOAT       Pool budget (for create, default: 50.0)
+  -c, --contribution FLOAT Your contribution (for join, default: 10.0)
+  --cost FLOAT             Ticket cost (for create, default: 2.0)
+```
+
+### `community-pools` - List Community Pools (v2.2)
+```bash
+python main.py community-pools [OPTIONS]
+
+Options:
+  -s, --status TEXT        Filter: open, closed, all (default: open)
 ```
 
 ## Prediction Methods
@@ -698,19 +818,24 @@ If you or someone you know has a gambling problem, please contact:
   - Next draw countdown timer
   - CLI: `draw-calendar` command with countdown & export
 
-### v2.2 - User Experience & Social 👥
-- [ ] **User Profiles & Preferences** - Save favorites, settings, notification config
+### v2.2 - User Experience & Social 👥 ✅
+- [x] **User Profiles & Preferences** - Save favorites, settings, notification config
   - Favorite lotteries & methods
   - Default prediction count & history depth
   - Notification channels (email, Discord, Pushbullet)
-- [ ] **Syndicate Web UI** - Manage groups, shares, payouts in Streamlit/Tkinter
+  - Language & theme preferences
+  - ROI tracking (spending vs winnings)
+- [x] **Syndicate Web UI** - Manage groups, shares, payouts in Streamlit
   - Create/join syndicates
   - Track contributions & distributions
   - Automated payout calculations
-- [ ] **Social Features** - Share predictions, community pools, leaderboards
+- [x] **Social Features** - Share predictions, community pools, leaderboards
   - Anonymous prediction sharing
   - Accuracy leaderboards
   - Community prediction pools
+- [x] **CLI Commands** - Full user management from terminal
+  - `user-create`, `user-login`, `user-profile`, `user-prefs`, `user-favorites`, `user-stats`
+  - `share-prediction`, `leaderboard`, `community-pool`, `community-pools`
 
 ### v2.3 - Intelligence & Automation 🤖
 - [ ] **Model Performance Dashboard** - Track accuracy over time, detect drift

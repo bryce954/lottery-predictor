@@ -47,7 +47,9 @@ from .data_integration import (
 )
 from .advanced import (
     PortfolioOptimizer, SyndicateManager, Syndicate, SyndicateMember,
-    NotificationSystem, I18nManager
+    NotificationSystem, I18nManager,
+    UserProfileManager, UserPreferences, UserProfile,
+    SocialManager, SharedPrediction
 )
 from .cloud import (
     create_app, generate_dockerfile, generate_docker_compose, generate_kubernetes
@@ -2039,6 +2041,518 @@ def draw_calendar(
             title="🎯 Next Draw",
             border_style="green"
         ))
+
+
+# v2.2 User Experience & Social Commands
+
+@app.command()
+def user_create(
+    username: str = typer.Option(..., "--username", "-u", help="Username"),
+    email: Optional[str] = typer.Option(None, "--email", "-e", help="Email address"),
+):
+    """Create a new user profile (v2.2)."""
+    print_header(f"👤 Create User Profile (v2.2)")
+
+    manager = UserProfileManager()
+
+    try:
+        profile = manager.create_profile(username, email)
+        console.print(f"\n[green]✓ Profile created for '{username}'[/green]")
+        if email:
+            console.print(f"  Email: {email}")
+        console.print(f"  Created: {profile.created_at}")
+    except ValueError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        raise typer.Exit(1)
+
+
+@app.command()
+def user_login(
+    username: str = typer.Option(..., "--username", "-u", help="Username"),
+):
+    """Login to a user profile (v2.2)."""
+    print_header(f"🔐 User Login (v2.2)")
+
+    manager = UserProfileManager()
+
+    if manager.set_current_user(username):
+        console.print(f"\n[green]✓ Logged in as '{username}'[/green]")
+        profile = manager.get_current_profile()
+        if profile:
+            console.print(f"  Last login: {profile.last_login}")
+            console.print(f"  Favorite lotteries: {', '.join(profile.preferences.favorite_lotteries) if profile.preferences.favorite_lotteries else 'None'}")
+    else:
+        console.print(f"[red]Error: User '{username}' not found[/red]")
+        console.print("[yellow]Available users:[/yellow]")
+        for u in manager.list_profiles():
+            console.print(f"  - {u}")
+        raise typer.Exit(1)
+
+
+@app.command()
+def user_profile(
+    show: bool = typer.Option(True, "--show/--hide", help="Show current profile"),
+    logout: bool = typer.Option(False, "--logout", help="Logout current user"),
+):
+    """Show or manage current user profile (v2.2)."""
+    print_header(f"👤 User Profile (v2.2)")
+
+    manager = UserProfileManager()
+
+    if logout:
+        if manager.current_user:
+            old_user = manager.current_user
+            manager.current_user = None
+            manager._save_current_user()
+            console.print(f"[green]✓ Logged out from '{old_user}'[/green]")
+        else:
+            console.print("[yellow]No user currently logged in[/yellow]")
+        return
+
+    if show:
+        profile = manager.get_current_profile()
+        if profile:
+            console.print(f"\n[bold]Current User:[/bold] {profile.username}")
+            console.print(f"  Email: {profile.email or 'Not set'}")
+            console.print(f"  Created: {profile.created_at}")
+            console.print(f"  Last Login: {profile.last_login or 'Never'}")
+            console.print(f"  Predictions Made: {len(profile.prediction_history)}")
+            console.print(f"  Syndicates: {len(profile.syndicate_memberships)}")
+            console.print(f"  Total Spent: ${profile.total_spent:.2f}")
+            console.print(f"  Total Won: ${profile.total_won:.2f}")
+            roi = manager.get_roi(profile.username)
+            if roi is not None:
+                console.print(f"  ROI: {roi:+.2f}%")
+            console.print(f"\n[bold]Preferences:[/bold]")
+            console.print(f"  Default Lottery: {profile.preferences.default_lottery}")
+            console.print(f"  Default Method: {profile.preferences.default_method}")
+            console.print(f"  Default Count: {profile.preferences.default_prediction_count}")
+            console.print(f"  Language: {profile.preferences.language}")
+            console.print(f"  Theme: {profile.preferences.theme}")
+            console.print(f"  Favorite Lotteries: {', '.join(profile.preferences.favorite_lotteries) if profile.preferences.favorite_lotteries else 'None'}")
+        else:
+            console.print("[yellow]No user logged in. Use 'user-login' to login or 'user-create' to create a profile.[/yellow]")
+
+
+@app.command()
+def user_prefs(
+    default_lottery: Optional[str] = typer.Option(None, "--default-lottery", help="Default lottery"),
+    default_method: Optional[str] = typer.Option(None, "--default-method", help="Default prediction method"),
+    default_count: Optional[int] = typer.Option(None, "--default-count", help="Default prediction count"),
+    language: Optional[str] = typer.Option(None, "--language", "--lang", help="Language: en, es, fr, de, zh"),
+    theme: Optional[str] = typer.Option(None, "--theme", help="Theme: light, dark, system"),
+    auto_detect: Optional[bool] = typer.Option(None, "--auto-detect/--no-auto-detect", help="Auto-detect lottery from location"),
+    all_history: Optional[bool] = typer.Option(None, "--all-history/--no-all-history", help="Use all historical data by default"),
+):
+    """Update user preferences (v2.2)."""
+    print_header(f"⚙️ User Preferences (v2.2)")
+
+    manager = UserProfileManager()
+    profile = manager.get_current_profile()
+
+    if not profile:
+        console.print("[red]Error: No user logged in. Use 'user-login' first.[/red]")
+        raise typer.Exit(1)
+
+    # Build update dict
+    updates = {}
+    if default_lottery:
+        if default_lottery not in LOTTERY_TYPES:
+            console.print(f"[red]Error: Unknown lottery '{default_lottery}'[/red]")
+            raise typer.Exit(1)
+        updates["default_lottery"] = default_lottery
+    if default_method:
+        valid_methods = ["statistical", "frequency", "cold", "pairs", "ml", "time_series", "transformer", "online_learning", "ensemble"]
+        if default_method not in valid_methods:
+            console.print(f"[red]Error: Invalid method. Choose from: {', '.join(valid_methods)}[/red]")
+            raise typer.Exit(1)
+        updates["default_method"] = default_method
+    if default_count:
+        if default_count < 1 or default_count > 100:
+            console.print("[red]Error: Count must be between 1 and 100[/red]")
+            raise typer.Exit(1)
+        updates["default_prediction_count"] = default_count
+    if language:
+        if language not in I18nManager.get_available_languages():
+            console.print(f"[red]Error: Language '{language}' not available. Choose from: {', '.join(I18nManager.get_available_languages())}[/red]")
+            raise typer.Exit(1)
+        updates["language"] = language
+    if theme:
+        if theme not in ["light", "dark", "system"]:
+            console.print("[red]Error: Theme must be 'light', 'dark', or 'system'[/red]")
+            raise typer.Exit(1)
+        updates["theme"] = theme
+    if auto_detect is not None:
+        updates["auto_detect_state"] = auto_detect
+    if all_history is not None:
+        updates["use_all_history"] = all_history
+
+    if not updates:
+        console.print("[yellow]No changes specified. Use options to update preferences.[/yellow]")
+        return
+
+    if manager.update_preferences(profile.username, **updates):
+        console.print("[green]✓ Preferences updated![/green]")
+        for key, value in updates.items():
+            console.print(f"  {key}: {value}")
+    else:
+        console.print("[red]Failed to update preferences[/red]")
+
+
+@app.command()
+def user_favorites(
+    add: Optional[str] = typer.Option(None, "--add", "-a", help="Add lottery to favorites"),
+    remove: Optional[str] = typer.Option(None, "--remove", "-r", help="Remove lottery from favorites"),
+    list_favs: bool = typer.Option(False, "--list", "-l", help="List favorites"),
+):
+    """Manage favorite lotteries (v2.2)."""
+    print_header(f"⭐ Favorite Lotteries (v2.2)")
+
+    manager = UserProfileManager()
+    profile = manager.get_current_profile()
+
+    if not profile:
+        console.print("[red]Error: No user logged in. Use 'user-login' first.[/red]")
+        raise typer.Exit(1)
+
+    if add:
+        if add not in LOTTERY_TYPES:
+            console.print(f"[red]Error: Unknown lottery '{add}'[/red]")
+            raise typer.Exit(1)
+        if manager.add_favorite_lottery(profile.username, add):
+            console.print(f"[green]✓ Added '{add}' to favorites[/green]")
+        else:
+            console.print("[red]Failed to add favorite[/red]")
+    elif remove:
+        if manager.remove_favorite_lottery(profile.username, remove):
+            console.print(f"[green]✓ Removed '{remove}' from favorites[/green]")
+        else:
+            console.print("[red]Failed to remove favorite[/red]")
+    elif list_favs or (not add and not remove):
+        favs = profile.preferences.favorite_lotteries
+        if favs:
+            console.print("\n[bold]Your Favorite Lotteries:[/bold]")
+            for fav in favs:
+                console.print(f"  ⭐ {LOTTERY_CONFIGS[fav]['name']} ({fav})")
+        else:
+            console.print("\n[yellow]No favorites set. Use --add to add lotteries.[/yellow]")
+
+
+@app.command()
+def user_stats():
+    """Show user statistics and ROI (v2.2)."""
+    print_header(f"📊 User Statistics (v2.2)")
+
+    manager = UserProfileManager()
+    profile = manager.get_current_profile()
+
+    if not profile:
+        console.print("[red]Error: No user logged in. Use 'user-login' first.[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"\n[bold]User: {profile.username}[/bold]")
+    console.print(f"  Member since: {profile.created_at[:10]}")
+    console.print(f"  Last login: {profile.last_login[:10] if profile.last_login else 'Never'}")
+
+    # Spending stats
+    console.print(f"\n[bold]Financial:[/bold]")
+    console.print(f"  Total Spent: ${profile.total_spent:.2f}")
+    console.print(f"  Total Won: ${profile.total_won:.2f}")
+    roi = manager.get_roi(profile.username)
+    if roi is not None:
+        color = "green" if roi >= 0 else "red"
+        console.print(f"  ROI: [{color}]{roi:+.2f}%[/{color}]")
+    else:
+        console.print(f"  ROI: N/A (no spending recorded)")
+
+    # Prediction history
+    console.print(f"\n[bold]Predictions:[/bold]")
+    console.print(f"  Total predictions made: {len(profile.prediction_history)}")
+
+    if profile.prediction_history:
+        # Method breakdown
+        method_counts = {}
+        lottery_counts = {}
+        for record in profile.prediction_history:
+            method = record.get('method', 'unknown')
+            lottery = record.get('lottery', 'unknown')
+            method_counts[method] = method_counts.get(method, 0) + 1
+            lottery_counts[lottery] = lottery_counts.get(lottery, 0) + 1
+
+        console.print(f"\n  By Method:")
+        for method, count in sorted(method_counts.items(), key=lambda x: -x[1]):
+            console.print(f"    {method}: {count}")
+
+        console.print(f"\n  By Lottery:")
+        for lottery, count in sorted(lottery_counts.items(), key=lambda x: -x[1]):
+            console.print(f"    {LOTTERY_CONFIGS.get(lottery, {}).get('name', lottery)}: {count}")
+
+    # Syndicates
+    if profile.syndicate_memberships:
+        console.print(f"\n[bold]Syndicate Memberships:[/bold]")
+        for s in profile.syndicate_memberships:
+            console.print(f"  - {s}")
+    else:
+        console.print(f"\n[bold]Syndicate Memberships:[/bold] None")
+
+
+@app.command()
+def share_prediction(
+    lottery: str = typer.Option(..., "--lottery", "-l", help="Lottery type"),
+    method: str = typer.Option("ensemble", "--method", "-m", help="Prediction method"),
+    count: int = typer.Option(3, "--count", "-c", help="Number of predictions to share"),
+    anonymous: bool = typer.Option(False, "--anonymous", help="Share anonymously"),
+):
+    """Share a prediction with the community (v2.2)."""
+    print_header(f"📤 Share Prediction (v2.2)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    manager = UserProfileManager()
+    profile = manager.get_current_profile()
+
+    if not profile and not anonymous:
+        console.print("[red]Error: Not logged in. Login or use --anonymous[/red]")
+        raise typer.Exit(1)
+
+    username = profile.username if profile else "Anonymous"
+
+    # Generate predictions
+    predictor = get_predictor(lottery, method)
+    if method == "statistical":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_balanced(num_predictions=count)
+    elif method == "frequency":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_frequency_based(num_predictions=count)
+    elif method == "cold":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_cold_numbers(num_predictions=count)
+    elif method == "pairs":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_pair_based(num_predictions=count)
+    elif method == "ml":
+        pred = MLModelPredictor(lottery)
+        if not pred.is_trained:
+            pred.train()
+        predictions = pred.predict(num_predictions=count)
+    elif method == "time_series":
+        pred = TimeSeriesPredictor(lottery)
+        predictions = pred.predict(num_predictions=count)
+    elif method == "transformer":
+        pred = TransformerPredictor(lottery)
+        if pred.model is None:
+            pred.train()
+        predictions = pred.predict(num_predictions=count)
+    elif method == "online_learning":
+        pred = OnlineLearningPredictor(lottery)
+        predictions = pred.predict(num_predictions=count)
+    else:  # ensemble
+        pred = EnsemblePredictor(lottery)
+        predictions = pred.get_consensus_prediction(num_predictions=count)
+
+    # Convert to dict format (convert numpy types to Python types)
+    pred_dicts = [
+        {
+            "main_numbers": [int(n) for n in p.main_numbers],
+            "bonus_numbers": [int(n) for n in p.bonus_numbers] if p.bonus_numbers else [],
+            "confidence": float(p.confidence),
+            "method": p.method,
+            "metadata": p.metadata
+        }
+        for p in predictions
+    ]
+
+    # Share
+    social = SocialManager()
+    shared = social.share_prediction(
+        username=username,
+        lottery=lottery,
+        method=method,
+        predictions=pred_dicts,
+        is_anonymous=anonymous
+    )
+
+    console.print(f"\n[green]✓ Prediction shared![/green]")
+    console.print(f"  Share ID: {shared.id}")
+    console.print(f"  Lottery: {LOTTERY_CONFIGS[lottery]['name']}")
+    console.print(f"  Method: {method}")
+    console.print(f"  Anonymous: {'Yes' if anonymous else 'No'}")
+
+    # Show preview
+    table = Table(title="Shared Prediction Preview", show_header=True)
+    table.add_column("Set", style="dim")
+    table.add_column("Main Numbers", style="green")
+    table.add_column("Bonus", style="yellow")
+    table.add_column("Confidence", style="blue")
+    for i, p in enumerate(pred_dicts, 1):
+        main_str = " ".join(f"{n:2d}" for n in p["main_numbers"])
+        bonus_str = " ".join(f"{n:2d}" for n in p["bonus_numbers"]) if p["bonus_numbers"] else "N/A"
+        table.add_row(str(i), main_str, bonus_str, f"{p['confidence']:.1%}")
+    console.print(table)
+
+
+@app.command()
+def leaderboard(
+    lottery: Optional[str] = typer.Option(None, "--lottery", "-l", help="Filter by lottery"),
+    limit: int = typer.Option(10, "--limit", help="Number of entries to show"),
+):
+    """Show accuracy leaderboard (v2.2)."""
+    print_header(f"🏆 Accuracy Leaderboard (v2.2)")
+
+    social = SocialManager()
+    lb = social.get_leaderboard(lottery, limit)
+
+    if not lb:
+        console.print("[yellow]No leaderboard data yet. Make predictions and verify them![/yellow]")
+        return
+
+    table = Table(show_header=True)
+    table.add_column("Rank", style="dim", width=6)
+    table.add_column("Username", style="cyan")
+    table.add_column("Predictions", style="green")
+    table.add_column("Correct", style="yellow")
+    table.add_column("Accuracy", style="magenta")
+
+    for i, entry in enumerate(lb, 1):
+        table.add_row(
+            str(i),
+            entry["username"],
+            str(entry["total_predictions"]),
+            str(entry["correct_predictions"]),
+            f"{entry['accuracy']}%"
+        )
+
+    console.print(table)
+    if lottery:
+        console.print(f"\n[dim]Filtered by: {LOTTERY_CONFIGS[lottery]['name']}[/dim]")
+
+
+@app.command()
+def community_pool(
+    create: bool = typer.Option(False, "--create", help="Create a new pool"),
+    join: Optional[str] = typer.Option(None, "--join", "-j", help="Join pool by ID"),
+    list_pools: bool = typer.Option(False, "--list", "-l", help="List open pools"),
+    name: Optional[str] = typer.Option(None, "--name", "-n", help="Pool name (for create)"),
+    lottery: Optional[str] = typer.Option(None, "--lottery", help="Lottery type (for create)"),
+    budget: float = typer.Option(50.0, "--budget", "-b", help="Pool budget (for create)"),
+    contribution: float = typer.Option(10.0, "--contribution", "-c", help="Your contribution (for join)"),
+    ticket_cost: float = typer.Option(2.0, "--cost", help="Ticket cost (for create)"),
+):
+    """Create or join community prediction pools (v2.2)."""
+    print_header(f"🤝 Community Pools (v2.2)")
+
+    manager = UserProfileManager()
+    profile = manager.get_current_profile()
+
+    social = SocialManager()
+
+    if create:
+        if not profile:
+            console.print("[red]Error: Must be logged in to create a pool[/red]")
+            raise typer.Exit(1)
+        if not name:
+            console.print("[red]Error: --name required for create[/red]")
+            raise typer.Exit(1)
+        if not lottery:
+            console.print("[red]Error: --lottery required for create[/red]")
+            raise typer.Exit(1)
+        if lottery not in LOTTERY_TYPES:
+            console.print(f"[red]Error: Unknown lottery '{lottery}'[/red]")
+            raise typer.Exit(1)
+
+        pool = social.create_community_pool(
+            name=name,
+            lottery=lottery,
+            budget=budget,
+            ticket_cost=ticket_cost,
+            creator=profile.username
+        )
+        console.print(f"\n[green]✓ Pool created![/green]")
+        console.print(f"  ID: {pool['id']}")
+        console.print(f"  Name: {pool['name']}")
+        console.print(f"  Lottery: {LOTTERY_CONFIGS[lottery]['name']}")
+        console.print(f"  Budget: ${pool['budget']:.2f}")
+        console.print(f"  Share this ID with others to join: {pool['id']}")
+
+    elif join:
+        if not profile:
+            console.print("[red]Error: Must be logged in to join a pool[/red]")
+            raise typer.Exit(1)
+
+        pool = social.get_pool(join)
+        if not pool:
+            console.print(f"[red]Error: Pool '{join}' not found[/red]")
+            raise typer.Exit(1)
+
+        if social.join_pool(join, profile.username, contribution):
+            console.print(f"\n[green]✓ Joined pool '{pool['name']}'![/green]")
+            console.print(f"  Your contribution: ${contribution:.2f}")
+            console.print(f"  Total participants: {len(pool['participants'])}")
+        else:
+            console.print("[red]Failed to join pool (already joined or pool closed)[/red]")
+
+    elif list_pools or (not create and not join):
+        pools = social.list_pools(status="open")
+        if pools:
+            table = Table(show_header=True)
+            table.add_column("ID", style="cyan")
+            table.add_column("Name", style="green")
+            table.add_column("Lottery", style="yellow")
+            table.add_column("Budget", style="blue")
+            table.add_column("Participants", style="magenta")
+            table.add_column("Creator", style="dim")
+            for pool in pools:
+                table.add_row(
+                    pool["id"],
+                    pool["name"],
+                    LOTTERY_CONFIGS.get(pool["lottery"], {}).get("name", pool["lottery"]),
+                    f"${pool['budget']:.2f}",
+                    str(len(pool["participants"])),
+                    pool["creator"]
+                )
+            console.print(table)
+        else:
+            console.print("[yellow]No open pools found. Create one with --create![/yellow]")
+
+    else:
+        console.print("[yellow]Use --create, --join, or --list[/yellow]")
+
+
+@app.command()
+def community_pools(
+    status: Optional[str] = typer.Option("open", "--status", "-s", help="Filter: open, closed, all"),
+):
+    """List community prediction pools (v2.2)."""
+    print_header(f"🤝 Community Pools (v2.2)")
+
+    social = SocialManager()
+    pools = social.list_pools(status=None if status == "all" else status)
+
+    if pools:
+        table = Table(show_header=True)
+        table.add_column("ID", style="cyan")
+        table.add_column("Name", style="green")
+        table.add_column("Lottery", style="yellow")
+        table.add_column("Budget", style="blue")
+        table.add_column("Participants", style="magenta")
+        table.add_column("Status", style="dim")
+        table.add_column("Created", style="dim")
+        for pool in pools:
+            table.add_row(
+                pool["id"],
+                pool["name"],
+                LOTTERY_CONFIGS.get(pool["lottery"], {}).get("name", pool["lottery"]),
+                f"${pool['budget']:.2f}",
+                str(len(pool["participants"])),
+                pool.get("status", "open"),
+                pool["created_at"][:10]
+            )
+        console.print(table)
+    else:
+        console.print("[yellow]No pools found matching criteria.[/yellow]")
 
 
 if __name__ == "__main__":
