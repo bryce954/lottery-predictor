@@ -691,7 +691,7 @@ If you or someone you know has a gambling problem, please contact:
   - Accuracy leaderboards
   - Community prediction pools
 
-### v3.0 - Intelligence & Automation 🤖
+### v2.3 - Intelligence & Automation 🤖
 - [ ] **Model Performance Dashboard** - Track accuracy over time, detect drift
   - Per-method performance charts
   - Model retraining triggers
@@ -707,7 +707,7 @@ If you or someone you know has a gambling problem, please contact:
   - Shortcuts/Intent support
   - Read aloud predictions
 
-### v3.1 - Enhanced History & Analytics 📊
+### v2.4 - Enhanced History & Analytics 📊
 - [ ] **Per-Lottery Full History Toggle** - Option to use all historical data for each lottery
   - Already implemented via `--all-history` flag (works for all 48+ lotteries)
   - Add UI toggles in Streamlit & Tkinter for easy access
