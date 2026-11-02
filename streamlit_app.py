@@ -555,7 +555,15 @@ with st.sidebar:
     )
 
     num_predictions = st.slider("Number of Predictions", 1, 10, 5)
-    last_n_draws = st.slider("Historical Draws to Analyze", 50, 1000, 200, step=50)
+
+    # Full history toggle (v2.4)
+    use_all_history = st.checkbox("📚 Use All Historical Data (from lottery start date)", value=False, help="Analyze all available draws instead of recent N draws")
+
+    if not use_all_history:
+        last_n_draws = st.slider("Historical Draws to Analyze", 50, 1000, 200, step=50)
+    else:
+        last_n_draws = None
+        st.info("Using all historical data from lottery start date")
 
     # Advanced settings
     with st.expander("Advanced Settings"):
@@ -563,13 +571,15 @@ with st.sidebar:
         lookback = st.slider("Lookback Window (ML)", 5, 20, 10)
 
 # Main tabs
-tab1, tab2, tab3, tab4, tab5, tab6 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
     "🎯 Predict",
     "📊 Analyze",
     "📈 Visualize",
     "📜 History",
     "⚔️ Compare",
-    "👤 Profile & Social"
+    "👤 Profile & Social",
+    "🏥 Data Health (v2.4)",
+    "🔗 Cross-Lottery (v2.4)"
 ])
 
 # Helper functions
@@ -687,12 +697,24 @@ with tab1:
 with tab2:
     st.markdown('<div class="sub-header">📊 Historical Analysis</div>', unsafe_allow_html=True)
 
-    dm, df = load_lottery_data(selected_lottery, last_n_draws)
+    # Full history toggle for analysis
+    analyze_all_history = st.checkbox("📚 Use All Historical Data (from lottery start date)", value=(last_n_draws is None), key="analyze_all_history")
+
+    if analyze_all_history:
+        dm, df = load_lottery_data(selected_lottery, None)
+        analysis_last_n = None
+        st.info(f"Using all {len(df)} historical draws from {df['date'].min().strftime('%Y-%m-%d')}")
+    else:
+        dm, df = load_lottery_data(selected_lottery, last_n_draws)
 
     # Analysis controls
     col1, col2, col3 = st.columns(3)
     with col1:
-        analysis_last_n = st.slider("Draws to Analyze", 50, len(df), min(last_n_draws, len(df)), key="analyze_n")
+        if not analyze_all_history:
+            analysis_last_n = st.slider("Draws to Analyze", 50, len(df), min(last_n_draws, len(df)), key="analyze_n")
+        else:
+            analysis_last_n = None
+            st.write("Analyzing all draws")
     with col2:
         if st.button("🔄 Refresh Analysis", key="refresh_analyze"):
             st.cache_data.clear()
@@ -701,7 +723,8 @@ with tab2:
         show_viz = st.checkbox("Show Charts", value=True)
 
     # Recalculate with selected draws
-    dm, df = load_lottery_data(selected_lottery, analysis_last_n)
+    if not analyze_all_history:
+        dm, df = load_lottery_data(selected_lottery, analysis_last_n)
 
     # Metrics row
     col1, col2, col3, col4 = st.columns(4)
@@ -1406,6 +1429,269 @@ with tab6:
                             st.button("Login to Join", disabled=True, use_container_width=True)
         else:
             st.info("No open community pools. Create one above!")
+
+# Tab 7: Data Health Dashboard (v2.4)
+with tab7:
+    st.markdown('<div class="sub-header">🏥 Historical Data Health Dashboard (v2.4)</div>', unsafe_allow_html=True)
+
+    st.markdown("""
+    Monitor data freshness, detect gaps in draw schedules, identify anomalies, and schedule backfills
+    for missing historical data across all supported lotteries.
+    """)
+
+    from lottery_predictor.advanced import HistoricalDataHealthDashboard
+
+    dashboard = HistoricalDataHealthDashboard()
+
+    # Options
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        health_lottery = st.selectbox(
+            "Select Lottery",
+            options=["All Lotteries"] + [f"{g.name} ({g.key})" for g in manager.list_games() if g.main_numbers > 0],
+            key="health_lottery"
+        )
+    with col2:
+        auto_refresh = st.checkbox("Auto-refresh on load", value=True)
+    with col3:
+        if st.button("🔄 Analyze Health", type="primary", width='stretch'):
+            st.cache_data.clear()
+            st.rerun()
+
+    if health_lottery == "All Lotteries":
+        with st.spinner("Analyzing health for all lotteries..."):
+            health_data = dashboard.get_all_lotteries_health()
+
+        if not health_data:
+            st.warning("No health data available. Click 'Analyze Health' to run analysis.")
+        else:
+            # Summary metrics
+            st.subheader("📊 Overall Health Summary")
+            cols = st.columns(4)
+            with cols[0]:
+                st.metric("Total Lotteries", len(health_data))
+            with cols[1]:
+                avg_completeness = np.mean([float(h['completeness_score'].rstrip('%'))/100 for h in health_data])
+                st.metric("Avg Completeness", f"{avg_completeness:.1%}")
+            with cols[2]:
+                avg_freshness = np.mean([float(h['freshness_score'].rstrip('%'))/100 for h in health_data])
+                st.metric("Avg Freshness", f"{avg_freshness:.1%}")
+            with cols[3]:
+                total_anomalies = sum(h['anomalies_count'] for h in health_data)
+                st.metric("Total Anomalies", total_anomalies)
+
+            # Health table
+            st.subheader("📋 Detailed Health Report")
+            health_df = pd.DataFrame(health_data)
+            health_df['Lottery Name'] = health_df['lottery'].apply(lambda x: LOTTERY_CONFIGS.get(x, {}).get('name', x))
+            display_cols = ['Lottery Name', 'total_draws', 'date_range', 'days_since_last_draw', 'expected_draws', 'missing_draws', 'completeness_score', 'freshness_score', 'gaps_count', 'anomalies_count']
+            health_df_display = health_df[display_cols].copy()
+            health_df_display.columns = ['Lottery', 'Total Draws', 'Date Range', 'Days Since Last', 'Expected', 'Missing', 'Completeness', 'Freshness', 'Gaps', 'Anomalies']
+            st.dataframe(health_df_display, width='stretch', hide_index=True)
+
+            # Download button
+            csv = health_df_display.to_csv(index=False)
+            st.download_button(
+                "📥 Download Health Report (CSV)",
+                csv,
+                file_name="data_health_report.csv",
+                mime="text/csv"
+            )
+    else:
+        lottery_key = health_lottery.split("(")[-1].rstrip(")")
+        with st.spinner(f"Analyzing health for {LOTTERY_CONFIGS[lottery_key]['name']}..."):
+            record = dashboard.analyze_lottery_health(lottery_key)
+
+        st.subheader(f"📋 Health Report: {LOTTERY_CONFIGS[lottery_key]['name']}")
+
+        # Metrics
+        cols = st.columns(5)
+        with cols[0]:
+            st.metric("Total Draws", record.total_draws)
+        with cols[1]:
+            st.metric("Days Since Last Draw", record.days_since_last_draw)
+        with cols[2]:
+            st.metric("Expected Draws", record.expected_draws)
+        with cols[3]:
+            st.metric("Missing Draws", record.missing_draws)
+        with cols[4]:
+            st.metric("Completeness", f"{record.completeness_score:.1%}")
+
+        cols2 = st.columns(3)
+        with cols2[0]:
+            st.metric("Freshness", f"{record.freshness_score:.1%}")
+        with cols2[1]:
+            st.metric("Gaps Detected", len(record.gaps))
+        with cols2[2]:
+            st.metric("Anomalies", len(record.anomalies))
+
+        st.write(f"**Date Range:** {record.date_range_start} to {record.date_range_end}")
+
+        # Gaps
+        if record.gaps:
+            st.subheader("⚠️ Detected Gaps")
+            gaps_df = pd.DataFrame(record.gaps)
+            st.dataframe(gaps_df, width='stretch', hide_index=True)
+
+            # Backfill button
+            if st.button("📥 Schedule Backfill for Missing Data", type="secondary"):
+                result = dashboard.schedule_backfill(lottery_key)
+                st.success(f"Backfill scheduled: {result}")
+        else:
+            st.success("✅ No gaps detected in draw schedule")
+
+        # Anomalies
+        if record.anomalies:
+            st.subheader("🔍 Detected Anomalies")
+            anomalies_df = pd.DataFrame(record.anomalies)
+            st.dataframe(anomalies_df, width='stretch', hide_index=True)
+        else:
+            st.success("✅ No anomalies detected")
+
+# Tab 8: Cross-Lottery Correlation (v2.4)
+with tab8:
+    st.markdown('<div class="sub-header">🔗 Cross-Lottery Historical Correlation (v2.4)</div>', unsafe_allow_html=True)
+
+    st.markdown("""
+    Analyze historical correlations between different lottery games to discover patterns.
+    Compare number frequencies, sum distributions, and odd/even patterns across lotteries.
+    """)
+
+    from lottery_predictor.advanced import CrossLotteryCorrelationAnalyzer
+
+    analyzer = CrossLotteryCorrelationAnalyzer()
+
+    # Mode selection
+    mode = st.radio(
+        "Analysis Mode",
+        ["Compare Two Lotteries", "Find Correlated Lotteries"],
+        horizontal=True
+    )
+
+    if mode == "Compare Two Lotteries":
+        col1, col2 = st.columns(2)
+        with col1:
+            lotto_a = st.selectbox(
+                "First Lottery",
+                options=[f"{g.name} ({g.key})" for g in manager.list_games() if g.main_numbers > 0],
+                index=0,
+                key="corr_lotto_a"
+            )
+        with col2:
+            lotto_b = st.selectbox(
+                "Second Lottery",
+                options=[f"{g.name} ({g.key})" for g in manager.list_games() if g.main_numbers > 0],
+                index=1,
+                key="corr_lotto_b"
+            )
+
+        lottery_a_key = lotto_a.split("(")[-1].rstrip(")")
+        lottery_b_key = lotto_b.split("(")[-1].rstrip(")")
+
+        if st.button("🔗 Analyze Correlations", type="primary", width='stretch'):
+            if lottery_a_key == lottery_b_key:
+                st.error("Please select two different lotteries")
+            else:
+                with st.spinner(f"Analyzing correlations between {LOTTERY_CONFIGS[lottery_a_key]['name']} and {LOTTERY_CONFIGS[lottery_b_key]['name']}..."):
+                    results = analyzer.analyze_all_correlations(lottery_a_key, lottery_b_key)
+
+                if results:
+                    st.subheader(f"📊 Correlation Results: {LOTTERY_CONFIGS[lottery_a_key]['name']} vs {LOTTERY_CONFIGS[lottery_b_key]['name']}")
+
+                    # Results table
+                    corr_data = []
+                    for r in results:
+                        corr_data.append({
+                            "Correlation Type": r.correlation_type.replace("_", " ").title(),
+                            "Coefficient": f"{r.correlation_coefficient:.4f}",
+                            "P-Value": f"{r.p_value:.4f}",
+                            "Significant": "✅ Yes" if r.significant else "❌ No",
+                            "Sample Size": r.sample_size,
+                            "Details": str(r.details)
+                        })
+
+                    corr_df = pd.DataFrame(corr_data)
+                    st.dataframe(corr_df, width='stretch', hide_index=True)
+
+                    # Interpretation
+                    st.subheader("📖 Interpretation")
+                    for r in results:
+                        strength = "strong" if abs(r.correlation_coefficient) > 0.7 else "moderate" if abs(r.correlation_coefficient) > 0.3 else "weak"
+                        direction = "positive" if r.correlation_coefficient > 0 else "negative"
+                        sig_text = "statistically significant" if r.significant else "not statistically significant"
+                        st.write(f"**{r.correlation_type.replace('_', ' ').title()}:** {strength.capitalize()} {direction} correlation ({sig_text}, p={r.p_value:.4f})")
+
+                    # Visualization - correlation heatmap
+                    st.subheader("📈 Correlation Visualization")
+                    fig = go.Figure()
+                    for r in results:
+                        fig.add_trace(go.Bar(
+                            name=r.correlation_type.replace("_", " ").title(),
+                            x=[r.correlation_type.replace("_", " ").title()],
+                            y=[r.correlation_coefficient],
+                            text=[f"{r.correlation_coefficient:.3f}"],
+                            textposition='auto'
+                        ))
+                    fig.add_hline(y=0, line_dash="dash", line_color="gray")
+                    fig.add_hline(y=0.3, line_dash="dot", line_color="green", annotation_text="Moderate")
+                    fig.add_hline(y=-0.3, line_dash="dot", line_color="green")
+                    fig.add_hline(y=0.7, line_dash="dot", line_color="red", annotation_text="Strong")
+                    fig.add_hline(y=-0.7, line_dash="dot", line_color="red")
+                    fig.update_layout(
+                        title=f"Correlation Coefficients: {LOTTERY_CONFIGS[lottery_a_key]['name']} vs {LOTTERY_CONFIGS[lottery_b_key]['name']}",
+                        yaxis_title="Correlation Coefficient",
+                        yaxis_range=[-1, 1],
+                        height=400
+                    )
+                    st.plotly_chart(fig, width='stretch')
+                else:
+                    st.warning("No correlation results available. Try different lotteries.")
+
+    else:  # Find Correlated Lotteries
+        base_lotto = st.selectbox(
+            "Base Lottery",
+            options=[f"{g.name} ({g.key})" for g in manager.list_games() if g.main_numbers > 0],
+            index=0,
+            key="corr_base_lotto"
+        )
+        top_n = st.slider("Number of Top Correlations", 3, 10, 5)
+        threshold = st.slider("Significance Threshold (p-value)", 0.01, 0.10, 0.05, 0.01)
+
+        base_key = base_lotto.split("(")[-1].rstrip(")")
+
+        if st.button("🔍 Find Correlated Lotteries", type="primary", width='stretch'):
+            with st.spinner(f"Finding lotteries correlated with {LOTTERY_CONFIGS[base_key]['name']}..."):
+                results = analyzer.find_correlated_lotteries(base_key, top_n)
+
+            if results:
+                st.subheader(f"🎯 Top {top_n} Lotteries Correlated with {LOTTERY_CONFIGS[base_key]['name']}")
+
+                corr_data = []
+                for i, r in enumerate(results, 1):
+                    corr_data.append({
+                        "Rank": i,
+                        "Lottery": f"{r['name']} ({r['lottery']})",
+                        "Avg Correlation": f"{r['avg_correlation']:.4f}",
+                        "Min P-Value": f"{r['min_p_value']:.4f}",
+                        "Significant": "✅ Yes" if r['significant'] else "❌ No",
+                        "Details": ", ".join([f"{k}: {v['corr']:.3f}" for k, v in r['details'].items()])
+                    })
+
+                corr_df = pd.DataFrame(corr_data)
+                st.dataframe(corr_df, width='stretch', hide_index=True)
+
+                # Bar chart
+                fig = px.bar(
+                    corr_df,
+                    x='Lottery',
+                    y='Avg Correlation',
+                    color='Significant',
+                    title=f"Average Correlation with {LOTTERY_CONFIGS[base_key]['name']}",
+                    color_discrete_map={"✅ Yes": "green", "❌ No": "red"}
+                )
+                st.plotly_chart(fig, width='stretch')
+            else:
+                st.warning("No correlations found. Try a different base lottery.")
 
 # Footer
 st.markdown("---")

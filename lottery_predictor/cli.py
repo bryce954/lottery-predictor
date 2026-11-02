@@ -49,7 +49,9 @@ from .advanced import (
     PortfolioOptimizer, SyndicateManager, Syndicate, SyndicateMember,
     NotificationSystem, I18nManager,
     UserProfileManager, UserPreferences, UserProfile,
-    SocialManager, SharedPrediction
+    SocialManager, SharedPrediction,
+    ModelPerformanceDashboard, BudgetTracker, MultiDrawPredictor, VoiceAssistant,
+    HistoricalDataHealthDashboard, CrossLotteryCorrelationAnalyzer
 )
 from .cloud import (
     create_app, generate_dockerfile, generate_docker_compose, generate_kubernetes
@@ -2553,6 +2555,533 @@ def community_pools(
         console.print(table)
     else:
         console.print("[yellow]No pools found matching criteria.[/yellow]")
+
+
+# v2.3 Intelligence & Automation Commands
+
+@app.command()
+def model_performance(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    method: Optional[str] = typer.Option(None, "--method", "-m", help="Filter by method"),
+    days: int = typer.Option(30, "--days", "-d", help="Days of history to show"),
+    check_drift: bool = typer.Option(False, "--check-drift", help="Check for model drift"),
+    compare: bool = typer.Option(False, "--compare", help="Compare all methods"),
+):
+    """Model performance dashboard - track accuracy, detect drift (v2.3)."""
+    print_header(f"🤖 Model Performance Dashboard - {LOTTERY_CONFIGS[lottery]['name']} (v2.3)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    dashboard = ModelPerformanceDashboard()
+
+    if check_drift:
+        methods_to_check = [method] if method else ["statistical", "frequency", "cold", "pairs", "ml", "ensemble", "time_series"]
+
+        console.print(f"\n[bold]Drift Detection (threshold: 5%):[/bold]")
+        for m in methods_to_check:
+            drift = dashboard.detect_drift(lottery, m, threshold=0.05, days=days)
+            if drift["drift_detected"]:
+                status = "[red]⚠️ DRIFT DETECTED[/red]"
+            else:
+                status = "[green]✓ Stable[/green]"
+
+            console.print(f"  {m:20s} {status} | Drift: {drift['drift_magnitude']:+.3f} | Samples: {drift['samples']}")
+
+        return
+
+    if compare:
+        comparison = dashboard.get_method_comparison(lottery, days)
+
+        if not comparison:
+            console.print("[yellow]No performance data available for comparison.[/yellow]")
+            return
+
+        console.print(f"\n[bold]Method Comparison (last {days} days):[/bold]")
+        table = Table(show_header=True)
+        table.add_column("Rank", style="dim", width=6)
+        table.add_column("Method", style="cyan")
+        table.add_column("Avg Accuracy", style="green")
+        table.add_column("Avg Hit Rate", style="yellow")
+        table.add_column("Avg ROI", style="blue")
+        table.add_column("Total Predictions", style="magenta")
+        table.add_column("Periods", style="dim")
+
+        for i, m in enumerate(comparison, 1):
+            table.add_row(
+                str(i),
+                m["method"],
+                f"{m['avg_accuracy']:.2%}",
+                f"{m['avg_hit_rate']:.2%}",
+                f"{m['avg_roi']:+.2f}%",
+                str(m["total_predictions"]),
+                str(m["periods"])
+            )
+
+        console.print(table)
+        return
+
+    # Show history for specific method
+    methods = [method] if method else ["statistical", "frequency", "cold", "pairs", "ml", "ensemble", "time_series"]
+
+    for m in methods:
+        history = dashboard.get_accuracy_trend(lottery, m, days)
+
+        if not history:
+            console.print(f"\n[yellow]No data for {m}[/yellow]")
+            continue
+
+        console.print(f"\n[bold]{m.upper()} - Last {len(history)} periods:[/bold]")
+        table = Table(show_header=True)
+        table.add_column("Date", style="cyan")
+        table.add_column("Accuracy", style="green")
+        table.add_column("Hit Rate", style="yellow")
+        table.add_column("ROI", style="blue")
+        table.add_column("Predictions", style="dim")
+
+        for h in history[-10:]:  # Show last 10
+            table.add_row(
+                h["timestamp"],
+                f"{h['accuracy']:.2%}",
+                f"{h['hit_rate']:.2%}",
+                f"{h['roi']:+.2f}%",
+                str(h["predictions"])
+            )
+
+        console.print(table)
+
+        # Check if should retrain
+        if dashboard.should_retrain(lottery, m):
+            console.print(f"  [red]⚠️ Recommend retraining {m}[/red]")
+
+
+@app.command()
+def budget(
+    lottery: Optional[str] = typer.Option(None, "--lottery", "-l", help="Filter by lottery"),
+    days: Optional[int] = typer.Option(None, "--days", "-d", help="Days of history"),
+    add: bool = typer.Option(False, "--add", help="Add spending record"),
+    amount_spent: float = typer.Option(0, "--spent", help="Amount spent"),
+    amount_won: float = typer.Option(0, "--won", help="Amount won"),
+    tickets: int = typer.Option(1, "--tickets", help="Tickets purchased"),
+    monthly: bool = typer.Option(False, "--monthly", help="Show monthly trend"),
+    export: Optional[str] = typer.Option(None, "--export", help="Export report (json/csv)"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Output file path"),
+):
+    """Budget tracker - track spending vs winnings, tax estimation (v2.3)."""
+    print_header(f"💰 Budget Tracker (v2.3)")
+
+    tracker = BudgetTracker()
+
+    if add:
+        if not lottery:
+            console.print("[red]Error: --lottery required when adding record[/red]")
+            raise typer.Exit(1)
+        if amount_spent <= 0:
+            console.print("[red]Error: --spent must be positive[/red]")
+            raise typer.Exit(1)
+
+        tracker.record_spending(lottery, amount_spent, amount_won, tickets)
+        console.print(f"[green]✓ Recorded: ${amount_spent:.2f} spent, ${amount_won:.2f} won, {tickets} tickets for {LOTTERY_CONFIGS[lottery]['name']}[/green]")
+        return
+
+    if monthly:
+        trend = tracker.get_monthly_trend()
+
+        if not trend:
+            console.print("[yellow]No budget data available.[/yellow]")
+            return
+
+        console.print(f"\n[bold]Monthly Trend:[/bold]")
+        table = Table(show_header=True)
+        table.add_column("Month", style="cyan")
+        table.add_column("Spent", style="red")
+        table.add_column("Won", style="green")
+        table.add_column("Net", style="blue")
+        table.add_column("Tickets", style="dim")
+        table.add_column("ROI", style="magenta")
+
+        for m in trend:
+            net_color = "green" if m["net"] >= 0 else "red"
+            table.add_row(
+                m["month"],
+                f"${m['spent']:.2f}",
+                f"${m['won']:.2f}",
+                f"[{net_color}]${m['net']:+.2f}[/{net_color}]",
+                str(m["tickets"]),
+                f"{m['roi']:+.2f}%"
+            )
+
+        console.print(table)
+        return
+
+    if export:
+        fmt = export.lower()
+        if fmt not in ("json", "csv"):
+            console.print("[red]Error: Export format must be json or csv[/red]")
+            raise typer.Exit(1)
+
+        content = tracker.export_report(format=fmt, output_path=output, days=days)
+        if output:
+            console.print(f"[green]✓ Report exported to {output}[/green]")
+        else:
+            console.print(content)
+        return
+
+    # Show summary
+    summary = tracker.get_summary(lottery, days)
+
+    console.print(f"\n[bold]Budget Summary{' for ' + LOTTERY_CONFIGS[lottery]['name'] if lottery else ''}:[/bold]")
+    console.print(f"  Total Spent: ${summary['total_spent']:.2f}")
+    console.print(f"  Total Won: ${summary['total_won']:.2f}")
+    net_color = "green" if summary['net'] >= 0 else "red"
+    console.print(f"  Net: [{net_color}]${summary['net']:+.2f}[/{net_color}]")
+    console.print(f"  Total Tickets: {summary['total_tickets']}")
+    console.print(f"  ROI: {summary['roi']:+.2f}%")
+    console.print(f"  Records: {summary['records']}")
+
+    # Per-lottery breakdown
+    if not lottery:
+        breakdown = tracker.get_per_lottery_breakdown(days)
+        if breakdown:
+            console.print(f"\n[bold]Per-Lottery Breakdown:[/bold]")
+            table = Table(show_header=True)
+            table.add_column("Lottery", style="cyan")
+            table.add_column("Spent", style="red")
+            table.add_column("Won", style="green")
+            table.add_column("Net", style="blue")
+            table.add_column("ROI", style="magenta")
+            table.add_column("Tickets", style="dim")
+
+            for b in breakdown:
+                net_color = "green" if b["net"] >= 0 else "red"
+                table.add_row(
+                    LOTTERY_CONFIGS.get(b["lottery"], {}).get("name", b["lottery"]),
+                    f"${b['total_spent']:.2f}",
+                    f"${b['total_won']:.2f}",
+                    f"[{net_color}]${b['net']:+.2f}[/{net_color}]",
+                    f"{b['roi']:+.2f}%",
+                    str(b["total_tickets"])
+                )
+            console.print(table)
+
+    # Tax estimation
+    if summary['total_won'] > 0:
+        tax = tracker.estimate_tax(summary['total_won'])
+        if tax["taxable"]:
+            console.print(f"\n[bold]Tax Estimation (on ${summary['total_won']:.2f} winnings):[/bold]")
+            console.print(f"  Federal (24%): ${tax['federal_tax']:.2f}")
+            console.print(f"  State (est.): ${tax['state_tax']:.2f}")
+            console.print(f"  Total Tax: ${tax['total_tax']:.2f}")
+            console.print(f"  Net After Tax: ${tax['net_after_tax']:.2f}")
+
+
+@app.command()
+def multi_draw(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    draws: int = typer.Option(5, "--draws", "-d", help="Number of upcoming draws"),
+    per_draw: int = typer.Option(3, "--per-draw", "-p", help="Predictions per draw"),
+    decay: float = typer.Option(0.95, "--decay", help="Confidence decay factor (0-1)"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Save to JSON file"),
+):
+    """Multi-draw predictions with confidence decay (v2.3)."""
+    print_header(f"🔮 Multi-Draw Predictions - {LOTTERY_CONFIGS[lottery]['name']} (v2.3)")
+    print_disclaimer()
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    predictor = MultiDrawPredictor(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Generating multi-draw predictions...", total=None)
+        predictions = predictor.predict_multiple_draws(
+            num_draws=draws,
+            predictions_per_draw=per_draw,
+            confidence_decay=decay
+        )
+        progress.update(task, description="Done!", completed=True)
+
+    console.print(f"\n[bold]Generated predictions for {draws} upcoming draws:[/bold]\n")
+
+    for draw in predictions:
+        console.print(f"[cyan]Draw #{draw['draw_number']} (~{draw['days_ahead']} days):[/cyan]")
+        table = Table(show_header=True)
+        table.add_column("Set", style="dim")
+        table.add_column("Main Numbers", style="green")
+        table.add_column("Bonus", style="yellow")
+        table.add_column("Base Conf", style="blue")
+        table.add_column("Adjusted Conf", style="magenta")
+
+        for p in draw["predictions"]:
+            main_str = " ".join(f"{n:2d}" for n in p["main_numbers"])
+            bonus_str = " ".join(f"{n:2d}" for n in p["bonus_numbers"]) if p["bonus_numbers"] else "N/A"
+            table.add_row(
+                str(p["set"]),
+                main_str,
+                bonus_str,
+                f"{p['base_confidence']:.1%}",
+                f"{p['adjusted_confidence']:.1%}"
+            )
+
+        console.print(table)
+        console.print()
+
+    if output:
+        import json
+        data = {
+            "lottery": lottery,
+            "lottery_name": LOTTERY_CONFIGS[lottery]["name"],
+            "num_draws": draws,
+            "predictions_per_draw": per_draw,
+            "confidence_decay": decay,
+            "generated_at": datetime.now().isoformat(),
+            "draws": predictions
+        }
+        with open(output, 'w') as f:
+            json.dump(data, f, indent=2)
+        console.print(f"[green]✓ Saved to {output}[/green]")
+
+
+@app.command()
+def voice(
+    text: str = typer.Option(..., "--text", "-t", help="Voice/text input"),
+    lottery: Optional[str] = typer.Option(None, "--lottery", "-l", help="Lottery (auto-detected if not specified)"),
+):
+    """Voice assistant integration for lottery queries (v2.3)."""
+    print_header(f"🎤 Voice Assistant (v2.3)")
+
+    va = VoiceAssistant()
+
+    if lottery and lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    result = va.process_request(text)
+
+    if result["success"]:
+        console.print(f"\n[bold]Intent:[/bold] {result['intent']}")
+        if result['lottery']:
+            console.print(f"[bold]Lottery:[/bold] {LOTTERY_CONFIGS[result['lottery']]['name']}")
+        console.print(f"\n[bold]Response:[/bold] {result['response']}")
+    else:
+        console.print(f"\n[red]{result['response']}[/red]")
+
+
+# v2.4 Enhanced History & Analytics Commands
+
+@app.command()
+def data_health(
+    lottery: Optional[str] = typer.Option(None, "--lottery", "-l", help="Lottery type (default: all)"),
+    all_lotteries: bool = typer.Option(False, "--all", help="Check health for all lotteries"),
+    schedule_backfill: bool = typer.Option(False, "--schedule-backfill", help="Schedule backfill for missing data"),
+    source: str = typer.Option("auto", "--source", help="Data source for backfill: auto, api, scrape"),
+):
+    """Historical data health dashboard - monitor freshness, gaps, anomalies (v2.4)."""
+    print_header(f"🏥 Historical Data Health Dashboard (v2.4)")
+
+    dashboard = HistoricalDataHealthDashboard()
+
+    if all_lotteries or (not lottery and not schedule_backfill):
+        console.print("[cyan]Analyzing health for all lotteries...[/cyan]")
+        health_data = dashboard.get_all_lotteries_health()
+
+        if not health_data:
+            console.print("[yellow]No health data available. Run analysis first.[/yellow]")
+            return
+
+        table = Table(show_header=True)
+        table.add_column("Lottery", style="cyan")
+        table.add_column("Total Draws", style="green")
+        table.add_column("Date Range", style="dim")
+        table.add_column("Days Since Last", style="yellow")
+        table.add_column("Expected", style="blue")
+        table.add_column("Missing", style="red")
+        table.add_column("Completeness", style="magenta")
+        table.add_column("Freshness", style="magenta")
+        table.add_column("Gaps", style="dim")
+        table.add_column("Anomalies", style="dim")
+
+        for h in health_data:
+            table.add_row(
+                LOTTERY_CONFIGS.get(h['lottery'], {}).get('name', h['lottery']),
+                str(h['total_draws']),
+                h['date_range'],
+                str(h['days_since_last_draw']),
+                str(h['expected_draws']),
+                str(h['missing_draws']),
+                h['completeness_score'],
+                h['freshness_score'],
+                str(h['gaps_count']),
+                str(h['anomalies_count'])
+            )
+
+        console.print(table)
+        return
+
+    if lottery:
+        if lottery not in LOTTERY_TYPES:
+            console.print(f"[red]Error: Unknown lottery '{lottery}'[/red]")
+            raise typer.Exit(1)
+
+        if schedule_backfill:
+            result = dashboard.schedule_backfill(lottery, source)
+            console.print(f"\n[bold]Backfill Schedule:[/bold]")
+            for k, v in result.items():
+                console.print(f"  {k}: {v}")
+            return
+
+        console.print(f"[cyan]Analyzing health for {LOTTERY_CONFIGS[lottery]['name']}...[/cyan]")
+        record = dashboard.analyze_lottery_health(lottery)
+
+        console.print(f"\n[bold]Data Health Report:[/bold]")
+        console.print(f"  Lottery: {LOTTERY_CONFIGS[lottery]['name']}")
+        console.print(f"  Total Draws: {record.total_draws}")
+        console.print(f"  Date Range: {record.date_range_start} to {record.date_range_end}")
+        console.print(f"  Days Since Last Draw: {record.days_since_last_draw}")
+        console.print(f"  Expected Draws: {record.expected_draws}")
+        console.print(f"  Missing Draws: {record.missing_draws}")
+        console.print(f"  Completeness Score: {record.completeness_score:.1%}")
+        console.print(f"  Freshness Score: {record.freshness_score:.1%}")
+
+        if record.gaps:
+            console.print(f"\n[yellow]Gaps Detected ({len(record.gaps)}):[/yellow]")
+            gap_table = Table(show_header=True)
+            gap_table.add_column("Type", style="cyan")
+            gap_table.add_column("Expected Date", style="yellow")
+            gap_table.add_column("Actual Date", style="green")
+            gap_table.add_column("Gap Days", style="red")
+            gap_table.add_column("Expected Interval", style="dim")
+            for gap in record.gaps[:10]:
+                gap_table.add_row(
+                    gap['type'],
+                    gap['expected_date'],
+                    gap['actual_date'],
+                    str(gap['gap_days']),
+                    str(gap['expected_interval'])
+                )
+            console.print(gap_table)
+
+        if record.anomalies:
+            console.print(f"\n[red]Anomalies Detected ({len(record.anomalies)}):[/red]")
+            anomaly_table = Table(show_header=True)
+            anomaly_table.add_column("Type", style="cyan")
+            anomaly_table.add_column("Count", style="red")
+            anomaly_table.add_column("Details", style="yellow")
+            for anomaly in record.anomalies[:10]:
+                anomaly_table.add_row(
+                    anomaly['type'],
+                    str(anomaly.get('count', 1)),
+                    anomaly['details'][:80]
+                )
+            console.print(anomaly_table)
+
+        if not record.gaps and not record.anomalies:
+            console.print("\n[green]✓ No gaps or anomalies detected[/green]")
+
+
+@app.command()
+def cross_correlation(
+    lottery_a: Optional[str] = typer.Option(None, "--lottery-a", help="First lottery"),
+    lottery_b: Optional[str] = typer.Option(None, "--lottery-b", help="Second lottery"),
+    all_types: bool = typer.Option(True, "--all/--single", help="Run all correlation types"),
+    find_correlated: Optional[str] = typer.Option(None, "--find-correlated", help="Find lotteries correlated with this one"),
+    top_n: int = typer.Option(5, "--top", help="Number of top correlated lotteries to show"),
+    threshold: float = typer.Option(0.05, "--threshold", help="Significance threshold (p-value)"),
+):
+    """Cross-lottery historical correlation analysis (v2.4)."""
+    print_header(f"🔗 Cross-Lottery Correlation Analysis (v2.4)")
+
+    analyzer = CrossLotteryCorrelationAnalyzer()
+
+    if find_correlated:
+        if find_correlated not in LOTTERY_TYPES:
+            console.print(f"[red]Error: Unknown lottery '{find_correlated}'[/red]")
+            raise typer.Exit(1)
+
+        console.print(f"[cyan]Finding lotteries correlated with {LOTTERY_CONFIGS[find_correlated]['name']}...[/cyan]")
+        results = analyzer.find_correlated_lotteries(find_correlated, top_n)
+
+        if not results:
+            console.print("[yellow]No correlations found.[/yellow]")
+            return
+
+        console.print(f"\n[bold]Top {top_n} Correlated Lotteries:[/bold]")
+        table = Table(show_header=True)
+        table.add_column("Rank", style="dim", width=6)
+        table.add_column("Lottery", style="cyan")
+        table.add_column("Avg Correlation", style="green")
+        table.add_column("Min P-Value", style="yellow")
+        table.add_column("Significant", style="magenta")
+        table.add_column("Details", style="dim")
+
+        for i, r in enumerate(results, 1):
+            details = ", ".join([f"{k}: {v['corr']:.3f}" for k, v in r['details'].items()])
+            table.add_row(
+                str(i),
+                f"{r['name']} ({r['lottery']})",
+                f"{r['avg_correlation']:.4f}",
+                f"{r['min_p_value']:.4f}",
+                "✓" if r['significant'] else "✗",
+                details[:60]
+            )
+
+        console.print(table)
+        return
+
+    if lottery_a not in LOTTERY_TYPES or lottery_b not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery. Choose from: {', '.join(LOTTERY_TYPES)}[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"[cyan]Analyzing correlation between {LOTTERY_CONFIGS[lottery_a]['name']} and {LOTTERY_CONFIGS[lottery_b]['name']}...[/cyan]")
+
+    if all_types:
+        results = analyzer.analyze_all_correlations(lottery_a, lottery_b)
+    else:
+        # Run single correlation type (default to number frequency)
+        results = [analyzer.analyze_number_frequency_correlation(lottery_a, lottery_b)]
+
+    if not results:
+        console.print("[yellow]No correlation results available.[/yellow]")
+        return
+
+    console.print(f"\n[bold]Correlation Results:[/bold]")
+    table = Table(show_header=True)
+    table.add_column("Type", style="cyan")
+    table.add_column("Correlation", style="green")
+    table.add_column("P-Value", style="yellow")
+    table.add_column("Significant", style="magenta")
+    table.add_column("Sample Size", style="dim")
+    table.add_column("Details", style="dim")
+
+    for r in results:
+        sig = "✓" if r.significant else "✗"
+        details = str(r.details)[:80]
+        table.add_row(
+            r.correlation_type.replace("_", " ").title(),
+            f"{r.correlation_coefficient:.4f}",
+            f"{r.p_value:.4f}",
+            sig,
+            str(r.sample_size),
+            details
+        )
+
+    console.print(table)
+
+    # Interpretation
+    console.print("\n[bold]Interpretation:[/bold]")
+    for r in results:
+        strength = "strong" if abs(r.correlation_coefficient) > 0.7 else "moderate" if abs(r.correlation_coefficient) > 0.3 else "weak"
+        direction = "positive" if r.correlation_coefficient > 0 else "negative"
+        if r.significant:
+            console.print(f"  {r.correlation_type}: {strength} {direction} correlation (p={r.p_value:.4f})")
+        else:
+            console.print(f"  {r.correlation_type}: No significant correlation (p={r.p_value:.4f})")
 
 
 if __name__ == "__main__":

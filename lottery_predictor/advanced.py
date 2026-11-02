@@ -1368,3 +1368,1158 @@ class SocialManager:
             except Exception:
                 pass
         return pools
+
+
+# ============================================================================
+# v2.3 - Intelligence & Automation: Model Performance, Budget Tracking, Multi-Draw
+# ============================================================================
+
+@dataclass
+class ModelPerformanceRecord:
+    """A record of model performance for a specific period."""
+    timestamp: str
+    lottery: str
+    method: str
+    accuracy: float
+    hit_rate: float
+    roi: float
+    num_predictions: int
+    num_draws_verified: int
+    model_version: str = "1.0"
+
+
+@dataclass
+class BudgetRecord:
+    """A budget/spending record."""
+    timestamp: str
+    lottery: str
+    amount_spent: float
+    amount_won: float
+    tickets_purchased: int
+    net: float
+
+
+class ModelPerformanceDashboard:
+    """Track model performance over time, detect drift, and visualize results."""
+
+    def __init__(self, storage_path: str = "model_performance"):
+        self.storage_path = Path(storage_path)
+        self.storage_path.mkdir(exist_ok=True)
+        self.performance_file = self.storage_path / "performance_history.json"
+        self.records: List[ModelPerformanceRecord] = []
+        self._load_records()
+
+    def _load_records(self):
+        """Load performance records from disk."""
+        if self.performance_file.exists():
+            try:
+                with open(self.performance_file, 'r') as f:
+                    data = json.load(f)
+                self.records = [ModelPerformanceRecord(**r) for r in data]
+            except Exception:
+                pass
+
+    def _save_records(self):
+        """Save performance records to disk."""
+        with open(self.performance_file, 'w') as f:
+            json.dump([r.__dict__ for r in self.records], f, indent=2)
+
+    def record_performance(
+        self,
+        lottery: str,
+        method: str,
+        accuracy: float,
+        hit_rate: float,
+        roi: float,
+        num_predictions: int,
+        num_draws_verified: int,
+        model_version: str = "1.0"
+    ) -> ModelPerformanceRecord:
+        """Record a performance metric."""
+        record = ModelPerformanceRecord(
+            timestamp=datetime.now().isoformat(),
+            lottery=lottery,
+            method=method,
+            accuracy=accuracy,
+            hit_rate=hit_rate,
+            roi=roi,
+            num_predictions=num_predictions,
+            num_draws_verified=num_draws_verified,
+            model_version=model_version
+        )
+        self.records.append(record)
+        self._save_records()
+        return record
+
+    def get_performance_history(
+        self,
+        lottery: Optional[str] = None,
+        method: Optional[str] = None,
+        days: int = 30
+    ) -> List[ModelPerformanceRecord]:
+        """Get performance history filtered by lottery/method and time."""
+        from datetime import timedelta
+        cutoff = datetime.now() - timedelta(days=days)
+
+        results = []
+        for r in self.records:
+            record_time = datetime.fromisoformat(r.timestamp)
+            if record_time < cutoff:
+                continue
+            if lottery and r.lottery != lottery:
+                continue
+            if method and r.method != method:
+                continue
+            results.append(r)
+
+        return results
+
+    def get_accuracy_trend(
+        self,
+        lottery: str,
+        method: str,
+        days: int = 30
+    ) -> List[Dict]:
+        """Get accuracy trend over time."""
+        records = self.get_performance_history(lottery, method, days)
+        records.sort(key=lambda x: x.timestamp)
+
+        return [
+            {
+                "timestamp": r.timestamp[:10],
+                "accuracy": r.accuracy,
+                "hit_rate": r.hit_rate,
+                "roi": r.roi,
+                "predictions": r.num_predictions
+            }
+            for r in records
+        ]
+
+    def detect_drift(
+        self,
+        lottery: str,
+        method: str,
+        threshold: float = 0.05,
+        days: int = 30
+    ) -> Dict:
+        """Detect model performance drift."""
+        records = self.get_performance_history(lottery, method, days)
+        if len(records) < 3:
+            return {"drift_detected": False, "message": "Insufficient data"}
+
+        records.sort(key=lambda x: x.timestamp)
+        accuracies = [r.accuracy for r in records]
+
+        # Compare first half vs second half
+        mid = len(accuracies) // 2
+        first_half_avg = sum(accuracies[:mid]) / mid
+        second_half_avg = sum(accuracies[mid:]) / (len(accuracies) - mid)
+
+        drift = second_half_avg - first_half_avg
+        drift_detected = abs(drift) > threshold
+
+        return {
+            "drift_detected": drift_detected,
+            "drift_magnitude": drift,
+            "first_half_avg": first_half_avg,
+            "second_half_avg": second_half_avg,
+            "threshold": threshold,
+            "samples": len(records)
+        }
+
+    def get_method_comparison(self, lottery: str, days: int = 30) -> List[Dict]:
+        """Compare all methods for a lottery."""
+        methods = ["statistical", "frequency", "cold", "pairs", "ml", "ensemble", "time_series"]
+        results = []
+
+        for method in methods:
+            records = self.get_performance_history(lottery, method, days)
+            if not records:
+                continue
+
+            avg_accuracy = sum(r.accuracy for r in records) / len(records)
+            avg_hit_rate = sum(r.hit_rate for r in records) / len(records)
+            avg_roi = sum(r.roi for r in records) / len(records)
+            total_predictions = sum(r.num_predictions for r in records)
+
+            results.append({
+                "method": method,
+                "avg_accuracy": avg_accuracy,
+                "avg_hit_rate": avg_hit_rate,
+                "avg_roi": avg_roi,
+                "total_predictions": total_predictions,
+                "periods": len(records)
+            })
+
+        results.sort(key=lambda x: x["avg_accuracy"], reverse=True)
+        return results
+
+    def should_retrain(self, lottery: str, method: str, threshold: float = 0.05) -> bool:
+        """Check if model should be retrained based on performance drift."""
+        drift = self.detect_drift(lottery, method, threshold)
+        return drift["drift_detected"] and drift["drift_magnitude"] < 0
+
+
+class BudgetTracker:
+    """Track spending vs winnings over time with per-lottery reports and tax estimation."""
+
+    def __init__(self, storage_path: str = "budget_tracker"):
+        self.storage_path = Path(storage_path)
+        self.storage_path.mkdir(exist_ok=True)
+        self.budget_file = self.storage_path / "budget_history.json"
+        self.records: List[BudgetRecord] = []
+        self._load_records()
+
+    def _load_records(self):
+        """Load budget records from disk."""
+        if self.budget_file.exists():
+            try:
+                with open(self.budget_file, 'r') as f:
+                    data = json.load(f)
+                self.records = [BudgetRecord(**r) for r in data]
+            except Exception:
+                pass
+
+    def _save_records(self):
+        """Save budget records to disk."""
+        with open(self.budget_file, 'w') as f:
+            json.dump([r.__dict__ for r in self.records], f, indent=2)
+
+    def record_spending(
+        self,
+        lottery: str,
+        amount_spent: float,
+        amount_won: float = 0.0,
+        tickets_purchased: int = 1
+    ) -> BudgetRecord:
+        """Record a spending/winning entry."""
+        net = amount_won - amount_spent
+        record = BudgetRecord(
+            timestamp=datetime.now().isoformat(),
+            lottery=lottery,
+            amount_spent=amount_spent,
+            amount_won=amount_won,
+            tickets_purchased=tickets_purchased,
+            net=net
+        )
+        self.records.append(record)
+        self._save_records()
+        return record
+
+    def get_summary(
+        self,
+        lottery: Optional[str] = None,
+        days: Optional[int] = None
+    ) -> Dict:
+        """Get budget summary."""
+        from datetime import timedelta
+
+        records = self.records
+
+        if lottery:
+            records = [r for r in records if r.lottery == lottery]
+
+        if days:
+            cutoff = datetime.now() - timedelta(days=days)
+            records = [r for r in records if datetime.fromisoformat(r.timestamp) >= cutoff]
+
+        if not records:
+            return {
+                "total_spent": 0.0,
+                "total_won": 0.0,
+                "net": 0.0,
+                "total_tickets": 0,
+                "roi": 0.0,
+                "records": 0
+            }
+
+        total_spent = sum(r.amount_spent for r in records)
+        total_won = sum(r.amount_won for r in records)
+        total_tickets = sum(r.tickets_purchased for r in records)
+        net = total_won - total_spent
+        roi = (net / total_spent * 100) if total_spent > 0 else 0.0
+
+        return {
+            "total_spent": total_spent,
+            "total_won": total_won,
+            "net": net,
+            "total_tickets": total_tickets,
+            "roi": roi,
+            "records": len(records)
+        }
+
+    def get_per_lottery_breakdown(self, days: Optional[int] = None) -> List[Dict]:
+        """Get spending breakdown per lottery."""
+        lotteries = set(r.lottery for r in self.records)
+        results = []
+
+        for lottery in lotteries:
+            summary = self.get_summary(lottery, days)
+            summary["lottery"] = lottery
+            results.append(summary)
+
+        results.sort(key=lambda x: x["total_spent"], reverse=True)
+        return results
+
+    def get_monthly_trend(self, months: int = 12) -> List[Dict]:
+        """Get monthly spending/winnings trend."""
+        from collections import defaultdict
+
+        monthly = defaultdict(lambda: {"spent": 0.0, "won": 0.0, "tickets": 0})
+
+        for r in self.records:
+            month_key = r.timestamp[:7]  # YYYY-MM
+            monthly[month_key]["spent"] += r.amount_spent
+            monthly[month_key]["won"] += r.amount_won
+            monthly[month_key]["tickets"] += r.tickets_purchased
+
+        # Sort and take last N months
+        sorted_months = sorted(monthly.items())[-months:]
+
+        return [
+            {
+                "month": month,
+                "spent": data["spent"],
+                "won": data["won"],
+                "net": data["won"] - data["spent"],
+                "tickets": data["tickets"],
+                "roi": ((data["won"] - data["spent"]) / data["spent"] * 100) if data["spent"] > 0 else 0.0
+            }
+            for month, data in sorted_months
+        ]
+
+    def estimate_tax(
+        self,
+        winnings: float,
+        federal_rate: float = 0.24,
+        state_rate: float = 0.0,
+        threshold: float = 600.0
+    ) -> Dict:
+        """Estimate tax on lottery winnings."""
+        # Winnings over $600 are typically reported
+        if winnings < threshold:
+            return {
+                "taxable": False,
+                "federal_tax": 0.0,
+                "state_tax": 0.0,
+                "total_tax": 0.0,
+                "net_after_tax": winnings
+            }
+
+        federal_tax = winnings * federal_rate
+        state_tax = winnings * state_rate
+        total_tax = federal_tax + state_tax
+
+        return {
+            "taxable": True,
+            "federal_tax": federal_tax,
+            "state_tax": state_tax,
+            "total_tax": total_tax,
+            "net_after_tax": winnings - total_tax,
+            "federal_rate": federal_rate,
+            "state_rate": state_rate
+        }
+
+    def export_report(
+        self,
+        format: str = "json",
+        output_path: Optional[str] = None,
+        days: Optional[int] = None
+    ) -> str:
+        """Export budget report."""
+        summary = self.get_summary(days=days)
+        per_lottery = self.get_per_lottery_breakdown(days)
+        monthly = self.get_monthly_trend()
+
+        report = {
+            "generated_at": datetime.now().isoformat(),
+            "period_days": days,
+            "summary": summary,
+            "per_lottery": per_lottery,
+            "monthly_trend": monthly
+        }
+
+        if format == "json":
+            content = json.dumps(report, indent=2)
+        elif format == "csv":
+            # Flatten to CSV
+            import csv
+            import io
+            output = io.StringIO()
+            writer = csv.writer(output)
+            writer.writerow(["Lottery", "Total Spent", "Total Won", "Net", "ROI %", "Tickets"])
+            for p in per_lottery:
+                writer.writerow([p["lottery"], p["total_spent"], p["total_won"], p["net"], f"{p['roi']:.2f}", p["total_tickets"]])
+            content = output.getvalue()
+        else:
+            raise ValueError(f"Unsupported format: {format}")
+
+        if output_path:
+            with open(output_path, 'w') as f:
+                f.write(content)
+
+        return content
+
+
+class MultiDrawPredictor:
+    """Generate predictions for multiple upcoming draws with confidence decay modeling."""
+
+    def __init__(self, lottery: str):
+        self.lottery = lottery
+        from .models import EnsemblePredictor
+        self.ensemble = EnsemblePredictor(lottery)
+        self.config = LOTTERY_CONFIGS[lottery]
+
+    def predict_multiple_draws(
+        self,
+        num_draws: int = 5,
+        predictions_per_draw: int = 3,
+        confidence_decay: float = 0.95
+    ) -> List[Dict]:
+        """Generate predictions for multiple upcoming draws."""
+        all_predictions = []
+        base_confidence = 0.1  # Base confidence for ensemble
+
+        for draw_idx in range(num_draws):
+            # Get predictions for this draw
+            preds = self.ensemble.get_consensus_prediction(num_predictions=predictions_per_draw)
+
+            # Apply confidence decay for future draws
+            decay_factor = confidence_decay ** draw_idx
+            adjusted_confidence = base_confidence * decay_factor
+
+            draw_predictions = []
+            for i, pred in enumerate(preds):
+                draw_predictions.append({
+                    "set": i + 1,
+                    "main_numbers": pred.main_numbers,
+                    "bonus_numbers": pred.bonus_numbers,
+                    "method": pred.method,
+                    "base_confidence": pred.confidence,
+                    "adjusted_confidence": min(pred.confidence * decay_factor, 1.0),
+                    "draw_index": draw_idx,
+                    "decay_factor": decay_factor
+                })
+
+            all_predictions.append({
+                "draw_number": draw_idx + 1,
+                "days_ahead": draw_idx * self._get_draw_interval_days(),
+                "predictions": draw_predictions
+            })
+
+        return all_predictions
+
+    def _get_draw_interval_days(self) -> int:
+        """Estimate days between draws based on draw schedule."""
+        draw_days = self.config.get("draw_days", [])
+        if len(draw_days) >= 2:
+            day_map = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6}
+            days = [day_map.get(d[:3], 0) for d in draw_days]
+            days.sort()
+            # Find minimum gap
+            min_gap = 7
+            for i in range(len(days)):
+                for j in range(i + 1, len(days)):
+                    gap = (days[j] - days[i]) % 7
+                    if gap > 0 and gap < min_gap:
+                        min_gap = gap
+            return min_gap
+        return 3  # Default
+
+
+class VoiceAssistant:
+    """Voice assistant integration for lottery predictions."""
+
+    def __init__(self):
+        self.intents = {
+            "get_predictions": [
+                "give me lottery numbers",
+                "predict lottery numbers",
+                "what are the winning numbers",
+                "generate predictions"
+            ],
+            "get_next_draw": [
+                "when is the next draw",
+                "next lottery draw",
+                "draw schedule"
+            ],
+            "get_odds": [
+                "what are the odds",
+                "lottery odds",
+                "chances of winning"
+            ]
+        }
+
+    def parse_intent(self, text: str) -> Optional[str]:
+        """Parse user intent from voice/text input."""
+        text_lower = text.lower()
+
+        for intent, patterns in self.intents.items():
+            for pattern in patterns:
+                if pattern in text_lower:
+                    return intent
+        return None
+
+    def extract_lottery(self, text: str) -> Optional[str]:
+        """Extract lottery name from text."""
+        text_lower = text.lower()
+
+        lottery_keywords = {
+            "powerball": "powerball",
+            "mega millions": "mega_millions",
+            "mega million": "mega_millions",
+            "florida lotto": "florida_lotto",
+            "euro millions": "euromillions",
+            "euromillions": "euromillions",
+            "uk lotto": "uk_lotto",
+            "super enalotto": "superenalotto"
+        }
+
+        for keyword, key in lottery_keywords.items():
+            if keyword in text_lower:
+                return key
+
+        return None
+
+    def generate_response(self, intent: str, lottery: Optional[str] = None, predictions: Optional[List] = None) -> str:
+        """Generate voice response."""
+        if not lottery:
+            lottery = "powerball"
+
+        lottery_name = LOTTERY_CONFIGS.get(lottery, {}).get("name", lottery)
+
+        if intent == "get_predictions":
+            if predictions:
+                pred_text = []
+                for i, p in enumerate(predictions[:3], 1):
+                    main = " ".join(str(n) for n in p.get("main_numbers", []))
+                    bonus = " ".join(str(n) for n in p.get("bonus_numbers", []))
+                    pred_text.append(f"Set {i}: {main}. Bonus: {bonus}")
+                return f"Here are your {lottery_name} predictions: " + "; ".join(pred_text)
+            else:
+                return f"I'll generate predictions for {lottery_name}. Please check the app for details."
+
+        elif intent == "get_next_draw":
+            return f"The next {lottery_name} draw is scheduled for... Please check the draw calendar for exact time."
+
+        elif intent == "get_odds":
+            from .validation import OddsCalculator
+            calc = OddsCalculator(lottery)
+            odds = calc.full_odds_analysis()
+            return f"The jackpot odds for {lottery_name} are {odds.jackpot_odds_str}. The expected value is ${odds.expected_value:.4f}."
+
+        return "I'm not sure what you'd like. You can ask for predictions, the next draw, or odds."
+
+    def process_request(self, text: str) -> Dict:
+        """Process a voice/text request and return response."""
+        intent = self.parse_intent(text)
+        lottery = self.extract_lottery(text)
+
+        if not intent:
+            return {
+                "success": False,
+                "response": "I didn't understand. Try asking for predictions, the next draw, or odds."
+            }
+
+        response = self.generate_response(intent, lottery)
+
+        return {
+            "success": True,
+            "intent": intent,
+            "lottery": lottery,
+            "response": response
+        }
+
+
+# ============================================================================
+# v2.4 - Enhanced History & Analytics
+# ============================================================================
+
+@dataclass
+class DataHealthRecord:
+    """A record of data health metrics for a lottery."""
+    timestamp: str
+    lottery: str
+    total_draws: int
+    date_range_start: str
+    date_range_end: str
+    days_since_last_draw: int
+    expected_draws: int
+    missing_draws: int
+    gaps: List[Dict]
+    anomalies: List[Dict]
+    completeness_score: float
+    freshness_score: float
+
+
+@dataclass
+class CrossLotteryCorrelation:
+    """Cross-lottery correlation analysis result."""
+    lottery_a: str
+    lottery_b: str
+    correlation_type: str  # 'number_frequency', 'sum_distribution', 'pair_patterns', 'odd_even'
+    correlation_coefficient: float
+    p_value: float
+    sample_size: int
+    significant: bool
+    details: Dict
+
+
+class HistoricalDataHealthDashboard:
+    """Monitor data freshness, gaps, anomalies, and backfill scheduling."""
+
+    def __init__(self, storage_path: str = "data_health"):
+        self.storage_path = Path(storage_path)
+        self.storage_path.mkdir(exist_ok=True)
+        self.health_file = self.storage_path / "health_history.json"
+        self.records: List[DataHealthRecord] = []
+        self._load_records()
+
+    def _load_records(self):
+        """Load health records from disk."""
+        if self.health_file.exists():
+            try:
+                with open(self.health_file, 'r') as f:
+                    data = json.load(f)
+                self.records = [DataHealthRecord(**r) for r in data]
+            except Exception:
+                pass
+
+    def _save_records(self):
+        """Save health records to disk."""
+        with open(self.health_file, 'w') as f:
+            json.dump([r.__dict__ for r in self.records], f, indent=2)
+
+    def analyze_lottery_health(self, lottery: str) -> DataHealthRecord:
+        """Analyze data health for a specific lottery."""
+        from .data import get_data_manager, LOTTERY_CONFIGS
+        from datetime import datetime, timedelta
+
+        dm = get_data_manager(lottery)
+        df = dm.load_data()
+        config = LOTTERY_CONFIGS[lottery]
+
+        if len(df) == 0:
+            return DataHealthRecord(
+                timestamp=datetime.now().isoformat(),
+                lottery=lottery,
+                total_draws=0,
+                date_range_start="",
+                date_range_end="",
+                days_since_last_draw=999,
+                expected_draws=0,
+                missing_draws=0,
+                gaps=[],
+                anomalies=[],
+                completeness_score=0.0,
+                freshness_score=0.0
+            )
+
+        # Basic metrics
+        total_draws = len(df)
+        date_start = df['date'].min()
+        date_end = df['date'].max()
+
+        # Days since last draw
+        days_since = (datetime.now() - date_end).days
+
+        # Calculate expected draws based on draw schedule
+        draw_days = config.get('draw_days', [])
+        expected_draws = self._calculate_expected_draws(date_start, date_end, draw_days)
+
+        # Detect gaps
+        gaps = self._detect_gaps(df, draw_days)
+
+        # Detect anomalies using existing validator
+        anomalies = self._detect_anomalies(df)
+
+        # Completeness score
+        completeness = min(1.0, total_draws / max(1, expected_draws)) if expected_draws > 0 else 1.0
+
+        # Freshness score (1.0 if draw was within expected interval, decays over time)
+        max_interval = self._get_max_draw_interval(draw_days)
+        freshness = max(0.0, 1.0 - (days_since / (max_interval * 2))) if max_interval > 0 else 0.5
+
+        record = DataHealthRecord(
+            timestamp=datetime.now().isoformat(),
+            lottery=lottery,
+            total_draws=total_draws,
+            date_range_start=date_start.strftime('%Y-%m-%d') if hasattr(date_start, 'strftime') else str(date_start),
+            date_range_end=date_end.strftime('%Y-%m-%d') if hasattr(date_end, 'strftime') else str(date_end),
+            days_since_last_draw=days_since,
+            expected_draws=expected_draws,
+            missing_draws=max(0, expected_draws - total_draws),
+            gaps=gaps,
+            anomalies=anomalies,
+            completeness_score=completeness,
+            freshness_score=freshness
+        )
+
+        self.records.append(record)
+        # Keep only last 100 records per lottery
+        self.records = [r for r in self.records if r.lottery != lottery][-99:] + [record]
+        self._save_records()
+
+        return record
+
+    def _calculate_expected_draws(self, start_date, end_date, draw_days) -> int:
+        """Calculate expected number of draws based on schedule."""
+        if not draw_days:
+            return 0
+
+        day_map = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6}
+        draw_day_nums = [day_map.get(d[:3], 0) for d in draw_days]
+
+        # Simple estimation: weeks * draws per week
+        days_diff = (end_date - start_date).days
+        weeks = days_diff / 7
+        draws_per_week = len(draw_day_nums)
+
+        return int(weeks * draws_per_week) + 1
+
+    def _get_max_draw_interval(self, draw_days) -> int:
+        """Get maximum days between draws."""
+        if not draw_days or len(draw_days) < 2:
+            return 7
+
+        day_map = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6}
+        days = sorted([day_map.get(d[:3], 0) for d in draw_days])
+
+        max_gap = 0
+        for i in range(len(days)):
+            for j in range(i + 1, len(days)):
+                gap = (days[j] - days[i]) % 7
+                if gap > 0 and gap < max_gap:
+                    max_gap = gap
+        return max_gap if max_gap > 0 else 7
+
+    def _detect_gaps(self, df, draw_days) -> List[Dict]:
+        """Detect gaps in draw schedule."""
+        if len(df) < 2:
+            return []
+
+        day_map = {"Mon": 0, "Tue": 1, "Wed": 2, "Thu": 3, "Fri": 4, "Sat": 5, "Sun": 6}
+        draw_day_nums = sorted([day_map.get(d[:3], 0) for d in draw_days])
+
+        gaps = []
+        dates = df['date'].tolist()
+
+        for i in range(1, len(dates)):
+            prev_date = dates[i-1]
+            curr_date = dates[i]
+
+            if hasattr(prev_date, 'weekday'):
+                prev_weekday = prev_date.weekday()
+            else:
+                prev_weekday = pd.Timestamp(prev_date).weekday()
+
+            if hasattr(curr_date, 'weekday'):
+                curr_weekday = curr_date.weekday()
+            else:
+                curr_weekday = pd.Timestamp(curr_date).weekday()
+
+            days_diff = (curr_date - prev_date).days if hasattr(curr_date, '__sub__') else (pd.Timestamp(curr_date) - pd.Timestamp(prev_date)).days
+
+            # Check if there should have been a draw in between
+            expected_next = self._get_next_draw_day(prev_weekday, draw_day_nums)
+            if expected_next is not None:
+                expected_days = (expected_next - prev_weekday) % 7
+                if expected_days == 0:
+                    expected_days = 7
+
+                if days_diff > expected_days + 2:  # Allow 2 days tolerance
+                    gaps.append({
+                        "type": "missing_draw",
+                        "expected_date": (prev_date + pd.Timedelta(days=expected_days)).strftime('%Y-%m-%d') if hasattr(prev_date, '__add__') else str(prev_date),
+                        "actual_date": curr_date.strftime('%Y-%m-%d') if hasattr(curr_date, 'strftime') else str(curr_date),
+                        "gap_days": days_diff,
+                        "expected_interval": expected_days
+                    })
+
+        return gaps
+
+    def _get_next_draw_day(self, current_weekday, draw_day_nums):
+        """Get the next draw day after current weekday."""
+        for d in draw_day_nums:
+            if d > current_weekday:
+                return d
+        return draw_day_nums[0] if draw_day_nums else None
+
+    def _detect_anomalies(self, df) -> List[Dict]:
+        """Detect anomalies in the data."""
+        anomalies = []
+
+        # Check for duplicate draws
+        draw_keys = df.apply(lambda row: tuple(sorted(row['main_numbers'])) + tuple(sorted(row['bonus_numbers'])) if row['bonus_numbers'] else tuple(sorted(row['main_numbers'])), axis=1)
+        duplicates = draw_keys[draw_keys.duplicated()]
+        if len(duplicates) > 0:
+            anomalies.append({
+                "type": "duplicate_draws",
+                "count": len(duplicates),
+                "details": f"Found {len(duplicates)} duplicate draw combinations"
+            })
+
+        # Check for out-of-range numbers
+        from .data import LOTTERY_CONFIGS
+        config = LOTTERY_CONFIGS.get(df['lottery'].iloc[0] if 'lottery' in df.columns else 'powerball')
+        if config:
+            main_max = config['main_max']
+            bonus_max = config['bonus_max']
+
+            for idx, row in df.iterrows():
+                for n in row['main_numbers']:
+                    if n < 1 or n > main_max:
+                        anomalies.append({
+                            "type": "out_of_range_number",
+                            "draw_number": row.get('draw_number', idx),
+                            "number": n,
+                            "details": f"Main number {n} out of range (1-{main_max})"
+                        })
+                for n in row['bonus_numbers']:
+                    if n < 1 or n > bonus_max:
+                        anomalies.append({
+                            "type": "out_of_range_number",
+                            "draw_number": row.get('draw_number', idx),
+                            "number": n,
+                            "details": f"Bonus number {n} out of range (1-{bonus_max})"
+                        })
+
+        # Check for unusual gaps in dates
+        dates = df['date'].tolist()
+        if len(dates) > 1:
+            intervals = []
+            for i in range(1, len(dates)):
+                d1 = dates[i-1]
+                d2 = dates[i]
+                diff = (d2 - d1).days if hasattr(d2, '__sub__') else (pd.Timestamp(d2) - pd.Timestamp(d1)).days
+                intervals.append(diff)
+
+            if intervals:
+                avg_interval = np.mean(intervals)
+                std_interval = np.std(intervals)
+                for i, diff in enumerate(intervals):
+                    if diff > avg_interval + 3 * std_interval:
+                        anomalies.append({
+                            "type": "unusual_date_gap",
+                            "gap_days": diff,
+                            "expected_avg": avg_interval,
+                            "details": f"Unusually large gap of {diff} days between draws"
+                        })
+
+        return anomalies
+
+    def get_health_summary(self, lottery: str) -> Dict:
+        """Get health summary for a lottery."""
+        records = [r for r in self.records if r.lottery == lottery]
+        if not records:
+            return {"error": "No health data available"}
+
+        latest = records[-1]
+        return {
+            "lottery": lottery,
+            "total_draws": latest.total_draws,
+            "date_range": f"{latest.date_range_start} to {latest.date_range_end}",
+            "days_since_last_draw": latest.days_since_last_draw,
+            "expected_draws": latest.expected_draws,
+            "missing_draws": latest.missing_draws,
+            "completeness_score": f"{latest.completeness_score:.1%}",
+            "freshness_score": f"{latest.freshness_score:.1%}",
+            "gaps_count": len(latest.gaps),
+            "anomalies_count": len(latest.anomalies),
+            "last_checked": latest.timestamp
+        }
+
+    def get_all_lotteries_health(self) -> List[Dict]:
+        """Get health summary for all lotteries."""
+        lotteries = set(r.lottery for r in self.records)
+        results = []
+        for lottery in lotteries:
+            summary = self.get_health_summary(lottery)
+            if "error" not in summary:
+                results.append(summary)
+        return sorted(results, key=lambda x: x['freshness_score'], reverse=True)
+
+    def schedule_backfill(self, lottery: str, source: str = "auto") -> Dict:
+        """Schedule a backfill for missing data."""
+        record = self.analyze_lottery_health(lottery)
+
+        if record.missing_draws == 0 and len(record.gaps) == 0:
+            return {
+                "status": "not_needed",
+                "message": "No missing data detected"
+            }
+
+        # In a real implementation, this would trigger a background job
+        # For now, we return the backfill plan
+        return {
+            "status": "scheduled",
+            "lottery": lottery,
+            "missing_draws": record.missing_draws,
+            "gaps_to_fill": len(record.gaps),
+            "source": source,
+            "estimated_completion": "Depends on data source availability"
+        }
+
+
+class CrossLotteryCorrelationAnalyzer:
+    """Analyze historical correlations across different lotteries."""
+
+    def __init__(self, storage_path: str = "cross_lottery_correlations"):
+        self.storage_path = Path(storage_path)
+        self.storage_path.mkdir(exist_ok=True)
+        self.correlation_file = self.storage_path / "correlations.json"
+        self.results: List[CrossLotteryCorrelation] = []
+        self._load_results()
+
+    def _load_results(self):
+        """Load correlation results from disk."""
+        if self.correlation_file.exists():
+            try:
+                with open(self.correlation_file, 'r') as f:
+                    data = json.load(f)
+                self.results = [CrossLotteryCorrelation(**r) for r in data]
+            except Exception:
+                pass
+
+    def _save_results(self):
+        """Save correlation results to disk."""
+        with open(self.correlation_file, 'w') as f:
+            json.dump([r.__dict__ for r in self.results], f, indent=2)
+
+    def analyze_number_frequency_correlation(self, lottery_a: str, lottery_b: str) -> CrossLotteryCorrelation:
+        """Analyze correlation in number frequency patterns between two lotteries."""
+        from .data import get_data_manager
+        from scipy import stats
+
+        dm_a = get_data_manager(lottery_a)
+        dm_b = get_data_manager(lottery_b)
+
+        df_a = dm_a.load_data()
+        df_b = dm_b.load_data()
+
+        # Use overlapping date range
+        min_date = max(df_a['date'].min(), df_b['date'].min())
+        max_date = min(df_a['date'].max(), df_b['date'].max())
+
+        df_a = df_a[(df_a['date'] >= min_date) & (df_a['date'] <= max_date)]
+        df_b = df_b[(df_b['date'] >= min_date) & (df_b['date'] <= max_date)]
+
+        # Get number frequencies for common range
+        config_a = dm_a.config
+        config_b = dm_b.config
+
+        # Find overlapping number range
+        max_common = min(config_a['main_max'], config_b['main_max'])
+
+        freq_a = np.zeros(max_common)
+        freq_b = np.zeros(max_common)
+
+        for _, row in df_a.iterrows():
+            for n in row['main_numbers']:
+                if n <= max_common:
+                    freq_a[n-1] += 1
+
+        for _, row in df_b.iterrows():
+            for n in row['main_numbers']:
+                if n <= max_common:
+                    freq_b[n-1] += 1
+
+        # Normalize by number of draws
+        freq_a = freq_a / max(1, len(df_a))
+        freq_b = freq_b / max(1, len(df_b))
+
+        # Calculate correlation
+        corr, p_value = stats.pearsonr(freq_a, freq_b)
+
+        # Convert numpy types to Python native types for JSON serialization
+        corr = float(corr)
+        p_value = float(p_value)
+        significant = bool(p_value < 0.05)
+
+        result = CrossLotteryCorrelation(
+            lottery_a=lottery_a,
+            lottery_b=lottery_b,
+            correlation_type="number_frequency",
+            correlation_coefficient=corr,
+            p_value=p_value,
+            sample_size=min(len(df_a), len(df_b)),
+            significant=significant,
+            details={
+                "max_common_number": int(max_common),
+                "draws_a": int(len(df_a)),
+                "draws_b": int(len(df_b)),
+                "date_range": f"{min_date.strftime('%Y-%m-%d') if hasattr(min_date, 'strftime') else str(min_date)} to {max_date.strftime('%Y-%m-%d') if hasattr(max_date, 'strftime') else str(max_date)}"
+            }
+        )
+
+        self.results.append(result)
+        self._save_results()
+        return result
+
+    def analyze_sum_distribution_correlation(self, lottery_a: str, lottery_b: str) -> CrossLotteryCorrelation:
+        """Analyze correlation in sum distribution between two lotteries."""
+        from .data import get_data_manager
+        from scipy import stats
+
+        dm_a = get_data_manager(lottery_a)
+        dm_b = get_data_manager(lottery_b)
+
+        df_a = dm_a.load_data()
+        df_b = dm_b.load_data()
+
+        # Use overlapping date range
+        min_date = max(df_a['date'].min(), df_b['date'].min())
+        max_date = min(df_a['date'].max(), df_b['date'].max())
+
+        df_a = df_a[(df_a['date'] >= min_date) & (df_a['date'] <= max_date)]
+        df_b = df_b[(df_b['date'] >= min_date) & (df_b['date'] <= max_date)]
+
+        # Calculate sums
+        sums_a = df_a['main_numbers'].apply(sum).values
+        sums_b = df_b['main_numbers'].apply(sum).values
+
+        # Align by date (use common dates)
+        # For simplicity, we'll correlate the distributions
+        # Create histograms with same bins
+        min_sum = min(sums_a.min(), sums_b.min())
+        max_sum = max(sums_a.max(), sums_b.max())
+        bins = np.linspace(min_sum, max_sum, 20)
+
+        hist_a, _ = np.histogram(sums_a, bins=bins, density=True)
+        hist_b, _ = np.histogram(sums_b, bins=bins, density=True)
+
+        corr, p_value = stats.pearsonr(hist_a, hist_b)
+
+        # Convert numpy types to Python native types for JSON serialization
+        corr = float(corr)
+        p_value = float(p_value)
+        significant = bool(p_value < 0.05)
+
+        result = CrossLotteryCorrelation(
+            lottery_a=lottery_a,
+            lottery_b=lottery_b,
+            correlation_type="sum_distribution",
+            correlation_coefficient=corr,
+            p_value=p_value,
+            sample_size=min(len(df_a), len(df_b)),
+            significant=significant,
+            details={
+                "mean_sum_a": float(sums_a.mean()),
+                "mean_sum_b": float(sums_b.mean()),
+                "std_sum_a": float(sums_a.std()),
+                "std_sum_b": float(sums_b.std()),
+                "draws_a": int(len(df_a)),
+                "draws_b": int(len(df_b))
+            }
+        )
+
+        self.results.append(result)
+        self._save_results()
+        return result
+
+    def analyze_odd_even_correlation(self, lottery_a: str, lottery_b: str) -> CrossLotteryCorrelation:
+        """Analyze correlation in odd/even patterns between two lotteries."""
+        from .data import get_data_manager
+        from scipy import stats
+
+        dm_a = get_data_manager(lottery_a)
+        dm_b = get_data_manager(lottery_b)
+
+        df_a = dm_a.load_data()
+        df_b = dm_b.load_data()
+
+        # Use overlapping date range
+        min_date = max(df_a['date'].min(), df_b['date'].min())
+        max_date = min(df_a['date'].max(), df_b['date'].max())
+
+        df_a = df_a[(df_a['date'] >= min_date) & (df_a['date'] <= max_date)]
+        df_b = df_b[(df_b['date'] >= min_date) & (df_b['date'] <= max_date)]
+
+        # Calculate odd/even ratios per draw
+        def get_odd_even_ratio(numbers):
+            odds = sum(1 for n in numbers if n % 2 == 1)
+            return odds / len(numbers) if numbers else 0
+
+        ratios_a = df_a['main_numbers'].apply(get_odd_even_ratio).values
+        ratios_b = df_b['main_numbers'].apply(get_odd_even_ratio).values
+
+        corr, p_value = stats.pearsonr(ratios_a, ratios_b)
+
+        # Convert numpy types to Python native types for JSON serialization
+        corr = float(corr)
+        p_value = float(p_value)
+        significant = bool(p_value < 0.05)
+
+        result = CrossLotteryCorrelation(
+            lottery_a=lottery_a,
+            lottery_b=lottery_b,
+            correlation_type="odd_even",
+            correlation_coefficient=corr,
+            p_value=p_value,
+            sample_size=min(len(df_a), len(df_b)),
+            significant=significant,
+            details={
+                "avg_odd_ratio_a": float(ratios_a.mean()),
+                "avg_odd_ratio_b": float(ratios_b.mean()),
+                "draws_a": int(len(df_a)),
+                "draws_b": int(len(df_b))
+            }
+        )
+
+        self.results.append(result)
+        self._save_results()
+        return result
+
+    def analyze_all_correlations(self, lottery_a: str, lottery_b: str) -> List[CrossLotteryCorrelation]:
+        """Run all correlation analyses between two lotteries."""
+        results = []
+
+        try:
+            results.append(self.analyze_number_frequency_correlation(lottery_a, lottery_b))
+        except Exception as e:
+            print(f"Number frequency correlation failed: {e}")
+
+        try:
+            results.append(self.analyze_sum_distribution_correlation(lottery_a, lottery_b))
+        except Exception as e:
+            print(f"Sum distribution correlation failed: {e}")
+
+        try:
+            results.append(self.analyze_odd_even_correlation(lottery_a, lottery_b))
+        except Exception as e:
+            print(f"Odd/even correlation failed: {e}")
+
+        return results
+
+    def get_significant_correlations(self, threshold: float = 0.05) -> List[CrossLotteryCorrelation]:
+        """Get all significant correlations."""
+        return [r for r in self.results if r.p_value < threshold]
+
+    def find_correlated_lotteries(self, base_lottery: str, top_n: int = 5) -> List[Dict]:
+        """Find lotteries most correlated with a base lottery."""
+        from .data import LOTTERY_CONFIGS
+
+        other_lotteries = [k for k in LOTTERY_CONFIGS.keys() if k != base_lottery]
+        correlations = []
+
+        for other in other_lotteries:
+            try:
+                results = self.analyze_all_correlations(base_lottery, other)
+                # Average correlation across all types
+                valid_results = [r for r in results if r.correlation_coefficient is not None]
+                if valid_results:
+                    avg_corr = np.mean([abs(r.correlation_coefficient) for r in valid_results])
+                    min_p = min(r.p_value for r in valid_results)
+                    correlations.append({
+                        "lottery": other,
+                        "name": LOTTERY_CONFIGS[other]['name'],
+                        "avg_correlation": avg_corr,
+                        "min_p_value": min_p,
+                        "significant": min_p < 0.05,
+                        "details": {r.correlation_type: {"corr": r.correlation_coefficient, "p": r.p_value} for r in valid_results}
+                    })
+            except Exception as e:
+                print(f"Correlation analysis failed for {base_lottery} vs {other}: {e}")
+
+        correlations.sort(key=lambda x: x['avg_correlation'], reverse=True)
+        return correlations[:top_n]

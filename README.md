@@ -189,6 +189,17 @@ python main.py leaderboard --limit 10
 python main.py community-pool --create --name "My Pool" --lottery powerball --budget 100
 python main.py community-pools --status all
 
+# NEW: v2.3 Intelligence & Automation commands
+python main.py model-performance --compare --check-drift
+python main.py budget --add --spent 20 --lottery powerball
+python main.py multi-draw --draws 5 --per-draw 3 --decay 0.95
+python main.py voice --text "predict powerball numbers"
+
+# NEW: v2.4 Enhanced History & Analytics commands
+python main.py data-health --lottery powerball
+python main.py cross-correlation --lottery-a powerball --lottery-b mega_millions
+python main.py cross-correlation --find-correlated powerball --top 5
+
 # Launch web GUI
 streamlit run streamlit_app.py
 
@@ -233,6 +244,12 @@ python tkinter_app.py
 | **Share Predictions (v2.2)** | ✅ `share-prediction` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ All |
 | **Leaderboards (v2.2)** | ✅ `leaderboard` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ All |
 | **Community Pools (v2.2)** | ✅ `community-pool` | ✅ **Tab 6: Profile & Social** | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Model Performance (v2.3)** | ✅ `model-performance` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ With DB |
+| **Budget Tracker (v2.3)** | ✅ `budget` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ With DB |
+| **Multi-Draw Predictions (v2.3)** | ✅ `multi-draw` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Voice Assistant (v2.3)** | ✅ `voice` | ❌ Not yet | ❌ Not yet | ❌ Not yet | ✅ With API |
+| **Data Health Dashboard (v2.4)** | ✅ `data-health` | ✅ **Tab 7: Data Health** | ❌ Not yet | ❌ Not yet | ✅ All |
+| **Cross-Lottery Correlation (v2.4)** | ✅ `cross-correlation` | ✅ **Tab 8: Cross-Lottery** | ❌ Not yet | ❌ Not yet | ✅ All |
 | **Production Ready** | Development | **Development + PWA** | Development | ✅ With auth/DB | ✅ Production grade |
 
 **Quick Recommendation:**
@@ -546,6 +563,83 @@ Options:
   -s, --status TEXT        Filter: open, closed, all (default: open)
 ```
 
+### `model-performance` - Model Performance Dashboard (v2.3)
+```bash
+python main.py model-performance [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Lottery type (default: powerball)
+  --compare/--no-compare   Compare all methods (default: True)
+  --check-drift/--no-check-drift  Check for model drift (default: True)
+  --threshold FLOAT        Drift threshold (default: 0.05)
+  -o, --output FILE        Save report to JSON file
+```
+
+### `budget` - Budget Tracker (v2.3)
+```bash
+python main.py budget [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Lottery type (default: powerball)
+  -a, --add                Add a spending entry
+  --spent FLOAT            Amount spent (for --add)
+  --won FLOAT              Amount won (for --add)
+  -d, --date TEXT          Date YYYY-MM-DD (for --add, default: today)
+  -m, --monthly            Show monthly spending breakdown
+  --tax-rate FLOAT         Federal tax rate (default: 0.24)
+  --state-tax FLOAT        State tax rate (default: 0.0)
+  -o, --output FILE        Save report to JSON file
+  -f, --format TEXT        Output format: json, csv (default: json)
+```
+
+### `multi-draw` - Multi-Draw Predictions (v2.3)
+```bash
+python main.py multi-draw [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Lottery type (default: powerball)
+  -m, --method TEXT        Prediction method (default: ensemble)
+  -d, --draws INT          Number of draws to predict (default: 5)
+  -p, --per-draw INT       Predictions per draw (default: 3)
+  --decay FLOAT            Confidence decay factor 0-1 (default: 0.95)
+  -o, --output FILE        Save predictions to JSON file
+```
+
+### `voice` - Voice Assistant (v2.3)
+```bash
+python main.py voice [OPTIONS]
+
+Options:
+  -t, --text TEXT          Voice command text (required if not using microphone)
+  --mic/--no-mic           Use microphone input (default: False)
+  -l, --lottery TEXT       Default lottery (default: powerball)
+  --respond/--no-respond   Generate spoken response (default: False)
+```
+
+### `data-health` - Historical Data Health Dashboard (v2.4)
+```bash
+python main.py data-health [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Lottery type (default: all lotteries)
+  --all/--single           Analyze all lotteries or single (default: all)
+  -o, --output FILE        Save health report to JSON file
+```
+
+### `cross-correlation` - Cross-Lottery Correlation Analysis (v2.4)
+```bash
+python main.py cross-correlation [OPTIONS]
+
+Options:
+  -a, --lottery-a TEXT     First lottery (required unless --find-correlated)
+  -b, --lottery-b TEXT     Second lottery (required unless --find-correlated)
+  --all/--single           Run all correlation types (default: all)
+  --find-correlated TEXT   Find lotteries correlated with this one
+  --top INT                Number of top correlated lotteries (default: 5)
+  --threshold FLOAT        Significance threshold p-value (default: 0.05)
+  -o, --output FILE        Save results to JSON file
+```
+
 ## Prediction Methods
 
 ### Statistical Methods
@@ -837,34 +931,49 @@ If you or someone you know has a gambling problem, please contact:
   - `user-create`, `user-login`, `user-profile`, `user-prefs`, `user-favorites`, `user-stats`
   - `share-prediction`, `leaderboard`, `community-pool`, `community-pools`
 
-### v2.3 - Intelligence & Automation 🤖
-- [ ] **Model Performance Dashboard** - Track accuracy over time, detect drift
-  - Per-method performance charts
-  - Model retraining triggers
-  - A/B testing results visualization
-- [ ] **Budget Tracker** - Track spending vs. winnings over time
-  - Per-lottery spending reports
-  - ROI calculations
-  - Tax estimator (federal/state)
-- [ ] **Multi-Draw Predictions** - Predict for multiple upcoming draws
-  - Rolling prediction windows
-  - Confidence decay modeling
-- [ ] **Voice Assistant Integration** - "Hey Siri/Google, give me Powerball numbers"
-  - Shortcuts/Intent support
-  - Read aloud predictions
+### v2.3 - Intelligence & Automation 🤖 ✅
+- [x] **Model Performance Dashboard** - Track accuracy over time, detect drift
+  - Per-method performance charts & history
+  - Model drift detection with configurable thresholds
+  - Retraining recommendations based on performance decay
+  - Method comparison across all algorithms
+  - CLI: `model-performance --compare --check-drift`
+- [x] **Budget Tracker** - Track spending vs. winnings over time
+  - Per-lottery spending reports & breakdowns
+  - ROI calculations with monthly trends
+  - Tax estimator (federal 24% + state)
+  - Export reports to JSON/CSV
+  - CLI: `budget --add --spent 20 --lottery powerball`, `budget --monthly`, `budget --export json`
+- [x] **Multi-Draw Predictions** - Predict for multiple upcoming draws
+  - Rolling prediction windows (configurable draws)
+  - Confidence decay modeling (exponential decay factor)
+  - Draw interval estimation from draw schedule
+  - CLI: `multi-draw --draws 5 --per-draw 3 --decay 0.95`
+- [x] **Voice Assistant Integration** - "Hey Siri/Google, give me Powerball numbers"
+  - Intent parsing (predictions, next draw, odds)
+  - Lottery name extraction from natural language
+  - Response generation with predictions/odds
+  - CLI: `voice --text "predict powerball numbers"`
 
-### v2.4 - Enhanced History & Analytics 📊
-- [ ] **Per-Lottery Full History Toggle** - Option to use all historical data for each lottery
-  - Already implemented via `--all-history` flag (works for all 48+ lotteries)
-  - Add UI toggles in Streamlit & Tkinter for easy access
-  - Show data quality metrics (completeness, date range) per lottery
-- [ ] **Historical Data Health Dashboard** - Monitor data freshness & gaps
+### v2.4 - Enhanced History & Analytics 📊 ✅
+- [x] **Per-Lottery Full History Toggle** - Option to use all historical data for each lottery
+  - Implemented via `--all-history` flag (works for all 48+ lotteries)
+  - Added UI toggles in Streamlit sidebar & Analyze tab for easy access
+  - Shows data quality metrics (completeness, date range) per lottery
+- [x] **Historical Data Health Dashboard** - Monitor data freshness & gaps
   - Auto-detect missing draws
   - Alert on data anomalies
   - Backfill scheduling
-- [ ] **Cross-Lottery Historical Correlation** - Find patterns across similar games
+  - CLI: `data-health --lottery powerball`
+  - Streamlit: Tab 7 "Data Health" with full health reports & CSV export
+- [x] **Cross-Lottery Historical Correlation** - Find patterns across similar games
   - Compare Powerball vs Mega Millions trends
   - State vs multi-state correlation analysis
+  - Number frequency, sum distribution, odd/even correlations
+  - Find top correlated lotteries for any base lottery
+  - CLI: `cross-correlation --lottery-a powerball --lottery-b mega_millions`
+  - CLI: `cross-correlation --find-correlated powerball --top 5`
+  - Streamlit: Tab 8 "Cross-Lottery" with interactive analysis & visualizations
 
 ---
 
