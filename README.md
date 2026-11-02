@@ -261,6 +261,88 @@ Options:
   -i, --interval INTEGER Update interval in hours (default: 24)
 ```
 
+### `portfolio` - Portfolio Optimizer (v1.5)
+```bash
+python main.py portfolio [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Lottery type (default: powerball)
+  -b, --budget FLOAT       Budget in dollars (default: 20.0)
+  --cost FLOAT             Cost per ticket (default: 2.0)
+  -d, --diversity FLOAT    Diversity weight 0-1 (default: 0.5)
+  -s, --strategy TEXT      Strategy: diverse, wheel (default: diverse)
+  -n, --numbers TEXT       Comma-separated numbers for wheel strategy
+  -o, --output FILE        Save portfolio to JSON file
+```
+
+### `syndicate` - Syndicate Manager (v1.5)
+```bash
+python main.py syndicate [OPTIONS]
+
+Options:
+  --name TEXT              Syndicate name (required)
+  -l, --lottery TEXT       Lottery type (default: powerball)
+  -b, --budget FLOAT       Total budget (default: 100.0)
+  --cost FLOAT             Cost per ticket (default: 2.0)
+  -m, --members TEXT       Members: name:email:share,name2:email2:share (required)
+  -d, --draw-date TEXT     Draw date YYYY-MM-DD
+  -o, --output FILE        Save syndicate to file
+  -f, --format TEXT        Output format: json, csv (default: json)
+```
+
+### `notify` - Notification System (v1.5)
+```bash
+python main.py notify [OPTIONS]
+
+Options:
+  -l, --lottery TEXT       Lottery type (default: powerball)
+  --method TEXT            Prediction method (default: ensemble)
+  -c, --count INT          Number of predictions (default: 5)
+  --email TEXT             Email recipient
+  --discord TEXT           Discord webhook URL
+  --pushbullet TEXT        Pushbullet token
+  --smtp-server TEXT       SMTP server for email
+  --smtp-port INT          SMTP port (default: 587)
+  --smtp-user TEXT         SMTP username
+  --smtp-pass TEXT         SMTP password
+```
+
+### `language` - Language Manager (v1.5)
+```bash
+python main.py language [OPTIONS]
+
+Options:
+  --lang TEXT              Language: en, es, fr, de, zh (default: en)
+  --list                   List available languages
+```
+
+### `serve` - Start API Server (v2.0)
+```bash
+python main.py serve [OPTIONS]
+
+Options:
+  --host TEXT              Host to bind (default: 0.0.0.0)
+  -p, --port INT           Port to bind (default: 8000)
+  --reload                 Enable auto-reload
+```
+
+### `generate-deployment` - Generate Deployment Files (v2.0)
+```bash
+python main.py generate-deployment [OPTIONS]
+
+Options:
+  -t, --type TEXT          Type: dockerfile, docker-compose, k8s, all (default: all)
+  -o, --output DIR         Output directory (default: .)
+```
+
+### `init-db` - Initialize Database (v2.0)
+```bash
+python main.py init-db [OPTIONS]
+
+Options:
+  --url TEXT               Database URL (default: sqlite:///lottery_predictor.db)
+```
+
 ## Prediction Methods
 
 ### Statistical Methods
@@ -299,7 +381,9 @@ lottery-predictor/
     ├── visualize.py      # Visualization generation
     ├── cli.py            # Command-line interface
     ├── universal.py      # Universal lottery configuration system
-    └── data_integration.py  # API integration, web scraping, validation (v1.4)
+    ├── data_integration.py  # API integration, web scraping, validation (v1.4)
+    ├── advanced.py       # Portfolio, syndicate, notifications, i18n (v1.5)
+    └── cloud.py          # FastAPI, Docker, K8s, Database (v2.0)
 ```
 
 ## Example Output
@@ -408,20 +492,20 @@ If you or someone you know has a gambling problem, please contact:
 - [x] Scheduled data updates (cron/GitHub Actions)
 - [x] Export to CSV/Excel/JSON
 
-### v1.5 - Advanced Features
+### v1.5 - Advanced Features ✅
 - [x] Backtesting framework with historical validation
-- [ ] Portfolio optimization (multiple tickets)
-- [ ] Syndicate/group play tools
-- [ ] Notification system (email, push, Discord)
-- [ ] Multi-language support
+- [x] Portfolio optimization (multiple tickets)
+- [x] Syndicate/group play tools
+- [x] Notification system (email, push, Discord)
+- [x] Multi-language support
 
-### v2.0 - Cloud & Scale
-- [ ] REST API (FastAPI)
-- [ ] Docker containerization
-- [ ] Kubernetes deployment configs
-- [ ] Database backend (PostgreSQL)
-- [ ] User accounts & prediction history
-- [ ] A/B testing for model versions
+### v2.0 - Cloud & Scale ✅
+- [x] REST API (FastAPI)
+- [x] Docker containerization
+- [x] Kubernetes deployment configs
+- [x] Database backend (PostgreSQL/SQLite)
+- [x] User accounts & prediction history
+- [x] A/B testing for model versions
 
 ---
 

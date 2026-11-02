@@ -27,5 +27,26 @@ plotly>=5.17.0
 # Data export
 openpyxl>=3.1.0
 
+# v1.4 Data Integration
+aiohttp>=3.9.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+schedule>=1.2.0
+brotli>=1.1.0
+
+# v1.5 Advanced Features
+# Optional: Optuna for hyperparameter optimization
+# optuna>=3.4.0
+# Optional: SHAP for model explainability
+# shap>=0.42.0
+# Optional: PyTorch for Transformer models
+# torch>=2.0.0
+
+# v2.0 Cloud & Scale
+fastapi>=0.104.0
+uvicorn>=0.24.0
+sqlalchemy>=2.0.0
+redis>=5.0.0
+
 # Development
-pytest>=7.4.0brotli
+pytest>=7.4.0

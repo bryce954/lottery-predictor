@@ -37,6 +37,13 @@ from .data_integration import (
     update_lottery_data, update_all_lotteries,
     save_github_workflow, run_scheduled_updater
 )
+from .advanced import (
+    PortfolioOptimizer, SyndicateManager, Syndicate, SyndicateMember,
+    NotificationSystem, I18nManager
+)
+from .cloud import (
+    create_app, generate_dockerfile, generate_docker_compose, generate_kubernetes
+)
 
 try:
     import openpyxl
@@ -969,6 +976,373 @@ def run_scheduler(
     console.print("[yellow]Press Ctrl+C to stop[/yellow]\n")
 
     run_scheduled_updater(keys, interval)
+
+
+@app.command()
+def portfolio(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    budget: float = typer.Option(20.0, "--budget", "-b", help="Budget in dollars"),
+    ticket_cost: float = typer.Option(2.0, "--cost", help="Cost per ticket"),
+    diversity: float = typer.Option(0.5, "--diversity", "-d", help="Diversity weight (0-1)"),
+    strategy: str = typer.Option("diverse", "--strategy", "-s", help="Strategy: diverse, wheel"),
+    numbers: str = typer.Option(None, "--numbers", "-n", help="Comma-separated numbers for wheel strategy"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Save portfolio to JSON file"),
+):
+    """Generate optimized ticket portfolio (v1.5)."""
+    print_header(f"💼 Portfolio Optimizer - {LOTTERY_CONFIGS[lottery]['name']} (v1.5)")
+    print_disclaimer()
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    optimizer = PortfolioOptimizer(lottery)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Generating portfolio...", total=None)
+
+        if strategy == "wheel":
+            if not numbers:
+                console.print("[red]Error: --numbers required for wheel strategy[/red]")
+                raise typer.Exit(1)
+            num_list = [int(n.strip()) for n in numbers.split(',')]
+            portfolio = optimizer.optimize_wheel(num_list, ticket_cost)
+        else:
+            portfolio = optimizer.generate_diverse_portfolio(
+                budget=budget,
+                ticket_cost=ticket_cost,
+                diversity_weight=diversity
+            )
+
+        progress.update(task, description="Done!", completed=True)
+
+    # Display portfolio
+    console.print(f"\n[bold]Portfolio Summary:[/bold]")
+    console.print(f"  Strategy: {portfolio.strategy}")
+    console.print(f"  Tickets: {len(portfolio.tickets)}")
+    console.print(f"  Total Cost: ${portfolio.total_cost:.2f}")
+    console.print(f"  Budget: ${portfolio.budget:.2f}")
+
+    table = Table(title="🎫 Tickets", show_header=True)
+    table.add_column("#", width=4)
+    table.add_column("Main Numbers", style="green")
+    table.add_column("Bonus", style="yellow")
+    table.add_column("Method", style="cyan")
+    table.add_column("Confidence", style="blue")
+
+    for i, ticket in enumerate(portfolio.tickets, 1):
+        main_str = "  ".join(f"{n:2d}" for n in ticket.main_numbers)
+        bonus_str = "  ".join(f"{n:2d}" for n in ticket.bonus_numbers) if ticket.bonus_numbers else "N/A"
+        table.add_row(str(i), main_str, bonus_str, ticket.method, f"{ticket.confidence:.1%}")
+
+    console.print(table)
+
+    if output:
+        data = {
+            "lottery": portfolio.lottery_type,
+            "strategy": portfolio.strategy,
+            "budget": portfolio.budget,
+            "total_cost": portfolio.total_cost,
+            "tickets": [
+                {
+                    "main_numbers": t.main_numbers,
+                    "bonus_numbers": t.bonus_numbers,
+                    "method": t.method,
+                    "confidence": t.confidence,
+                    "cost": t.cost
+                }
+                for t in portfolio.tickets
+            ]
+        }
+        with open(output, 'w') as f:
+            json.dump(data, f, indent=2)
+        console.print(f"\n[green]Portfolio saved to {output}[/green]")
+
+
+@app.command()
+def syndicate(
+    name: str = typer.Option(..., "--name", help="Syndicate name"),
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    budget: float = typer.Option(100.0, "--budget", "-b", help="Total budget"),
+    ticket_cost: float = typer.Option(2.0, "--cost", help="Cost per ticket"),
+    members: str = typer.Option(..., "--members", "-m", help="Members: name:email:share,name2:email2:share"),
+    draw_date: Optional[str] = typer.Option(None, "--draw-date", "-d", help="Draw date (YYYY-MM-DD)"),
+    output: Optional[str] = typer.Option(None, "--output", "-o", help="Save syndicate to JSON file"),
+    format: str = typer.Option("json", "--format", "-f", help="Output format: json, csv"),
+):
+    """Create and manage lottery syndicate (v1.5)."""
+    print_header(f"👥 Syndicate Manager - {name} (v1.5)")
+    print_disclaimer()
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    # Parse members
+    member_list = []
+    for member_str in members.split(','):
+        parts = member_str.strip().split(':')
+        if len(parts) >= 2:
+            member_name = parts[0]
+            email = parts[1] if parts[1] else None
+            share = float(parts[2]) if len(parts) > 2 and parts[2] else 0.0
+        else:
+            member_name = parts[0]
+            email = None
+            share = 0.0
+
+        member_list.append(SyndicateMember(
+            name=member_name,
+            email=email,
+            share_percentage=share
+        ))
+
+    manager = SyndicateManager()
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Creating syndicate...", total=None)
+        syndicate = manager.create_syndicate(name, lottery, member_list, budget, ticket_cost)
+        if draw_date:
+            syndicate.draw_date = draw_date
+        progress.update(task, description="Done!", completed=True)
+
+    console.print(f"\n[bold]Syndicate Created:[/bold]")
+    console.print(f"  Name: {syndicate.name}")
+    console.print(f"  Lottery: {LOTTERY_CONFIGS[lottery]['name']}")
+    console.print(f"  Total Budget: ${syndicate.total_cost:.2f}")
+    console.print(f"  Tickets: {len(syndicate.tickets)}")
+
+    if draw_date:
+        console.print(f"  Draw Date: {draw_date}")
+
+    # Members table
+    member_table = Table(title="👥 Members", show_header=True)
+    member_table.add_column("Name", style="cyan")
+    member_table.add_column("Email", style="green")
+    member_table.add_column("Share %", style="yellow")
+    member_table.add_column("Contribution", style="blue")
+
+    for m in syndicate.members:
+        member_table.add_row(
+            m.name,
+            m.email or "N/A",
+            f"{m.share_percentage:.1f}%",
+            f"${m.contribution:.2f}"
+        )
+    console.print(member_table)
+
+    # Tickets table
+    ticket_table = Table(title="🎫 Tickets", show_header=True)
+    ticket_table.add_column("#", width=4)
+    ticket_table.add_column("Main Numbers", style="green")
+    ticket_table.add_column("Bonus", style="yellow")
+    ticket_table.add_column("Method", style="cyan")
+
+    for i, ticket in enumerate(syndicate.tickets, 1):
+        main_str = "  ".join(f"{n:2d}" for n in ticket.main_numbers)
+        bonus_str = "  ".join(f"{n:2d}" for n in ticket.bonus_numbers) if ticket.bonus_numbers else "N/A"
+        ticket_table.add_row(str(i), main_str, bonus_str, ticket.method)
+
+    console.print(ticket_table)
+
+    if output:
+        content = manager.export_syndicate(name, format)
+        with open(output, 'w') as f:
+            f.write(content)
+        console.print(f"\n[green]Syndicate saved to {output}[/green]")
+
+
+@app.command()
+def notify(
+    lottery: str = typer.Option("powerball", "--lottery", "-l", help="Lottery type"),
+    method: str = typer.Option("ensemble", "--method", help="Prediction method"),
+    count: int = typer.Option(5, "--count", "-c", help="Number of predictions"),
+    email: Optional[str] = typer.Option(None, "--email", help="Email recipient"),
+    discord: Optional[str] = typer.Option(None, "--discord", help="Discord webhook URL"),
+    pushbullet: Optional[str] = typer.Option(None, "--pushbullet", help="Pushbullet token"),
+    smtp_server: Optional[str] = typer.Option(None, "--smtp-server", help="SMTP server for email"),
+    smtp_port: int = typer.Option(587, "--smtp-port", help="SMTP port"),
+    smtp_user: Optional[str] = typer.Option(None, "--smtp-user", help="SMTP username"),
+    smtp_pass: Optional[str] = typer.Option(None, "--smtp-pass", help="SMTP password"),
+):
+    """Send prediction notifications (v1.5)."""
+    print_header(f"📢 Notification System - {LOTTERY_CONFIGS[lottery]['name']} (v1.5)")
+
+    if lottery not in LOTTERY_TYPES:
+        console.print(f"[red]Error: Unknown lottery type '{lottery}'[/red]")
+        raise typer.Exit(1)
+
+    # Get predictions
+    predictor = get_predictor(lottery, method)
+    if method == "statistical":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_balanced(num_predictions=count)
+    elif method == "frequency":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_frequency_based(num_predictions=count)
+    elif method == "cold":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_cold_numbers(num_predictions=count)
+    elif method == "pairs":
+        pred = StatisticalPredictor(lottery)
+        predictions = pred.predict_pair_based(num_predictions=count)
+    elif method == "ml":
+        pred = MLModelPredictor(lottery)
+        if not pred.is_trained:
+            pred.train()
+        predictions = pred.predict(num_predictions=count)
+    else:
+        pred = EnsemblePredictor(lottery)
+        predictions = pred.get_consensus_prediction(num_predictions=count)
+
+    notification = NotificationSystem()
+
+    recipients = []
+    if email:
+        if not smtp_server or not smtp_user or not smtp_pass:
+            console.print("[red]Error: SMTP settings required for email[/red]")
+            raise typer.Exit(1)
+        notification.configure_email(smtp_server, smtp_port, smtp_user, smtp_pass)
+        recipients.append(email)
+
+    if discord:
+        notification.configure_discord(discord)
+        recipients.append(f"discord:{discord}")
+
+    if pushbullet:
+        notification.configure_pushbullet(pushbullet)
+        recipients.append(f"pushbullet:{pushbullet}")
+
+    if not recipients:
+        console.print("[yellow]No recipients specified. Use --email, --discord, or --pushbullet[/yellow]")
+        return
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Sending notifications...", total=None)
+        results = notification.notify_predictions(lottery, predictions, recipients)
+        progress.update(task, description="Done!", completed=True)
+
+    console.print("\n[bold]Notification Results:[/bold]")
+    for recipient, success in results.items():
+        status = "[green]✓ Sent[/green]" if success else "[red]✗ Failed[/red]"
+        console.print(f"  {recipient}: {status}")
+
+
+@app.command()
+def language(
+    lang: str = typer.Option("en", "--lang", help="Language code: en, es, fr, de, zh"),
+    list_langs: bool = typer.Option(False, "--list", help="List available languages"),
+):
+    """Manage multi-language support (v1.5)."""
+    print_header("🌐 Language Manager (v1.5)")
+
+    i18n = I18nManager()
+
+    if list_langs:
+        console.print("\n[bold]Available Languages:[/bold]")
+        for code in I18nManager.get_available_languages():
+            current = " (current)" if code == i18n.language else ""
+            console.print(f"  {code}{current}")
+        return
+
+    if lang not in I18nManager.get_available_languages():
+        console.print(f"[red]Error: Language '{lang}' not available[/red]")
+        console.print(f"Available: {', '.join(I18nManager.get_available_languages())}")
+        raise typer.Exit(1)
+
+    i18n.set_language(lang)
+    console.print(f"\n[green]Language set to: {lang}[/green]")
+
+    # Show sample translations
+    console.print("\n[bold]Sample Translations:[/bold]")
+    sample_keys = ["predictions", "main_numbers", "confidence", "disclaimer", "hot_numbers", "cold_numbers"]
+    table = Table(show_header=True)
+    table.add_column("Key", style="cyan")
+    table.add_column("Translation", style="green")
+    for key in sample_keys:
+        table.add_row(key, i18n.get(key)[:80] + "..." if len(i18n.get(key)) > 80 else i18n.get(key))
+    console.print(table)
+
+
+@app.command()
+def serve(
+    host: str = typer.Option("0.0.0.0", "--host", help="Host to bind"),
+    port: int = typer.Option(8000, "--port", "-p", help="Port to bind"),
+    reload: bool = typer.Option(False, "--reload", help="Enable auto-reload"),
+):
+    """Start FastAPI REST API server (v2.0)."""
+    print_header("🚀 Starting Lottery Predictor API Server (v2.0)")
+
+    try:
+        import uvicorn
+    except ImportError:
+        console.print("[red]Error: uvicorn not installed. Run: pip install uvicorn[/red]")
+        raise typer.Exit(1)
+
+    console.print(f"[cyan]Starting server on {host}:{port}[/cyan]")
+    console.print("[yellow]Press Ctrl+C to stop[/yellow]")
+
+    uvicorn.run("lottery_predictor.cloud:create_app", host=host, port=port, reload=reload, factory=True)
+
+
+@app.command()
+def generate_deployment(
+    type: str = typer.Option("all", "--type", "-t", help="Type: dockerfile, docker-compose, k8s, all"),
+    output_dir: str = typer.Option(".", "--output", "-o", help="Output directory"),
+):
+    """Generate deployment files (v2.0)."""
+    print_header("📦 Generating Deployment Files (v2.0)")
+
+    if type in ("dockerfile", "all"):
+        path = generate_dockerfile(f"{output_dir}/Dockerfile")
+        console.print(f"[green]✓ Dockerfile generated: {path}[/green]")
+
+    if type in ("docker-compose", "all"):
+        path = generate_docker_compose(f"{output_dir}/docker-compose.yml")
+        console.print(f"[green]✓ docker-compose.yml generated: {path}[/green]")
+
+    if type in ("k8s", "all"):
+        path = generate_kubernetes(f"{output_dir}/k8s")
+        console.print(f"[green]✓ Kubernetes files generated: {path}[/green]")
+
+    console.print("\n[bold]Next Steps:[/bold]")
+    console.print("  1. Review generated files")
+    console.print("  2. For Docker: docker-compose up --build")
+    console.print("  3. For Kubernetes: kubectl apply -f k8s/")
+
+
+@app.command()
+def init_db(
+    database_url: str = typer.Option("sqlite:///lottery_predictor.db", "--url", help="Database URL"),
+):
+    """Initialize database for user accounts and history (v2.0)."""
+    print_header("🗄️ Initializing Database (v2.0)")
+
+    try:
+        from .cloud import init_database
+        SessionLocal = init_database(database_url)
+        console.print(f"[green]✓ Database initialized at {database_url}[/green]")
+        console.print("\nTables created:")
+        console.print("  - users (accounts)")
+        console.print("  - prediction_history")
+        console.print("  - ab_tests")
+        console.print("  - ab_test_results")
+    except ImportError as e:
+        console.print(f"[red]Error: {e}[/red]")
+        console.print("Install with: pip install sqlalchemy")
+        raise typer.Exit(1)
 
 
 if __name__ == "__main__":
