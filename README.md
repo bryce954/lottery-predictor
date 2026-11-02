@@ -610,14 +610,6 @@ If you or someone you know has a gambling problem, please contact:
 - [x] Notification system (email, push, Discord)
 - [x] Multi-language support
 
-### v2.0 - Cloud & Scale ✅
-- [x] REST API (FastAPI)
-- [x] Docker containerization
-- [x] Kubernetes deployment configs
-- [x] Database backend (PostgreSQL/SQLite)
-- [x] User accounts & prediction history
-- [x] A/B testing for model versions
-
 ### v1.6 - UX Enhancements ✅
 - [x] **Location Auto-Detection** - IP geolocation to auto-select state lottery
   - CLI: `--detect-state` / `--auto` / `--lottery auto`
@@ -664,6 +656,14 @@ If you or someone you know has a gambling problem, please contact:
   - Multiple sets generation
   - Export to wallet/passbook
 
+### v2.0 - Cloud & Scale ✅
+- [x] REST API (FastAPI)
+- [x] Docker containerization
+- [x] Kubernetes deployment configs
+- [x] Database backend (PostgreSQL/SQLite)
+- [x] User accounts & prediction history
+- [x] A/B testing for model versions
+
 ### v2.1 - Real Data & Production 🔌
 - [ ] **Real API Integrations** - Replace simulated data with official sources
   - State lottery official APIs (where available)
@@ -706,6 +706,19 @@ If you or someone you know has a gambling problem, please contact:
 - [ ] **Voice Assistant Integration** - "Hey Siri/Google, give me Powerball numbers"
   - Shortcuts/Intent support
   - Read aloud predictions
+
+### v3.1 - Enhanced History & Analytics 📊
+- [ ] **Per-Lottery Full History Toggle** - Option to use all historical data for each lottery
+  - Already implemented via `--all-history` flag (works for all 48+ lotteries)
+  - Add UI toggles in Streamlit & Tkinter for easy access
+  - Show data quality metrics (completeness, date range) per lottery
+- [ ] **Historical Data Health Dashboard** - Monitor data freshness & gaps
+  - Auto-detect missing draws
+  - Alert on data anomalies
+  - Backfill scheduling
+- [ ] **Cross-Lottery Historical Correlation** - Find patterns across similar games
+  - Compare Powerball vs Mega Millions trends
+  - State vs multi-state correlation analysis
 
 ---
 
