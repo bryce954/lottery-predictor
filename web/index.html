@@ -749,7 +749,7 @@
               </div>
             </div>
             <button type="button" class="add-member" onclick="addMemberRow(event)">+ Add member</button>
-            <button class="primary" onclick="doCreateSyndicate(event)">Create syndicate</button>
+            <button type="button" class="primary" onclick="doCreateSyndicate(event)">Create syndicate</button>
           </div>
         </div>
         <div id="syndicate-detail"></div>
@@ -1295,7 +1295,7 @@ async function viewSyndicate(name) {
           `).join("")}
         </div>
       </div>
-    `);
+    `;
   } catch (e) {
     panel.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to load syndicate: ${e.message}</div>`;
   }
@@ -1498,9 +1498,6 @@ async function _ensureRemoveFavoriteEndpoint() {
 }
 
 loadLotteries();
-</script>
-</body>
-</html>
 </script>
 </body>
 </html>
