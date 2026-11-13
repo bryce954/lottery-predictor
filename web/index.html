@@ -271,6 +271,57 @@
   .compare-card { border: 1px solid var(--line); border-radius: 12px; padding: 1rem; background: #fff; }
   .compare-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 1rem; margin-bottom: 0.75rem; color: var(--ink); }
 
+  /* ---------- Profile ---------- */
+  .profile-card {
+    background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
+    border-radius: var(--radius);
+    padding: 2rem;
+    color: #fff;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 768px) { .profile-card { grid-template-columns: 1fr; } }
+  .profile-card .info h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .profile-card .info p { margin: 0.4rem 0; color: rgba(255,255,255,0.9); font-size: 0.95rem; }
+  .profile-card .info b { color: #fff; }
+  .profile-card .stats { display: flex; flex-direction: column; gap: 0.5rem; }
+  .profile-card .stat { background: rgba(255,255,255,0.1); border-radius: 10px; padding: 1rem; text-align: center; }
+  .profile-card .stat .v { font-family: "Space Grotesk", sans-serif; font-size: 1.75rem; font-weight: 800; }
+  .profile-card .stat .k { font-size: 0.8rem; opacity: 0.9; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .login-form {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 400px;
+    box-shadow: var(--shadow-sm);
+    margin: 0 auto;
+  }
+  .login-form h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.25rem; margin-bottom: 1.5rem; color: var(--ink); text-align: center; }
+  .login-form .form-group { margin-bottom: 1rem; }
+  .login-form .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .login-form .form-group input { width: 100%; padding: 0.7rem 0.9rem; border: 1px solid var(--line); border-radius: 10px; background: #fff; font-size: 0.95rem; color: var(--ink); font-family: Inter, sans-serif; box-sizing: border-box; }
+  .login-form .form-group input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .login-form .note { text-align: center; margin-top: 1rem; font-size: 0.85rem; }
+
+  .favorites-list {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+  }
+  .favorites-list h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; margin-bottom: 1rem; color: var(--ink); display: flex; align-items: center; gap: 0.5rem; }
+  .favorites-list .fav-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem; border: 1px solid var(--line); border-radius: 10px; margin-bottom: 0.5rem; background: #fff; }
+  .favorites-list .fav-name { font-weight: 600; color: var(--ink); }
+  .favorites-list .fav-remove { margin-left: auto; background: #fee2e2; color: #991b1b; border: none; border-radius: 8px; padding: 0.35rem 0.9rem; font-size: 0.85rem; cursor: pointer; }
+  .favorites-list .fav-remove:hover { background: #fecaca; }
+
   /* ---------- Misc ---------- */
   .badge {
     display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.75rem; border-radius: 999px;
@@ -328,6 +379,7 @@
     <button onclick="showTab('visualize', event)">Visualize</button>
     <button onclick="showTab('compare', event)">Compare</button>
     <button onclick="showTab('history', event)">History</button>
+    <button onclick="showTab('profile', event)">Profile</button>
   </div>
 
   <!-- Predict tab -->
@@ -480,6 +532,67 @@
       <div id="hl-results" class="results"></div>
     </div>
   </section>
+
+  <!-- Profile tab -->
+  <section id="tab-profile" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>👤 Your profile</h2>
+
+      <!-- Not logged in -->
+      <div id="profile-logged-out" class="login-form fade-in">
+        <h3>Login or create profile</h3>
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="profile-username" placeholder="e.g. alice">
+        </div>
+        <div class="form-group">
+          <label>Email (optional)</label>
+          <input type="email" id="profile-email" placeholder="alice@example.com">
+        </div>
+        <div style="display:flex; gap:0.5rem;">
+          <button class="primary" onclick="doLogin(event)">Login</button>
+          <button class="primary" style="background:var(--gold); color:#7a5a0a;" onclick="doCreateUser(event)">Create profile</button>
+        </div>
+        <p class="note">Creating a profile saves your predictions, favorites, and ROI across sessions.</p>
+      </div>
+
+      <!-- Logged in -->
+      <div id="profile-logged-in" style="display:none;">
+        <div class="profile-card fade-in">
+          <div class="info">
+            <h3 id="profile-name">User</h3>
+            <p><b>Email:</b> <span id="profile-email-display">—</span></p>
+            <p><b>Member since:</b> <span id="profile-created">—</span></p>
+            <p><b>Last login:</b> <span id="profile-last-login">—</span></p>
+            <p id="profile-favorites-display"><b>Favorite lotteries:</b> <span id="profile-fav-list">None</span></p>
+          </div>
+          <div class="stats">
+            <div class="stat"><div class="v" id="profile-pred-count">0</div><div class="k">Predictions</div></div>
+            <div class="stat"><div class="v" id="profile-spent">$0.00</div><div class="k">Total spent</div></div>
+            <div class="stat"><div class="v" id="profile-won">$0.00</div><div class="k">Total won</div></div>
+            <div class="stat"><div class="v" id="profile-roi">—</div><div class="k">ROI</div></div>
+          </div>
+        </div>
+
+        <div class="favorites-list fade-in">
+          <h3>Favorite lotteries</h3>
+          <div id="profile-favorites-list"></div>
+          <div style="margin-top:1rem;">
+            <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Add favorite</label>
+            <div style="display:flex; gap:0.5rem;">
+              <select id="profile-fav-lottery" style="flex:1; padding:0.7rem 0.9rem; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:0.95rem; color:var(--ink); font-family:Inter,sans-serif;"></select>
+              <button class="primary" onclick="doAddFavorite(event)">Add</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+          <button class="primary" onclick="doLogout(event)">Logout</button>
+          <button class="primary" style="background:var(--warn); color:#fff;" onclick="doRefreshProfile(event)">Refresh</button>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -513,6 +626,10 @@ function showTab(name, evt) {
     panel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   if (evt && evt.target) evt.target.classList.add("active");
+
+  if (name === "profile") {
+    loadProfile();
+  }
 }
 
 async function apiRequest(path, opts = {}) {
@@ -823,7 +940,143 @@ window.addEventListener("error", (e) => {
   console.error("JS error:", e.error || e.message);
 });
 
+// ---------- Profile functions ----------
+
+async function loadProfile() {
+  const loggedOut = document.getElementById("profile-logged-out");
+  const loggedIn = document.getElementById("profile-logged-in");
+  const favSelect = document.getElementById("profile-fav-lottery");
+
+  try {
+    const profile = await apiRequest("/users/me");
+
+    // Populate favorite lottery dropdown with all available lotteries
+    const lotteries = await apiRequest("/lotteries");
+    favSelect.innerHTML = lotteries.map(l => `<option value="${l.key}">${l.name}</option>`).join("");
+
+    loggedOut.style.display = "none";
+    loggedIn.style.display = "block";
+
+    document.getElementById("profile-name").textContent = profile.username;
+    document.getElementById("profile-email-display").textContent = profile.email || "—";
+    document.getElementById("profile-created").textContent = profile.created_at ? new Date(profile.created_at).toLocaleDateString() : "—";
+    document.getElementById("profile-last-login").textContent = profile.last_login ? new Date(profile.last_login).toLocaleDateString() : "—";
+    document.getElementById("profile-pred-count").textContent = profile.total_predictions;
+    document.getElementById("profile-spent").textContent = `$${profile.total_spent.toFixed(2)}`;
+    document.getElementById("profile-won").textContent = `$${profile.total_won.toFixed(2)}`;
+    document.getElementById("profile-roi").textContent = profile.roi !== null ? profile.roi.toFixed(2) + "%" : "—";
+
+    const favList = document.getElementById("profile-favorites-list");
+    const favListText = document.getElementById("profile-fav-list");
+    if (profile.favorite_lotteries && profile.favorite_lotteries.length) {
+      favListText.style.display = "none";
+      favList.innerHTML = profile.favorite_lotteries.map(fav => {
+        const l = lotteries.find(l => l.key === fav);
+        const name = l ? l.name : fav;
+        return `<div class="fav-item"><span class="fav-name">${name}</span><button class="fav-remove" onclick="doRemoveFavorite('${fav}', event)">Remove</button></div>`;
+      }).join("");
+    } else {
+      favList.innerHTML = "";
+      favListText.style.display = "inline";
+      favListText.textContent = "None";
+    }
+  } catch (e) {
+    // Not logged in or error - show login form
+    loggedOut.style.display = "block";
+    loggedIn.style.display = "none";
+  }
+}
+
+async function doLogin(evt) {
+  const username = document.getElementById("profile-username").value.trim();
+  const email = document.getElementById("profile-email").value.trim();
+  if (!username) {
+    alert("Please enter a username");
+    return;
+  }
+  try {
+    await apiRequest("/users/login", {
+      method: "POST",
+      body: JSON.stringify({ username, email: email || undefined }),
+    });
+    await loadProfile();
+  } catch (e) {
+    alert("Login failed: " + e.message);
+  }
+}
+
+async function doCreateUser(evt) {
+  const username = document.getElementById("profile-username").value.trim();
+  const email = document.getElementById("profile-email").value.trim();
+  if (!username) {
+    alert("Please enter a username");
+    return;
+  }
+  try {
+    await apiRequest("/users", {
+      method: "POST",
+      body: JSON.stringify({ username, email: email || undefined }),
+    });
+    await apiRequest("/users/login", {
+      method: "POST",
+      body: JSON.stringify({ username }),
+    });
+    await loadProfile();
+  } catch (e) {
+    alert("Create failed: " + e.message);
+  }
+}
+
+async function doLogout(evt) {
+  try {
+    await apiRequest("/users/me", { method: "DELETE" });
+  } catch (e) {
+    // ignore
+  }
+  document.getElementById("profile-logged-out").style.display = "block";
+  document.getElementById("profile-logged-in").style.display = "none";
+  document.getElementById("profile-username").value = "";
+  document.getElementById("profile-email").value = "";
+}
+
+async function doRefreshProfile(evt) {
+  await loadProfile();
+}
+
+async function doAddFavorite(evt) {
+  const select = document.getElementById("profile-fav-lottery");
+  const lottery = select.value;
+  if (!lottery) return;
+  try {
+    await apiRequest("/users/me/favorites", {
+      method: "POST",
+      body: JSON.stringify({ lottery }),
+    });
+    await loadProfile();
+  } catch (e) {
+    alert("Failed to add favorite: " + e.message);
+  }
+}
+
+async function doRemoveFavorite(lottery, evt) {
+  if (evt) evt.stopPropagation();
+  try {
+    await apiRequest("/users/me/favorites/" + lottery, { method: "DELETE" });
+    await loadProfile();
+  } catch (e) {
+    alert("Failed to remove favorite: " + e.message);
+  }
+}
+
+// Remove favorite endpoint - add to backend
+async function _ensureRemoveFavoriteEndpoint() {
+  // placeholder - endpoint added below
+}
+
 loadLotteries();
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>

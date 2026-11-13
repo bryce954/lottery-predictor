@@ -105,6 +105,44 @@ class HealthResponse(BaseModel):
     timestamp: str
 
 
+# User profile models
+class UserCreateRequest(BaseModel):
+    username: str
+    email: Optional[str] = None
+
+
+class UserLoginRequest(BaseModel):
+    username: str
+
+
+class UserPreferenceUpdate(BaseModel):
+    default_lottery: Optional[str] = None
+    default_method: Optional[str] = None
+    default_prediction_count: Optional[int] = None
+    language: Optional[str] = None
+    theme: Optional[str] = None
+    auto_detect_state: Optional[bool] = None
+    use_all_history: Optional[bool] = None
+
+
+class FavoriteLotteryRequest(BaseModel):
+    lottery: str
+
+
+class UserProfileResponse(BaseModel):
+    username: str
+    email: Optional[str]
+    created_at: str
+    last_login: Optional[str]
+    total_predictions: int
+    total_spent: float
+    total_won: float
+    roi: Optional[float]
+    favorite_lotteries: List[str]
+    default_lottery: str
+    default_method: str
+
+
 # Database models (if SQLAlchemy available)
 if HAS_SQLALCHEMY:
     Base = declarative_base()
@@ -172,9 +210,13 @@ def create_app() -> FastAPI:
     # Import here to avoid circular imports
     from .data import get_data_manager, LOTTERY_CONFIGS
     from .models import get_predictor, StatisticalPredictor, MLModelPredictor, EnsemblePredictor
+    from .advanced import UserProfileManager
 
     # In-memory cache for models
     model_cache = {}
+
+    # User profile manager
+    user_manager = UserProfileManager()
 
     @app.get("/health", response_model=HealthResponse)
     async def health_check():
@@ -346,6 +388,110 @@ def create_app() -> FastAPI:
             }
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # User Profile Endpoints
+    # =========================================================================
+
+    @app.get("/users", response_model=List[str])
+    async def list_users():
+        """List all user profiles."""
+        return user_manager.list_profiles()
+
+    @app.post("/users", response_model=UserProfileResponse)
+    async def create_user(request: UserCreateRequest):
+        """Create a new user profile."""
+        try:
+            profile = user_manager.create_profile(request.username, request.email)
+        except ValueError as e:
+            raise HTTPException(status_code=400, detail=str(e))
+        return _profile_to_response(profile)
+
+    @app.post("/users/login")
+    async def login_user(request: UserLoginRequest):
+        """Set the current active user."""
+        if not user_manager.set_current_user(request.username):
+            raise HTTPException(status_code=404, detail=f"User '{request.username}' not found")
+        profile = user_manager.get_current_profile()
+        return {"message": f"Logged in as {request.username}", "profile": _profile_to_response(profile)}
+
+    @app.get("/users/me", response_model=UserProfileResponse)
+    async def get_current_user():
+        """Get the current active user profile."""
+        profile = user_manager.get_current_profile()
+        if not profile:
+            raise HTTPException(status_code=401, detail="No user logged in")
+        return _profile_to_response(profile)
+
+    @app.delete("/users/me")
+    async def logout_user():
+        """Logout the current user."""
+        user_manager.current_user = None
+        user_manager._save_current_user()
+        return {"message": "Logged out"}
+
+    @app.put("/users/me/preferences")
+    async def update_preferences(request: UserPreferenceUpdate):
+        """Update current user preferences."""
+        profile = user_manager.get_current_profile()
+        if not profile:
+            raise HTTPException(status_code=401, detail="No user logged in")
+
+        updates = request.model_dump(exclude_unset=True)
+        if not user_manager.update_preferences(profile.username, **updates):
+            raise HTTPException(status_code=400, detail="Failed to update preferences")
+        return {"message": "Preferences updated"}
+
+    @app.post("/users/me/favorites")
+    async def add_favorite_lottery(request: FavoriteLotteryRequest):
+        """Add a lottery to the current user's favorites."""
+        profile = user_manager.get_current_profile()
+        if not profile:
+            raise HTTPException(status_code=401, detail="No user logged in")
+
+        if request.lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=400, detail=f"Unknown lottery '{request.lottery}'")
+
+        if not user_manager.add_favorite_lottery(profile.username, request.lottery):
+            raise HTTPException(status_code=400, detail="Failed to add favorite lottery")
+        return {"message": f"Added {request.lottery} to favorites"}
+
+    @app.delete("/users/me/favorites/{lottery}")
+    async def remove_favorite_lottery(lottery: str):
+        """Remove a lottery from the current user's favorites."""
+        profile = user_manager.get_current_profile()
+        if not profile:
+            raise HTTPException(status_code=401, detail="No user logged in")
+
+        if not user_manager.remove_favorite_lottery(profile.username, lottery):
+            raise HTTPException(status_code=400, detail=f"'{lottery}' is not a favorite")
+        return {"message": f"Removed {lottery} from favorites"}
+
+    @app.get("/users/me/roi")
+    async def get_user_roi():
+        """Get the current user's ROI."""
+        profile = user_manager.get_current_profile()
+        if not profile:
+            raise HTTPException(status_code=401, detail="No user logged in")
+        roi = user_manager.get_roi(profile.username)
+        return {"roi": roi}
+
+    def _profile_to_response(profile) -> UserProfileResponse:
+        """Convert a UserProfile to a UserProfileResponse."""
+        roi = user_manager.get_roi(profile.username)
+        return UserProfileResponse(
+            username=profile.username,
+            email=profile.email,
+            created_at=profile.created_at,
+            last_login=profile.last_login,
+            total_predictions=len(profile.prediction_history),
+            total_spent=profile.total_spent,
+            total_won=profile.total_won,
+            roi=roi,
+            favorite_lotteries=profile.preferences.favorite_lotteries,
+            default_lottery=profile.preferences.default_lottery,
+            default_method=profile.preferences.default_method,
+        )
 
     return app
 
