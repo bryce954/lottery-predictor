@@ -2157,6 +2157,19 @@ def format_numbers(numbers):
     """Format numbers for display (markdown fallback)."""
     return "  ".join(f"**{n:2d}**" for n in numbers)
 
+
+def _json_default(obj):
+    """JSON serializer fallback for numpy and other non-standard types."""
+    import numpy as np
+
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
 # Tab 1: Predict
 with tab1:
     st.subheader("Generate predictions", icon=":material/analytics:", anchor=False)
@@ -2202,7 +2215,7 @@ with tab1:
             }
             st.download_button(
                 "Download JSON",
-                json.dumps(data, indent=2),
+                json.dumps(data, indent=2, default=_json_default),
                 file_name=f"{selected_lottery}_predictions.json",
                 mime="application/json",
                 icon=":material/download:",
