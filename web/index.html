@@ -417,6 +417,10 @@
       </div>
       <div id="pl-results" class="results"></div>
       <div id="pl-stats" class="metrics" style="margin-top:1.5rem; display:none;"></div>
+      <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+        <button class="primary" onclick="doExportPredictions('json', event)">Export JSON</button>
+        <button class="primary" style="background:var(--gold); color:#7a5a0a;" onclick="doExportPredictions('csv', event)">Export CSV</button>
+      </div>
     </div>
   </section>
 
@@ -530,6 +534,10 @@
         </div>
       </div>
       <div id="hl-results" class="results"></div>
+      <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+        <button class="primary" onclick="doExportHistory('json', event)">Export JSON</button>
+        <button class="primary" style="background:var(--gold); color:#7a5a0a;" onclick="doExportHistory('csv', event)">Export CSV</button>
+      </div>
     </div>
   </section>
 
@@ -934,6 +942,96 @@ function drawChart(canvasId, labels, values, title) {
       scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "#f1f5f9" } }, x: { grid: { display: false } } }
     }
   });
+}
+
+// ---------- Export functions ----------
+
+async function doExportPredictions(fmt, evt) {
+  if (evt) evt.preventDefault();
+  const lottery = document.getElementById("pl-lottery").value;
+  const method = document.getElementById("pl-method").value;
+  const count = parseInt(document.getElementById("pl-count").value) || 3;
+
+  try {
+    const data = await apiRequest("/export/predictions", {
+      method: "POST",
+      body: JSON.stringify({ lottery, method, count, format: fmt }),
+    });
+
+    if (fmt === "csv") {
+      // data is a StreamingResponse - we need to handle it differently
+      // Since we can't easily stream from fetch, let's use a direct download approach
+      const url = API + "/export/predictions";
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = url;
+      form.target = "_blank";
+      const inputs = { lottery, method, count, format: "csv" };
+      Object.entries(inputs).forEach(([key, value]) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = key;
+        input.value = value;
+        form.appendChild(input);
+      });
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    } else {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${lottery}_${method}_predictions.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  } catch (e) {
+    alert("Export failed: " + e.message);
+  }
+}
+
+async function doExportHistory(fmt, evt) {
+  if (evt) evt.preventDefault();
+  const lottery = document.getElementById("hl-lottery").value;
+  const count = parseInt(document.getElementById("hl-count").value) || 100;
+
+  try {
+    if (fmt === "csv") {
+      const form = document.createElement("form");
+      form.method = "GET";
+      form.action = API + "/export/history/" + lottery;
+      form.target = "_blank";
+      const countInput = document.createElement("input");
+      countInput.type = "hidden";
+      countInput.name = "count";
+      countInput.value = count;
+      const formatInput = document.createElement("input");
+      formatInput.type = "hidden";
+      formatInput.name = "format";
+      formatInput.value = "csv";
+      form.appendChild(countInput);
+      form.appendChild(formatInput);
+      document.body.appendChild(form);
+      form.submit();
+      document.body.removeChild(form);
+    } else {
+      const data = await apiRequest(`/export/history/${lottery}?count=${count}&format=json`);
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${lottery}_history.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  } catch (e) {
+    alert("Export failed: " + e.message);
+  }
 }
 
 window.addEventListener("error", (e) => {

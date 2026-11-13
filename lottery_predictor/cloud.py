@@ -5,6 +5,7 @@ FastAPI REST API, Docker, Database backend, User accounts, A/B testing.
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
@@ -127,6 +128,14 @@ class UserPreferenceUpdate(BaseModel):
 
 class FavoriteLotteryRequest(BaseModel):
     lottery: str
+
+
+# Export models
+class ExportPredictionsRequest(BaseModel):
+    lottery: str
+    method: str
+    count: int = 5
+    format: str = "json"  # json or csv
 
 
 class UserProfileResponse(BaseModel):
@@ -492,6 +501,149 @@ def create_app() -> FastAPI:
             default_lottery=profile.preferences.default_lottery,
             default_method=profile.preferences.default_method,
         )
+
+    # =========================================================================
+    # Export Endpoints
+    # =========================================================================
+
+    @app.post("/export/predictions")
+    async def export_predictions(request: ExportPredictionsRequest):
+        """Export predictions as JSON or CSV."""
+        if request.lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{request.lottery}'")
+
+        if request.format not in ("json", "csv"):
+            raise HTTPException(status_code=400, detail="Format must be 'json' or 'csv'")
+
+        try:
+            predictor = get_predictor(request.lottery, request.method)
+
+            if request.method == "statistical":
+                pred = StatisticalPredictor(request.lottery)
+                predictions = pred.predict_balanced(num_predictions=request.count)
+            elif request.method == "frequency":
+                pred = StatisticalPredictor(request.lottery)
+                predictions = pred.predict_frequency_based(num_predictions=request.count)
+            elif request.method == "cold":
+                pred = StatisticalPredictor(request.lottery)
+                predictions = pred.predict_cold_numbers(num_predictions=request.count)
+            elif request.method == "pairs":
+                pred = StatisticalPredictor(request.lottery)
+                predictions = pred.predict_pair_based(num_predictions=request.count)
+            elif request.method == "ml":
+                pred = MLModelPredictor(request.lottery)
+                if not pred.is_trained:
+                    pred.train()
+                predictions = pred.predict(num_predictions=request.count)
+            else:  # ensemble
+                pred = EnsemblePredictor(request.lottery)
+                predictions = pred.get_consensus_prediction(num_predictions=request.count)
+
+            pred_data = [
+                {
+                    "main_numbers": _to_py(p.main_numbers),
+                    "bonus_numbers": _to_py(p.bonus_numbers),
+                    "confidence": _to_py(p.confidence),
+                    "method": p.method,
+                    "metadata": _to_py(p.metadata),
+                }
+                for p in predictions
+            ]
+
+            if request.format == "csv":
+                import csv
+                import io
+
+                output = io.StringIO()
+                writer = csv.writer(output)
+                writer.writerow(["main_numbers", "bonus_numbers", "confidence", "method"])
+                for p in pred_data:
+                    writer.writerow(
+                        [
+                            " ".join(str(n) for n in p["main_numbers"]),
+                            " ".join(str(n) for n in p["bonus_numbers"]),
+                            f"{p['confidence']:.4f}",
+                            p["method"],
+                        ]
+                    )
+                csv_content = output.getvalue()
+
+                return StreamingResponse(
+                    iter([csv_content]),
+                    media_type="text/csv",
+                    headers={
+                        "Content-Disposition": f'attachment; filename="{request.lottery}_{request.method}_predictions.csv"'
+                    },
+                )
+
+            return {
+                "lottery": request.lottery,
+                "method": request.method,
+                "count": len(pred_data),
+                "predictions": pred_data,
+            }
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/export/history/{lottery}")
+    async def export_history(lottery: str, count: int = 100, format: str = "json"):
+        """Export historical draw data as JSON or CSV."""
+        if lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{lottery}'")
+
+        if format not in ("json", "csv"):
+            raise HTTPException(status_code=400, detail="Format must be 'json' or 'csv'")
+
+        try:
+            dm = get_data_manager(lottery)
+            df = dm.load_data()
+            recent = df.tail(count)
+
+            rows = [
+                {
+                    "date": row["date"].strftime("%Y-%m-%d")
+                    if hasattr(row["date"], "strftime")
+                    else str(row["date"]),
+                    "draw_number": row["draw_number"],
+                    "main_numbers": row["main_numbers"],
+                    "bonus_numbers": row["bonus_numbers"],
+                    "jackpot": row["jackpot"],
+                }
+                for _, row in recent.iterrows()
+            ]
+
+            if format == "csv":
+                import csv
+                import io
+
+                output = io.StringIO()
+                writer = csv.writer(output)
+                writer.writerow(["date", "draw_number", "main_numbers", "bonus_numbers", "jackpot"])
+                for r in rows:
+                    writer.writerow(
+                        [
+                            r["date"],
+                            r["draw_number"],
+                            " ".join(str(n) for n in r["main_numbers"]),
+                            " ".join(str(n) for n in r["bonus_numbers"]),
+                            r["jackpot"],
+                        ]
+                    )
+                csv_content = output.getvalue()
+
+                return StreamingResponse(
+                    iter([csv_content]),
+                    media_type="text/csv",
+                    headers={
+                        "Content-Disposition": f'attachment; filename="{lottery}_history.csv"'
+                    },
+                )
+
+            return {"lottery": lottery, "count": len(rows), "draws": rows}
+
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     return app
 
