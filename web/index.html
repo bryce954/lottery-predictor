@@ -291,17 +291,17 @@
 </header>
 <main>
   <!-- Connection status -->
-  <div id="conn-status" class="conn-status" style="display:none;">
+  <div id="conn-status" class="conn-status">
     <div class="conn-ok">
       <span class="conn-dot"></span>
-      <span class="conn-text">Connected to API</span>
-      <button class="conn-retry" onclick="loadLotteries()">Refresh</button>
+      <span class="conn-text">Checking API…</span>
+      <button class="conn-retry" onclick="loadLotteries()">Retry</button>
     </div>
   </div>
   <div id="conn-error" class="conn-error" style="display:none;">
     <div class="conn-bad">
       <span class="conn-dot conn-dot-bad"></span>
-      <span class="conn-text">Cannot reach API at <code>http://127.0.0.1:8000</code></span>
+      <span class="conn-text" id="conn-msg">Cannot reach API</span>
       <button class="conn-retry" onclick="loadLotteries()">Retry</button>
     </div>
   </div>
