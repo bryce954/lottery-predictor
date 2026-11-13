@@ -248,6 +248,35 @@
   canvas { max-height: 300px; }
   .fade-in { animation: fadeIn 0.4s ease both; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ---------- Connection status ---------- */
+  .conn-status, .conn-error {
+    border-radius: var(--radius);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    animation: fadeIn 0.3s ease both;
+  }
+  .conn-status { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .conn-error { background: #fef2f2; border: 1px solid #fecaca; }
+  .conn-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 2px rgba(5, 150, 69, 0.2); }
+  .conn-dot-bad { background: var(--warn); box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2); }
+  .conn-text { font-size: 0.9rem; color: var(--ink); font-weight: 500; }
+  .conn-error .conn-text { color: var(--ink); }
+  .conn-error code { background: #fee2e2; color: #991b1b; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.85rem; }
+  .conn-retry {
+    margin-left: auto;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 0.35rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink);
+  }
+  .conn-retry:hover { border-color: var(--accent); background: var(--accent-glow); }
 </style>
 </head>
 <body>
@@ -261,6 +290,22 @@
   </div>
 </header>
 <main>
+  <!-- Connection status -->
+  <div id="conn-status" class="conn-status" style="display:none;">
+    <div class="conn-ok">
+      <span class="conn-dot"></span>
+      <span class="conn-text">Connected to API</span>
+      <button class="conn-retry" onclick="loadLotteries()">Refresh</button>
+    </div>
+  </div>
+  <div id="conn-error" class="conn-error" style="display:none;">
+    <div class="conn-bad">
+      <span class="conn-dot conn-dot-bad"></span>
+      <span class="conn-text">Cannot reach API at <code>http://127.0.0.1:8000</code></span>
+      <button class="conn-retry" onclick="loadLotteries()">Retry</button>
+    </div>
+  </div>
+
   <section class="hero fade-in">
     <h2>Pick smarter numbers.</h2>
     <p>AI-powered lottery predictions using historical draw data, frequency analysis, and ensemble models. Supports Powerball, Mega Millions, Florida Lotto, and 40+ more games.</p>
@@ -371,6 +416,23 @@
 const API = "http://127.0.0.1:8000";
 let chartInstance = null;
 
+function setConnected(ok) {
+  document.getElementById("conn-status").style.display = ok ? "flex" : "none";
+  document.getElementById("conn-error").style.display = ok ? "none" : "flex";
+}
+
+async function apiRequest(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: {"Content-Type": "application/json", ...opts.headers},
+    ...opts,
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}${body ? ": " + body : ""}`);
+  }
+  return res.json();
+}
+
 function showTab(name) {
   document.querySelectorAll(".tab-panel").forEach(el => {
     el.style.display = "none";
@@ -385,14 +447,15 @@ function showTab(name) {
 
 async function loadLotteries() {
   try {
-    const r = await fetch(API + "/lotteries");
-    const lotteries = await r.json();
+    const lotteries = await apiRequest("/lotteries");
+    setConnected(true);
     const sel = (id) => {
       const el = document.getElementById(id);
       el.innerHTML = lotteries.map(l => `<option value="${l.key}">${l.name}</option>`).join("");
     };
     ["pl-lottery", "al-lottery", "hl-lottery"].forEach(sel);
   } catch (e) {
+    setConnected(false);
     console.error("Failed to load lotteries:", e);
   }
 }
