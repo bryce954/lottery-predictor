@@ -271,6 +271,30 @@
   .compare-card { border: 1px solid var(--line); border-radius: 12px; padding: 1rem; background: #fff; }
   .compare-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 1rem; margin-bottom: 0.75rem; color: var(--ink); }
 
+  /* ---------- Odds ---------- */
+  .odds-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+  }
+  .odds-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.25rem; margin-bottom: 1rem; color: var(--ink); }
+  .odds-inputs { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; margin-bottom: 1.5rem; }
+  @media (max-width: 768px) { .odds-inputs { grid-template-columns: 1fr; } }
+  .odds-result { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  @media (max-width: 768px) { .odds-result { grid-template-columns: 1fr; } }
+  .odds-metric { background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 1rem; text-align: center; }
+  .odds-metric .v { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+  .odds-metric .k { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+  .odds-metric .v.negative { color: var(--warn); }
+  .odds-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 1rem; }
+  .odds-table th { text-align: left; color: var(--muted); font-weight: 600; padding: 0.75rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .odds-table td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; }
+  .odds-table tr:hover td { background: rgba(45, 58, 140, 0.03); }
+  .odds-table .jackpot-row { background: rgba(45, 58, 140, 0.05); font-weight: 600; }
+
   /* ---------- Profile ---------- */
   .profile-card {
     background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
@@ -380,6 +404,7 @@
     <button onclick="showTab('compare', event)">Compare</button>
     <button onclick="showTab('history', event)">History</button>
     <button onclick="showTab('profile', event)">Profile</button>
+    <button onclick="showTab('odds', event)">Odds</button>
   </div>
 
   <!-- Predict tab -->
@@ -601,6 +626,49 @@
       </div>
     </div>
   </section>
+
+  <!-- Odds tab -->
+  <section id="tab-odds" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>🎯 Odds Calculator</h2>
+      <p class="note" style="margin-bottom:1rem;">Calculate exact jackpot odds, prize tiers, and expected value for any lottery game.</p>
+      <div class="odds-card">
+        <h3>Calculate odds</h3>
+        <div class="odds-inputs">
+          <div class="control-group">
+            <label>Lottery</label>
+            <select id="ol-lottery"></select>
+          </div>
+          <div class="control-group">
+            <label>Current jackpot ($)</label>
+            <input type="number" id="ol-jackpot" min="0" value="100000000" step="1000000">
+          </div>
+          <div class="control-group">
+            <label>Ticket cost ($)</label>
+            <input type="number" id="ol-ticket-cost" min="0.01" step="0.01" value="2.00">
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <button class="primary" onclick="doOdds(event)">Calculate odds</button>
+          </div>
+        </div>
+        <div id="ol-result" class="odds-result" style="display:none;">
+          <div class="odds-metric">
+            <div class="v" id="ol-jackpot-odds">—</div>
+            <div class="k">Jackpot odds</div>
+          </div>
+          <div class="odds-metric">
+            <div class="v" id="ol-expected-value">—</div>
+            <div class="k">Expected value (net)</div>
+          </div>
+          <div class="odds-metric">
+            <div class="v" id="ol-break-even">—</div>
+            <div class="k">Break-even jackpot</div>
+          </div>
+        </div>
+        <div id="ol-tiers" style="margin-top:1rem;"></div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -660,7 +728,7 @@ async function loadLotteries(evt) {
       const el = document.getElementById(id);
       el.innerHTML = lotteries.map(l => `<option value="${l.key}">${l.name}</option>`).join("");
     };
-    ["pl-lottery", "al-lottery", "vl-lottery", "cl-lottery", "hl-lottery"].forEach(sel);
+    ["pl-lottery", "al-lottery", "vl-lottery", "cl-lottery", "hl-lottery", "ol-lottery"].forEach(sel);
     loadJackpot(evt);
   } catch (e) {
     setConnected(false, e.message);
@@ -1031,6 +1099,49 @@ async function doExportHistory(fmt, evt) {
     }
   } catch (e) {
     alert("Export failed: " + e.message);
+  }
+}
+
+// ---------- Odds functions ----------
+
+async function doOdds(evt) {
+  if (evt) evt.preventDefault();
+  const lottery = document.getElementById("ol-lottery").value;
+  const jackpot = parseFloat(document.getElementById("ol-jackpot").value) || 0;
+  const ticketCost = parseFloat(document.getElementById("ol-ticket-cost").value) || 2.0;
+
+  try {
+    const data = await apiRequest(`/odds/${lottery}?jackpot=${jackpot}&ticket_cost=${ticketCost}`);
+
+    document.getElementById("ol-jackpot-odds").textContent = data.jackpot_odds_str;
+    const ev = data.expected_value;
+    const evEl = document.getElementById("ol-expected-value");
+    evEl.textContent = `$${ev.toFixed(4)}`;
+    if (ev < 0) evEl.className = "v negative";
+    else evEl.className = "v";
+    document.getElementById("ol-break-even").textContent = `$${data.break_even_jackpot.toLocaleString()}`;
+
+    // Prize tiers table
+    const tiersBody = document.getElementById("ol-tiers");
+    tiersBody.innerHTML = `
+      <table class="odds-table">
+        <thead><tr><th>Prize tier</th><th>Match</th><th>Odds</th><th>Probability</th></tr></thead>
+        <tbody>
+          ${data.prize_tiers.map(t => `
+            <tr class="${t.tier === 'Jackpot' ? 'jackpot-row' : ''}">
+              <td>${t.tier}</td>
+              <td>${t.main_match} main${t.bonus_match > 0 ? ' + ' + t.bonus_match + ' bonus' : ''}</td>
+              <td>${t.odds_str}</td>
+              <td>${(t.probability * 100).toFixed(6)}%</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+    document.getElementById("ol-result").style.display = "grid";
+  } catch (e) {
+    alert("Odds calculation failed: " + e.message);
   }
 }
 

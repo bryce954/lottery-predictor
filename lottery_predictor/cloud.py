@@ -138,6 +138,22 @@ class ExportPredictionsRequest(BaseModel):
     format: str = "json"  # json or csv
 
 
+# Odds models
+class OddsResponse(BaseModel):
+    lottery: str
+    jackpot_odds: int
+    jackpot_odds_str: str
+    expected_value: float
+    break_even_jackpot: float
+    prize_tiers: List[Dict[str, Any]]
+
+
+class OddsRequest(BaseModel):
+    lottery: str
+    jackpot: float = 0
+    ticket_cost: float = 2.0
+
+
 class UserProfileResponse(BaseModel):
     username: str
     email: Optional[str]
@@ -220,6 +236,7 @@ def create_app() -> FastAPI:
     from .data import get_data_manager, LOTTERY_CONFIGS
     from .models import get_predictor, StatisticalPredictor, MLModelPredictor, EnsemblePredictor
     from .advanced import UserProfileManager
+    from .validation import OddsCalculator
 
     # In-memory cache for models
     model_cache = {}
@@ -642,6 +659,35 @@ def create_app() -> FastAPI:
 
             return {"lottery": lottery, "count": len(rows), "draws": rows}
 
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # Odds Calculator Endpoints
+    # =========================================================================
+
+    @app.get("/odds/{lottery}", response_model=OddsResponse)
+    async def get_odds(
+        lottery: str,
+        jackpot: float = 0,
+        ticket_cost: float = 2.0,
+    ):
+        """Calculate odds, prize tiers, and expected value for a lottery."""
+        if lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{lottery}'")
+
+        try:
+            calc = OddsCalculator(lottery)
+            result = calc.full_odds_analysis(current_jackpot=jackpot, ticket_cost=ticket_cost)
+
+            return OddsResponse(
+                lottery=result.lottery,
+                jackpot_odds=result.jackpot_odds,
+                jackpot_odds_str=result.jackpot_odds_str,
+                expected_value=result.expected_value,
+                break_even_jackpot=result.break_even_jackpot,
+                prize_tiers=result.prize_tiers,
+            )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
