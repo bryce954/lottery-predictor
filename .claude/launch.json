@@ -1,0 +1,9 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "lottery-predictor-streamlit",
+      "url": "http://localhost:8501"
+    }
+  ]
+}

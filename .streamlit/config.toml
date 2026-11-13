@@ -1,0 +1,48 @@
+[theme]
+# Brand tokens — shared across light and dark
+font = "Inter:https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+headingFont = "Space Grotesk:https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap"
+codeFont = "JetBrains Mono:https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap"
+baseRadius = "0.6rem"
+buttonRadius = "0.6rem"
+showWidgetBorder = true
+showSidebarBorder = true
+paddingTop = "1rem"
+paddingBottom = "2rem"
+linkUnderline = false
+metricValueFontSize = "2rem"
+metricValueFontWeight = 700
+
+[theme.light]
+primaryColor = "#2d3a8c"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f8fafc"
+textColor = "#1e293b"
+borderColor = "#e2e8f0"
+linkColor = "#2d3a8c"
+chartCategoricalColors = ["#2d3a8c", "#d4a82a", "#059669", "#d97706", "#2563eb", "#8250df", "#64748b"]
+
+[theme.dark]
+primaryColor = "#818cf8"
+backgroundColor = "#0f172a"
+secondaryBackgroundColor = "#1e293b"
+textColor = "#f8fafc"
+borderColor = "#334155"
+linkColor = "#a5b4fc"
+chartCategoricalColors = ["#818cf8", "#e8c54a", "#34d399", "#fbbf24", "#60a5fa", "#a78bfa", "#94a3b8"]
+
+[theme.sidebar]
+backgroundColor = "#f1f5f9"
+secondaryBackgroundColor = "#e2e8f0"
+textColor = "#1e293b"
+borderColor = "#cbd5e1"
+primaryColor = "#2d3a8c"
+linkColor = "#2d3a8c"
+
+[theme.dark.sidebar]
+backgroundColor = "#020617"
+secondaryBackgroundColor = "#0f172a"
+textColor = "#f8fafc"
+borderColor = "#1e293b"
+primaryColor = "#818cf8"
+linkColor = "#a5b4fc"

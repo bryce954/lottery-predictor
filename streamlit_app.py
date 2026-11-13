@@ -30,8 +30,8 @@ from lottery_predictor.visualize import LotteryVisualizer
 
 # Page config
 st.set_page_config(
-    page_title="🎲 Lottery Predictor",
-    page_icon="🎲",
+    page_title="Lottery predictor",
+    page_icon=":material/casino:",
     layout="wide",
     initial_sidebar_state="expanded"
 )
@@ -50,417 +50,1950 @@ st.markdown("""
 
 <!-- Service Worker Registration -->
 <script>
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('sw.js')
-            .then(function(registration) {
-                console.log('ServiceWorker registered:', registration.scope);
-                registration.addEventListener('updatefound', function() {
-                    var newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', function() {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            // New content available, show update notification
-                            if (confirm('New version available! Reload to update?')) {
-                                window.location.reload();
-                            }
-                        }
-                    });
-                });
-            })
-            .catch(function(error) {
-                console.log('ServiceWorker registration failed:', error);
-            });
-    });
-}
+// AGGRESSIVE Unicode arrow fix - removes ALL Material Icons ligature text
+(function() {
+  const replacements = {
+    'keyboard_double_arrow_right': '▶',
+    'keyboard_arrow_right': '▶',
+    'expand_more': '▶',
+    'chevron_right': '▶',
+    'keyboard_arrow_left': '◀',
+    'expand_less': '◀',
+    'chevron_left': '◀',
+    'keyboard_arrow_up': '▲',
+    'keyboard_arrow_down': '▼',
+    'arrow_forward': '▶',
+    'arrow_back': '◀',
+    'arrow_drop_down': '▼',
+    'arrow_drop_up': '▲',
+    'keyboard_arrow_down': '▼',
+    'keyboard_arrow_up': '▲',
+  };
 
-// Detect standalone mode (PWA installed)
-if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true) {
-    document.body.classList.add('pwa-mode');
-}
+  function fixTextNodes() {
+    if (!document.body) return;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+    let node;
+    while (node = walker.nextNode()) {
+      let text = node.textContent;
+      let changed = false;
+      for (const [search, replace] of Object.entries(replacements)) {
+        if (text.includes(search)) {
+          text = text.replace(new RegExp(search, 'g'), replace);
+          changed = true;
+        }
+      }
+      if (changed) {
+        node.textContent = text;
+      }
+    }
+  }
+
+  function fixElementText() {
+    // Also fix elements that might have ligature text as direct content
+    document.querySelectorAll('*').forEach(el => {
+      // Skip script/style/our debug elements
+      if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.id === 'debug-overlay') return;
+
+      // Check if element has only text content (no children)
+      if (el.children.length === 0 && el.textContent) {
+        let text = el.textContent;
+        let changed = false;
+        for (const [search, replace] of Object.entries(replacements)) {
+          if (text.includes(search)) {
+            text = text.replace(new RegExp(search, 'g'), replace);
+            changed = true;
+          }
+        }
+        if (changed) {
+          el.textContent = text;
+        }
+      }
+    });
+  }
+
+  function runFix() {
+    fixTextNodes();
+    fixElementText();
+  }
+
+  // Run immediately
+  runFix();
+
+  // Watch for dynamically added content
+  const observer = new MutationObserver(runFix);
+  observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+
+  // Hook into Streamlit's render event
+  document.addEventListener('streamlit:render', runFix);
+  window.addEventListener('load', runFix);
+
+  // Also run periodically as a safety net
+  setInterval(runFix, 1000);
+})();
 </script>
 """, unsafe_allow_html=True)
 
-# Custom CSS with Mobile Optimization
-st.markdown("""
+# Custom CSS with Mobile Optimization - using st.html() for Streamlit 1.66+
+# Design System: LottoPredict - Modern Lottery Interface
+# Colors: Deep indigo primary, warm gold accent, semantic status colors
+# Typography: "Space Grotesk" for display, "DM Sans" for body, "JetBrains Mono" for numbers
+st.html("""
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
-    /* Base styles */
-    .main-header {
-        font-size: 2.5rem;
-        font-weight: bold;
-        color: #1f77b4;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        font-weight: bold;
-        color: #2c3e50;
-        margin-top: 2rem;
-        margin-bottom: 1rem;
-    }
-    .disclaimer {
-        background-color: #856404;
-        color: #ffffff;
-        border: 1px solid #6d5303;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin: 1rem 0;
-    }
-    .prediction-box {
-        background-color: #ffffff;
-        color: #212529;
-        border: 1px solid #dee2e6;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        margin: 0.5rem 0;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .metric-card {
-        background-color: #f8f9fa;
-        color: #212529;
-        border: 1px solid #e0e0e0;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        text-align: center;
-    }
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-    }
-    .stTabs [data-baseweb="tab"] {
-        height: 50px;
-        padding-left: 20px;
-        padding-right: 20px;
-    }
+/* ============================================================
+   NUCLEAR ICON FIX - Hide Material Icons, use Unicode instead
+   This bypasses the font entirely - no ligatures, no loading issues
+   ============================================================ */
 
-    /* ===== MOBILE OPTIMIZATION ===== */
-    @media (max-width: 768px) {
-        /* Larger touch targets */
-        .stButton > button {
-            height: 56px !important;
-            font-size: 1.1rem !important;
-            padding: 0 24px !important;
-        }
+  /* Hide ALL Material Icons font text - comprehensive selector */
+  .material-icons,
+  .material-icons-outlined,
+  .material-symbols-outlined,
+  [class*="material-icons"],
+  [class*="material-symbols"],
+  i[class*="material"],
+  span[class*="material"] {
+    font-size: 0 !important;
+    display: inline-block !important;
+    width: 1em !important;
+    height: 1em !important;
+    vertical-align: middle !important;
+    overflow: hidden !important;
+  }
 
-        .stSelectbox > div > div {
-            height: 56px !important;
-            font-size: 1.1rem !important;
-        }
+  /* Expanders - use Unicode arrows via ::before */
+  [data-testid="stExpander"] summary .material-icons::before,
+  [data-testid="stExpander"] summary .material-icons-outlined::before,
+  [data-testid="stExpander"] summary .material-symbols-outlined::before,
+  [data-testid="stExpander"] summary [class*="material-icons"]::before {
+    font-size: 0.875rem !important;
+    font-family: system-ui, sans-serif !important;
+    content: "▶" !important;
+    display: inline-block !important;
+    transition: transform 0.2s;
+  }
+  [data-testid="stExpander"][open] summary .material-icons::before,
+  [data-testid="stExpander"][open] summary .material-icons-outlined::before,
+  [data-testid="stExpander"][open] summary .material-symbols-outlined::before,
+  [data-testid="stExpander"][open] summary [class*="material-icons"]::before {
+    content: "▼" !important;
+  }
 
-        .stSlider > div > div > div > div {
-            height: 48px !important;
-        }
+  /* Native summary marker fallback */
+  [data-testid="stExpander"] summary::marker {
+    content: "▶" !important;
+    font-family: system-ui !important;
+    font-size: 0.75rem !important;
+  }
+  [data-testid="stExpander"][open] summary::marker {
+    content: "▼" !important;
+  }
 
-        .stNumberInput > div > div > input {
-            height: 56px !important;
-            font-size: 1.1rem !important;
-        }
+  /* Selectbox / Multiselect - hide SVG, show Unicode */
+  [data-testid="stSelectbox"] [data-baseweb="select"] svg,
+  [data-testid="stMultiSelect"] [data-baseweb="select"] svg {
+    display: none !important;
+  }
+  [data-testid="stSelectbox"] [data-baseweb="select"] .material-icons,
+  [data-testid="stMultiSelect"] [data-baseweb="select"] .material-icons,
+  [data-testid="stSelectbox"] [data-baseweb="select"] [class*="material-icons"],
+  [data-testid="stMultiSelect"] [data-baseweb="select"] [class*="material-icons"] {
+    font-size: 0 !important;
+  }
+  [data-testid="stSelectbox"] [data-baseweb="select"] .material-icons::before,
+  [data-testid="stMultiSelect"] [data-baseweb="select"] .material-icons::before,
+  [data-testid="stSelectbox"] [data-baseweb="select"] [class*="material-icons"]::before,
+  [data-testid="stMultiSelect"] [data-baseweb="select"] [class*="material-icons"]::before {
+    font-size: 0.7rem !important;
+    font-family: system-ui, sans-serif !important;
+    content: "▼" !important;
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
 
-        /* Tabs - larger touch targets */
-        .stTabs [data-baseweb="tab-list"] {
-            gap: 4px;
-            flex-wrap: wrap;
-        }
+  /* Sidebar collapse button */
+  [data-testid="stSidebarCollapseButton"] .material-icons,
+  [data-testid="stSidebarCollapseButton"] svg,
+  [data-testid="stSidebarCollapseButton"] [class*="material-icons"] {
+    display: none !important;
+  }
+  [data-testid="stSidebarCollapseButton"]::after {
+    content: "◀" !important;
+    font-family: system-ui !important;
+    font-size: 1rem !important;
+    display: inline-block;
+  }
 
-        .stTabs [data-baseweb="tab"] {
-            height: 56px !important;
-            min-width: 120px !important;
-            font-size: 1rem !important;
-            padding: 0 16px !important;
-        }
+  /* Number input arrows */
+  [data-testid="stNumberInput"] button .material-icons,
+  [data-testid="stNumberInput"] button svg,
+  [data-testid="stNumberInput"] button [class*="material-icons"] {
+    display: none !important;
+  }
+  [data-testid="stNumberInput"] button:first-child::after {
+    content: "▲" !important;
+    font-family: system-ui !important;
+    font-size: 0.6rem !important;
+    display: inline-block;
+  }
+  [data-testid="stNumberInput"] button:last-child::after {
+    content: "▼" !important;
+    font-family: system-ui !important;
+    font-size: 0.6rem !important;
+    display: inline-block;
+  }
 
-        /* Sidebar - full width on mobile */
-        .css-1d391kg, .css-1lcbmhc, .css-17lntkn {
-            min-width: 100% !important;
-        }
+  /* Generic material-icons spans - hide ligature text, show Unicode */
+  span[class*="material-icons"] {
+    font-size: 0 !important;
+  }
+  span[class*="material-icons"]::before {
+    font-size: 1rem !important;
+    font-family: system-ui, sans-serif !important;
+  }
 
-        /* Prediction boxes - larger text */
-        .prediction-box {
-            padding: 1.5rem !important;
-            margin: 1rem 0 !important;
-        }
+  /* Specific ligature replacements based on data-icon attribute */
+  span[class*="material-icons"][data-icon="keyboard_double_arrow_right"]::before,
+  span[class*="material-icons"][data-icon="keyboard_arrow_right"]::before,
+  span[class*="material-icons"][data-icon="expand_more"]::before,
+  span[class*="material-icons"][data-icon="chevron_right"]::before,
+  span[class*="material-icons"][data-icon="arrow_forward"]::before,
+  span[class*="material-icons"][data-icon="arrow_drop_down"]::before {
+    content: "▶" !important;
+  }
+  span[class*="material-icons"][data-icon="keyboard_arrow_left"]::before,
+  span[class*="material-icons"][data-icon="expand_less"]::before,
+  span[class*="material-icons"][data-icon="chevron_left"]::before,
+  span[class*="material-icons"][data-icon="arrow_back"]::before,
+  span[class*="material-icons"][data-icon="arrow_drop_up"]::before {
+    content: "◀" !important;
+  }
+  span[class*="material-icons"][data-icon="keyboard_arrow_up"]::before {
+    content: "▲" !important;
+  }
+  span[class*="material-icons"][data-icon="keyboard_arrow_down"]::before {
+    content: "▼" !important;
+  }
 
-        .prediction-box p {
-            font-size: 1.8rem !important;
-            letter-spacing: 4px !important;
-        }
+  /* Fallback for when data-icon is not present - hide text, show bullet */
+  .material-icons:not([data-icon]),
+  .material-icons-outlined:not([data-icon]),
+  .material-symbols-outlined:not([data-icon]),
+  [class*="material-icons"]:not([data-icon]),
+  [class*="material-symbols"]:not([data-icon]) {
+    visibility: hidden;
+  }
+  .material-icons:not([data-icon])::before,
+  .material-icons-outlined:not([data-icon])::before,
+  .material-symbols-outlined:not([data-icon])::before,
+  [class*="material-icons"]:not([data-icon])::before,
+  [class*="material-symbols"]:not([data-icon])::before {
+    visibility: visible;
+    content: "•" !important;
+    font-size: 1rem !important;
+    font-family: system-ui, sans-serif !important;
+    display: inline-block !important;
+  }
 
-        .prediction-box h4 {
-            font-size: 1.3rem !important;
-        }
+  /* ULTRA-AGGRESSIVE: Hide any element containing ligature text patterns */
+  /* This catches text nodes that might not have the material-icons class */
+  [data-testid="stExpander"] summary,
+  [data-testid="stSelectbox"],
+  [data-testid="stMultiSelect"],
+  [data-testid="stSidebarCollapseButton"],
+  [data-testid="stNumberInput"] button {
+    /* Ensure no ligature text leaks through */
+    font-variant-ligatures: none !important;
+  }
 
-        /* Metrics - larger touch targets */
-        .stMetric {
-            padding: 1rem !important;
-        }
+/* ============================================================
+   DESIGN TOKENS
+   ============================================================ */
 
-        .stMetric label {
-            font-size: 1rem !important;
-        }
+:root {
+  /* Brand Colors */
+  --color-primary: #2d3a8c;        /* Deep indigo */
+  --color-primary-hover: #1e2a6b;
+  --color-primary-light: #e8ebfa;
+  --color-accent: #d4a82a;         /* Warm gold */
+  --color-accent-hover: #c4961e;
+  --color-accent-light: #fef7e0;
 
-        .stMetric div[data-testid="stMetricValue"] {
-            font-size: 2rem !important;
-        }
+  /* Semantic Colors */
+  --color-success: #059669;
+  --color-success-light: #d1fae5;
+  --color-warning: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-error: #dc2626;
+  --color-error-light: #fee2e2;
+  --color-info: #2563eb;
+  --color-info-light: #dbeafe;
 
-        /* Headers */
-        .main-header {
-            font-size: 1.8rem !important;
-        }
+  /* Neutral Colors (Light) */
+  --bg-primary: #fafafa;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f5f5f5;
+  --bg-elevated: #ffffff;
+  --fg-primary: #111827;
+  --fg-secondary: #4b5563;
+  --fg-tertiary: #9ca3af;
+  --fg-inverse: #ffffff;
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+  --border-focus: #2d3a8c;
 
-        .sub-header {
-            font-size: 1.3rem !important;
-        }
+  /* RGB versions for transparency */
+  --bg-primary-rgb: 250, 250, 250;
+  --bg-secondary-rgb: 255, 255, 255;
+  --bg-tertiary-rgb: 245, 245, 245;
+  --bg-elevated-rgb: 255, 255, 255;
 
-        /* Columns stack on mobile */
-        .stColumns {
-            flex-direction: column !important;
-        }
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(17, 24, 39, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(17, 24, 39, 0.1), 0 2px 4px -2px rgba(17, 24, 39, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(17, 24, 39, 0.1), 0 4px 6px -4px rgba(17, 24, 39, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(17, 24, 39, 0.1), 0 8px 10px -6px rgba(17, 24, 39, 0.1);
 
-        .stColumns > div {
-            width: 100% !important;
-            min-width: 100% !important;
-        }
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
 
-        /* Dataframes - horizontal scroll */
-        .stDataFrame {
-            overflow-x: auto !important;
-        }
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
 
-        /* Expander - larger touch target */
-        .streamlit-expanderHeader {
-            padding: 1rem !important;
-            font-size: 1.1rem !important;
-        }
+  /* Typography */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Fira Code', monospace;
 
-        /* File uploader */
-        .stFileUploader > div {
-            padding: 2rem !important;
-        }
-
-        /* Radio/Checkbox - larger */
-        .stRadio > div, .stCheckbox > div {
-            padding: 0.5rem 0 !important;
-        }
-
-        .stRadio label, .stCheckbox label {
-            font-size: 1.1rem !important;
-            padding: 0.5rem !important;
-        }
-    }
-
-    /* ===== BOTTOM NAVIGATION FOR PWA MODE ===== */
-    @media (max-width: 768px) {
-        .bottom-nav {
-            display: none;
-        }
-
-        .pwa-mode .bottom-nav {
-            display: flex !important;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #1a1a2e;
-            border-top: 1px solid #333;
-            z-index: 9999;
-            justify-content: space-around;
-            padding: 8px 0;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
-        }
-
-        .bottom-nav a {
-            color: #888;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 8px 12px;
-            min-width: 60px;
-            transition: color 0.2s;
-        }
-
-        .bottom-nav a.active, .bottom-nav a:hover {
-            color: #00d4aa;
-        }
-
-        .bottom-nav svg {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 4px;
-        }
-
-        .bottom-nav span {
-            font-size: 0.7rem;
-            font-weight: 500;
-        }
-
-        /* Add padding to bottom of page for nav */
-        .pwa-mode .main .block-container {
-            padding-bottom: 80px !important;
-        }
-    }
-
-    /* ===== SWIPE GESTURE SUPPORT ===== */
-    .swipe-container {
-        touch-action: pan-y;
-    }
-
-    .swipe-container:hover {
-        cursor: grab;
-    }
-
-    .swipe-container:active {
-        cursor: grabbing;
-    }
-
-    /* ===== PWA MODE STYLES ===== */
-    .pwa-mode .main-header {
-        padding-top: 1rem;
-    }
-
-    .pwa-mode .stAppHeader {
-        display: none !important;
-    }
-
-    /* ===== TOUCH FEEDBACK ===== */
-    @media (hover: none) and (pointer: coarse) {
-        .stButton > button:active,
-        .stTabs [data-baseweb="tab"]:active,
-        .stSelectbox > div:active {
-            transform: scale(0.98);
-            transition: transform 0.1s;
-        }
-    }
-
-    /* ===== LANDSCAPE MOBILE ===== */
-    @media (max-height: 500px) and (orientation: landscape) {
-        .main-header {
-            font-size: 1.5rem !important;
-            margin-bottom: 0.5rem !important;
-        }
-
-        .stTabs [data-baseweb="tab"] {
-            height: 44px !important;
-        }
-
-        .stButton > button {
-            height: 44px !important;
-        }
-    }
-
-    /* ===== DARK MODE SUPPORT ===== */
-    @media (prefers-color-scheme: dark) {
-        .prediction-box {
-            background-color: #2d2d3a;
-            border-color: #444;
-            color: #e0e0e0;
-        }
-
-        .metric-card {
-            background-color: #2d2d3a;
-            border-color: #444;
-            color: #e0e0e0;
-        }
-    }
-</style>
-
-<!-- Bottom Navigation for PWA -->
-<div class="bottom-nav" role="navigation" aria-label="Main navigation">
-    <a href="/" class="nav-item" data-tab="predict" aria-label="Predictions">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
-        <span>Predict</span>
-    </a>
-    <a href="/?tab=quickpick" class="nav-item" data-tab="quickpick" aria-label="Quick Pick">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <path d="M12 6v6l4 2"/>
-        </svg>
-        <span>Quick Pick</span>
-    </a>
-    <a href="/?tab=analyze" class="nav-item" data-tab="analyze" aria-label="Analysis">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 20V10M12 20V4M6 20v-6"/>
-        </svg>
-        <span>Analyze</span>
-    </a>
-    <a href="/?tab=settings" class="nav-item" data-tab="settings" aria-label="Settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-        </svg>
-        <span>Settings</span>
-    </a>
-</div>
-
-<script>
-// Bottom navigation active state
-document.addEventListener('DOMContentLoaded', function() {
-    const navItems = document.querySelectorAll('.nav-item');
-    const currentPath = window.location.pathname + window.location.search;
-
-    navItems.forEach(item => {
-        const href = item.getAttribute('href');
-        if (currentPath.includes(href.replace('/', '')) || (href === '/' && currentPath === '/')) {
-            item.classList.add('active');
-        }
-
-        item.addEventListener('click', function(e) {
-            navItems.forEach(i => i.classList.remove('active'));
-            this.classList.add('active');
-        });
-    });
-});
-
-// Swipe gesture for tabs
-let touchStartX = 0;
-let touchEndX = 0;
-
-document.addEventListener('touchstart', function(e) {
-    touchStartX = e.changedTouches[0].screenX;
-}, { passive: true });
-
-document.addEventListener('touchend', function(e) {
-    touchEndX = e.changedTouches[0].screenX;
-    handleSwipe();
-}, { passive: true });
-
-function handleSwipe() {
-    const swipeThreshold = 50;
-    const diff = touchStartX - touchEndX;
-
-    if (Math.abs(diff) > swipeThreshold) {
-        const tabs = document.querySelectorAll('.stTabs [data-baseweb="tab"]');
-        const activeTab = document.querySelector('.stTabs [data-baseweb="tab"][aria-selected="true"]');
-
-        if (activeTab && tabs.length > 1) {
-            const activeIndex = Array.from(tabs).indexOf(activeTab);
-            let newIndex;
-
-            if (diff > 0) {
-                // Swipe left - next tab
-                newIndex = (activeIndex + 1) % tabs.length;
-            } else {
-                // Swipe right - previous tab
-                newIndex = (activeIndex - 1 + tabs.length) % tabs.length;
-            }
-
-            tabs[newIndex].click();
-        }
-    }
+  /* Transitions */
+  --transition-fast: 120ms ease;
+  --transition-normal: 200ms ease;
+  --transition-slow: 300ms ease;
 }
 
-// Prevent zoom on double tap for inputs
-let lastTouchEnd = 0;
-document.addEventListener('touchend', function(e) {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-        e.preventDefault();
-    }
-    lastTouchEnd = now;
-}, { passive: false });
-</script>
-""", unsafe_allow_html=True)
+/* Dark Mode Tokens */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-primary: #4f5fd6;
+    --color-primary-hover: #6b7ae0;
+    --color-primary-light: #1e2a6b;
+    --color-accent: #e8c54a;
+    --color-accent-hover: #f0d16a;
+    --color-accent-light: #3d3300;
+
+    --color-success: #34d399;
+    --color-success-light: #064e3b;
+    --color-warning: #fbbf24;
+    --color-warning-light: #422006;
+    --color-error: #f87171;
+    --color-error-light: #7f1d1d;
+    --color-info: #60a5fa;
+    --color-info-light: #1e3a5f;
+
+    --bg-primary: #0f1115;
+    --bg-secondary: #181a1f;
+    --bg-tertiary: #1f2228;
+    --bg-elevated: #1f2228;
+    --fg-primary: #f3f4f6;
+    --fg-secondary: #d1d5db;
+    --fg-tertiary: #9ca3af;
+    --fg-inverse: #111827;
+    --border-light: #2d3139;
+    --border-medium: #3d424c;
+    --border-focus: #4f5fd6;
+
+    /* RGB versions for transparency */
+    --bg-primary-rgb: 15, 17, 21;
+    --bg-secondary-rgb: 24, 26, 31;
+    --bg-tertiary-rgb: 31, 34, 40;
+    --bg-elevated-rgb: 31, 34, 40;
+
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-primary: #4f5fd6;
+  --color-primary-hover: #6b7ae0;
+  --color-primary-light: #1e2a6b;
+  --color-accent: #e8c54a;
+  --color-accent-hover: #f0d16a;
+  --color-accent-light: #3d3300;
+
+  --color-success: #34d399;
+  --color-success-light: #064e3b;
+  --color-warning: #fbbf24;
+  --color-warning-light: #422006;
+  --color-error: #f87171;
+  --color-error-light: #7f1d1d;
+  --color-info: #60a5fa;
+  --color-info-light: #1e3a5f;
+
+  --bg-primary: #0f1115;
+  --bg-secondary: #181a1f;
+  --bg-tertiary: #1f2228;
+  --bg-elevated: #1f2228;
+  --fg-primary: #f3f4f6;
+  --fg-secondary: #d1d5db;
+  --fg-tertiary: #9ca3af;
+  --fg-inverse: #111827;
+  --border-light: #2d3139;
+  --border-medium: #3d424c;
+  --border-focus: #4f5fd6;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+
+  color-scheme: dark;
+}
+
+/* ============================================================
+   BASE STYLES
+   ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+html, body, [data-testid="stAppViewContainer"] {
+  font-family: var(--font-body) !important;
+  background-color: var(--bg-primary) !important;
+  color: var(--fg-primary) !important;
+}
+
+/* Main container - semi-transparent to show background particles */
+.main .block-container {
+  padding-top: var(--space-6) !important;
+  padding-bottom: var(--space-8) !important;
+  max-width: 1300px !important;
+  background-color: rgba(var(--bg-primary-rgb), 0.95) !important;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6,
+.stMarkdown h1, .stMarkdown h2, .stMarkdown h3,
+.stMarkdown h4, .stMarkdown h5, .stMarkdown h6 {
+  font-family: var(--font-display) !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  color: var(--fg-primary) !important;
+}
+
+.main-header {
+  font-family: var(--font-display) !important;
+  font-size: clamp(2rem, 5vw, 3rem) !important;
+  font-weight: 700 !important;
+  color: var(--color-primary) !important;
+  text-align: center !important;
+  margin-bottom: var(--space-4) !important;
+  letter-spacing: -0.02em;
+}
+
+.main-header::after {
+  content: "";
+  display: block;
+  width: 60px;
+  height: 4px;
+  margin: var(--space-3) auto 0;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent));
+  border-radius: var(--radius-full);
+}
+
+.sub-header {
+  font-family: var(--font-display) !important;
+  font-size: clamp(1.25rem, 3vw, 1.75rem) !important;
+  font-weight: 600 !important;
+  color: var(--fg-primary) !important;
+  margin-top: var(--space-8) !important;
+  margin-bottom: var(--space-4) !important;
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--border-light);
+}
+
+p, li, span, div {
+  font-family: var(--font-body) !important;
+  line-height: 1.6;
+}
+
+code, pre, .prediction-numbers {
+  font-family: var(--font-mono) !important;
+}
+
+/* ============================================================
+   COMPONENT: CARDS
+   ============================================================ */
+.card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--transition-normal), transform var(--transition-normal), border-color var(--transition-normal);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+}
+
+.card-interactive {
+  cursor: pointer;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--color-primary);
+}
+
+.card-primary {
+  border-color: var(--color-primary);
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--color-primary-light) 100%);
+}
+
+.card-accent {
+  border-color: var(--color-accent);
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--color-accent-light) 100%);
+}
+
+/* ============================================================
+   COMPONENT: PREDICTION BOX
+   ============================================================ */
+.prediction-box {
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-tertiary) 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  margin: var(--space-3) 0;
+  box-shadow:
+    var(--shadow-sm),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: all var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+}
+
+.prediction-box::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--color-primary), var(--color-accent));
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.prediction-box::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle at top right, var(--color-accent-light) 0%, transparent 70%);
+  border-radius: 0 0 0 80px;
+  pointer-events: none;
+  opacity: 0.3;
+}
+
+.prediction-box:hover {
+  box-shadow:
+    var(--shadow-lg),
+    0 0 30px rgba(45, 58, 140, 0.15);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+}
+
+.prediction-box:hover::before {
+  opacity: 1;
+}
+
+.prediction-box.ticket-card {
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+  border: 2px dashed var(--color-accent);
+  box-shadow:
+    0 4px 20px rgba(218, 165, 32, 0.15),
+    inset 0 1px 0 rgba(255,255,255,0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .prediction-box.ticket-card {
+    background: linear-gradient(135deg, #3d3300 0%, #2d2200 100%);
+    border-color: var(--color-accent);
+  }
+}
+
+.prediction-box h4 {
+  font-family: var(--font-display) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  color: var(--fg-secondary) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-3) !important;
+}
+
+.prediction-numbers {
+  font-size: 1.75rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.1em !important;
+  color: var(--fg-primary) !important;
+  line-height: 1.4;
+  word-break: break-all;
+}
+
+.prediction-bonus {
+  font-size: 1.125rem !important;
+  font-weight: 500 !important;
+  color: var(--color-accent) !important;
+  margin-top: var(--space-2) !important;
+}
+
+.prediction-meta {
+  font-size: 0.8125rem !important;
+  color: var(--fg-tertiary) !important;
+  margin-top: var(--space-3) !important;
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.prediction-meta strong {
+  color: var(--fg-secondary);
+}
+
+/* Confidence badge */
+.confidence-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: var(--font-body);
+}
+
+.confidence-high { background: var(--color-success-light); color: var(--color-success); }
+.confidence-medium { background: var(--color-warning-light); color: var(--color-warning); }
+.confidence-low { background: var(--color-error-light); color: var(--color-error); }
+
+/* ============================================================
+   COMPONENT: DISCLAIMER
+   ============================================================ */
+.disclaimer {
+  background: var(--color-warning-light);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5) var(--space-6);
+  margin: var(--space-6) 0;
+  color: #78350f !important;
+  position: relative;
+}
+
+.disclaimer::before {
+  content: "⚠️";
+  margin-right: var(--space-3);
+  font-size: 1.25rem;
+}
+
+.disclaimer strong {
+  color: #92400e !important;
+}
+
+.disclaimer p {
+  margin: 0 !important;
+}
+
+/* ============================================================
+   COMPONENT: METRIC CARDS
+   ============================================================ */
+.metric-card {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  text-align: center;
+  transition: all var(--transition-normal);
+}
+
+.metric-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-primary);
+}
+
+.metric-card .metric-label {
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--fg-tertiary) !important;
+  margin-bottom: var(--space-2) !important;
+  font-family: var(--font-body) !important;
+}
+
+.metric-card .metric-value {
+  font-family: var(--font-display) !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: var(--fg-primary) !important;
+  line-height: 1.2;
+}
+
+.metric-card .metric-delta {
+  font-size: 0.8125rem !important;
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+}
+
+/* Override Streamlit metrics */
+[data-testid="stMetric"] {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: var(--space-5) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+[data-testid="stMetric"]:hover {
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--color-primary) !important;
+}
+
+[data-testid="stMetric"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.08em !important;
+  color: var(--fg-tertiary) !important;
+}
+
+[data-testid="stMetricValue"] {
+  font-family: var(--font-display) !important;
+  font-size: 2rem !important;
+  font-weight: 700 !important;
+  color: var(--fg-primary) !important;
+  line-height: 1.2 !important;
+}
+
+[data-testid="stMetricDelta"] {
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+}
+
+/* ============================================================
+   COMPONENT: BUTTONS
+   ============================================================ */
+[data-testid="stButton"] > button {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--space-3) var(--space-6) !important;
+  height: auto !important;
+  min-height: 44px !important;
+  transition: all var(--transition-fast) !important;
+  border: none !important;
+  cursor: pointer !important;
+}
+
+[data-testid="stButton"] > button[kind="primary"] {
+  background: var(--color-primary) !important;
+  color: var(--fg-inverse) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+[data-testid="stButton"] > button[kind="primary"]:hover {
+  background: var(--color-primary-hover) !important;
+  box-shadow: var(--shadow-md) !important;
+  transform: translateY(-1px) !important;
+}
+
+[data-testid="stButton"] > button[kind="primary"]:active {
+  transform: translateY(0) !important;
+  background: var(--color-primary-hover) !important;
+}
+
+[data-testid="stButton"] > button[kind="secondary"] {
+  background: var(--bg-tertiary) !important;
+  color: var(--fg-primary) !important;
+  border: 1px solid var(--border-medium) !important;
+}
+
+[data-testid="stButton"] > button[kind="secondary"]:hover {
+  background: var(--border-medium) !important;
+  border-color: var(--color-primary) !important;
+}
+
+[data-testid="stButton"] > button:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+}
+
+/* Download button */
+[data-testid="stDownloadButton"] > button {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--space-3) var(--space-5) !important;
+  background: var(--bg-tertiary) !important;
+  color: var(--fg-secondary) !important;
+  border: 1px solid var(--border-medium) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+[data-testid="stDownloadButton"] > button:hover {
+  background: var(--color-primary) !important;
+  color: var(--fg-inverse) !important;
+  border-color: var(--color-primary) !important;
+}
+
+/* ============================================================
+   COMPONENT: FORM ELEMENTS
+   ============================================================ */
+/* Selectbox */
+[data-testid="stSelectbox"] > div > div {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-md) !important;
+  min-height: 44px !important;
+  transition: all var(--transition-fast) !important;
+}
+
+[data-testid="stSelectbox"] > div > div:hover {
+  border-color: var(--color-primary) !important;
+}
+
+[data-testid="stSelectbox"] > div > div:focus-within {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-light) !important;
+}
+
+[data-testid="stSelectbox"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--fg-secondary) !important;
+  margin-bottom: var(--space-2) !important;
+}
+
+/* Slider */
+[data-testid="stSlider"] > div > div > div > div {
+  height: 40px !important;
+}
+
+[data-testid="stSlider"] [role="slider"] {
+  background: var(--color-primary) !important;
+  width: 20px !important;
+  height: 20px !important;
+  border-radius: 50% !important;
+  box-shadow: var(--shadow-md) !important;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast) !important;
+}
+
+[data-testid="stSlider"] [role="slider"]:hover {
+  transform: scale(1.2) !important;
+  box-shadow: var(--shadow-lg) !important;
+}
+
+[data-testid="stSlider"] [role="slider"]:focus-visible {
+  outline: none !important;
+  box-shadow: 0 0 0 4px var(--color-primary-light), var(--shadow-lg) !important;
+}
+
+[data-testid="stSlider"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--fg-secondary) !important;
+  margin-bottom: var(--space-2) !important;
+}
+
+/* Number Input */
+[data-testid="stNumberInput"] > div > div > input {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-md) !important;
+  min-height: 44px !important;
+  padding: var(--space-2) var(--space-4) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 0.875rem !important;
+  color: var(--fg-primary) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+[data-testid="stNumberInput"] > div > div > input:hover {
+  border-color: var(--color-primary) !important;
+}
+
+[data-testid="stNumberInput"] > div > div > input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-light) !important;
+  outline: none !important;
+}
+
+[data-testid="stNumberInput"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--fg-secondary) !important;
+  margin-bottom: var(--space-2) !important;
+}
+
+/* Text Input */
+[data-testid="stTextInput"] > div > div > input {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-md) !important;
+  min-height: 44px !important;
+  padding: var(--space-2) var(--space-4) !important;
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  color: var(--fg-primary) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+[data-testid="stTextInput"] > div > div > input:hover {
+  border-color: var(--color-primary) !important;
+}
+
+[data-testid="stTextInput"] > div > div > input:focus {
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px var(--color-primary-light) !important;
+  outline: none !important;
+}
+
+[data-testid="stTextInput"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--fg-secondary) !important;
+  margin-bottom: var(--space-2) !important;
+}
+
+/* Checkbox */
+[data-testid="stCheckbox"] > div {
+  padding: var(--space-1) 0 !important;
+}
+
+[data-testid="stCheckbox"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  color: var(--fg-primary) !important;
+}
+
+[data-testid="stCheckbox"] [data-testid="stMarkdownContainer"] p {
+  font-family: var(--font-body) !important;
+}
+
+[data-testid="stCheckbox"] input[type="checkbox"] {
+  accent-color: var(--color-primary) !important;
+  width: 20px !important;
+  height: 20px !important;
+}
+
+/* Radio */
+[data-testid="stRadio"] > div {
+  padding: var(--space-2) 0 !important;
+}
+
+[data-testid="stRadio"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  color: var(--fg-primary) !important;
+  padding: var(--space-2) var(--space-3) !important;
+  border-radius: var(--radius-md) !important;
+  transition: all var(--transition-fast) !important;
+}
+
+[data-testid="stRadio"] label:hover {
+  background: var(--color-primary-light) !important;
+}
+
+[data-testid="stRadio"] input[type="radio"] {
+  accent-color: var(--color-primary) !important;
+}
+
+/* Multiselect */
+[data-testid="stMultiSelect"] > div > div {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-medium) !important;
+  border-radius: var(--radius-md) !important;
+  min-height: 44px !important;
+  transition: all var(--transition-fast) !important;
+}
+
+[data-testid="stMultiSelect"] > div > div:hover {
+  border-color: var(--color-primary) !important;
+}
+
+[data-testid="stMultiSelect"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--fg-secondary) !important;
+  margin-bottom: var(--space-2) !important;
+}
+
+/* File Uploader */
+[data-testid="stFileUploader"] > div {
+  background: var(--bg-elevated) !important;
+  border: 2px dashed var(--border-medium) !important;
+  border-radius: var(--radius-lg) !important;
+  padding: var(--space-8) !important;
+  transition: all var(--transition-normal) !important;
+}
+
+[data-testid="stFileUploader"] > div:hover {
+  border-color: var(--color-primary) !important;
+  background: var(--color-primary-light) !important;
+}
+
+[data-testid="stFileUploader"] label {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  color: var(--fg-secondary) !important;
+  margin-bottom: var(--space-2) !important;
+}
+
+/* ============================================================
+   COMPONENT: TABS
+   ============================================================ */
+.stTabs [data-baseweb="tab-list"] {
+  gap: var(--space-2) !important;
+  background: var(--bg-tertiary) !important;
+  padding: var(--space-2) !important;
+  border-radius: var(--radius-lg) !important;
+  border: 1px solid var(--border-light) !important;
+}
+
+.stTabs [data-baseweb="tab"] {
+  font-family: var(--font-body) !important;
+  font-size: 0.875rem !important;
+  font-weight: 500 !important;
+  color: var(--fg-secondary) !important;
+  background: transparent !important;
+  border-radius: var(--radius-md) !important;
+  padding: var(--space-3) var(--space-5) !important;
+  height: auto !important;
+  min-height: 44px !important;
+  transition: all var(--transition-fast) !important;
+  border: none !important;
+}
+
+.stTabs [data-baseweb="tab"]:hover {
+  color: var(--fg-primary) !important;
+  background: var(--bg-elevated) !important;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
+  color: var(--fg-inverse) !important;
+  background: var(--color-primary) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.stTabs [data-baseweb="tab"][aria-selected="true"]:hover {
+  background: var(--color-primary-hover) !important;
+}
+
+/* ============================================================
+   COMPONENT: SIDEBAR
+   ============================================================ */
+[data-testid="stSidebar"] {
+  min-width: 320px !important;
+  max-width: 400px !important;
+  background: var(--bg-secondary) !important;
+  border-right: 1px solid var(--border-light) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] {
+  margin-bottom: var(--space-3) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSubheader"],
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3 {
+  font-family: var(--font-display) !important;
+  font-size: 1.125rem !important;
+  font-weight: 600 !important;
+  color: var(--fg-primary) !important;
+  margin-top: var(--space-6) !important;
+  margin-bottom: var(--space-3) !important;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-light);
+}
+
+[data-testid="stSidebar"] [data-testid="stAlert"],
+[data-testid="stSidebar"] .stInfo,
+[data-testid="stSidebar"] .stSuccess,
+[data-testid="stSidebar"] .stWarning,
+[data-testid="stSidebar"] .stError {
+  font-size: 0.8125rem !important;
+  padding: var(--space-3) var(--space-4) !important;
+  border-radius: var(--radius-md) !important;
+  border: none !important;
+}
+
+[data-testid="stSidebar"] .stInfo {
+  background: var(--color-info-light) !important;
+  color: var(--color-info) !important;
+}
+
+[data-testid="stSidebar"] .stSuccess {
+  background: var(--color-success-light) !important;
+  color: var(--color-success) !important;
+}
+
+[data-testid="stSidebar"] .stWarning {
+  background: var(--color-warning-light) !important;
+  color: var(--color-warning) !important;
+}
+
+[data-testid="stSidebar"] .stError {
+  background: var(--color-error-light) !important;
+  color: var(--color-error) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stMarkdownContainer"] p {
+  font-size: 0.875rem !important;
+  line-height: 1.6;
+}
+
+/* ============================================================
+   COMPONENT: EXPANDER
+   ============================================================ */
+[data-testid="stExpander"] {
+  background: var(--bg-elevated) !important;
+  border: 1px solid var(--border-light) !important;
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+[data-testid="stExpander"] summary {
+  font-family: var(--font-body) !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  color: var(--fg-primary) !important;
+  padding: var(--space-4) var(--space-5) !important;
+  background: var(--bg-tertiary) !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  cursor: pointer !important;
+  transition: background var(--transition-fast) !important;
+}
+
+[data-testid="stExpander"] summary:hover {
+  background: var(--border-light) !important;
+}
+
+[data-testid="stExpander"] summary::marker {
+  color: var(--fg-tertiary) !important;
+}
+
+[data-testid="stExpander"][open] summary {
+  border-bottom-color: var(--border-light) !important;
+}
+
+[data-testid="stExpander"] > div:last-child {
+  padding: var(--space-5) !important;
+}
+
+/* ============================================================
+   COMPONENT: DATAFRAME
+   ============================================================ */
+[data-testid="stDataFrame"] {
+  font-family: var(--font-body) !important;
+  font-size: 0.8125rem !important;
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden !important;
+  border: 1px solid var(--border-light) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+[data-testid="stDataFrame"] [data-testid="stTable"] {
+  font-family: var(--font-body) !important;
+}
+
+[data-testid="stDataFrame"] th {
+  font-family: var(--font-display) !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--fg-tertiary) !important;
+  background: var(--bg-tertiary) !important;
+  padding: var(--space-3) var(--space-4) !important;
+  border-bottom: 1px solid var(--border-light) !important;
+}
+
+[data-testid="stDataFrame"] td {
+  padding: var(--space-3) var(--space-4) !important;
+  border-bottom: 1px solid var(--border-light) !important;
+  color: var(--fg-primary) !important;
+}
+
+[data-testid="stDataFrame"] tr:last-child td {
+  border-bottom: none !important;
+}
+
+[data-testid="stDataFrame"] tr:hover td {
+  background: var(--color-primary-light) !important;
+}
+
+/* ============================================================
+   COMPONENT: ALERTS / NOTIFICATIONS
+   ============================================================ */
+.stAlert {
+  border-radius: var(--radius-lg) !important;
+  border: none !important;
+  padding: var(--space-4) var(--space-5) !important;
+  font-size: 0.875rem !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.stInfo {
+  background: var(--color-info-light) !important;
+  color: var(--color-info) !important;
+  border-left: 4px solid var(--color-info) !important;
+}
+
+.stSuccess {
+  background: var(--color-success-light) !important;
+  color: var(--color-success) !important;
+  border-left: 4px solid var(--color-success) !important;
+}
+
+.stWarning {
+  background: var(--color-warning-light) !important;
+  color: var(--color-warning) !important;
+  border-left: 4px solid var(--color-warning) !important;
+}
+
+.stError {
+  background: var(--color-error-light) !important;
+  color: var(--color-error) !important;
+  border-left: 4px solid var(--color-error) !important;
+}
+
+/* ============================================================
+   COMPONENT: PROGRESS / SPINNER
+   ============================================================ */
+.stProgress > div > div {
+  background: var(--color-primary) !important;
+  border-radius: var(--radius-full) !important;
+}
+
+.stSpinner > div {
+  border-color: var(--color-primary) transparent transparent transparent !important;
+}
+
+/* ============================================================
+   COMPONENT: COLUMNS
+   ============================================================ */
+.stColumns {
+  gap: var(--space-4) !important;
+}
+
+.stColumns > div {
+  min-width: 0 !important;
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-16px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.animate-fade-in {
+  animation: fadeIn var(--transition-normal) ease forwards;
+}
+
+.animate-slide-in {
+  animation: slideIn var(--transition-normal) ease forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Staggered animation for prediction cards */
+.prediction-box:nth-child(1) { animation-delay: 0ms; }
+.prediction-box:nth-child(2) { animation-delay: 80ms; }
+.prediction-box:nth-child(3) { animation-delay: 160ms; }
+.prediction-box:nth-child(4) { animation-delay: 240ms; }
+.prediction-box:nth-child(5) { animation-delay: 320ms; }
+.prediction-box:nth-child(6) { animation-delay: 400ms; }
+.prediction-box:nth-child(7) { animation-delay: 480ms; }
+.prediction-box:nth-child(8) { animation-delay: 560ms; }
+.prediction-box:nth-child(9) { animation-delay: 640ms; }
+.prediction-box:nth-child(10) { animation-delay: 720ms; }
+
+/* ============================================================
+   RESPONSIVE: MOBILE (< 768px)
+   ============================================================ */
+@media (max-width: 768px) {
+  .main .block-container {
+    padding-top: var(--space-4) !important;
+    padding-bottom: var(--space-6) !important;
+    padding-left: var(--space-4) !important;
+    padding-right: var(--space-4) !important;
+  }
+
+  .main-header {
+    font-size: 2rem !important;
+  }
+
+  .sub-header {
+    font-size: 1.25rem !important;
+  }
+
+  /* Larger touch targets */
+  [data-testid="stButton"] > button {
+    min-height: 52px !important;
+    font-size: 1rem !important;
+    padding: var(--space-3) var(--space-6) !important;
+  }
+
+  [data-testid="stSelectbox"] > div > div,
+  [data-testid="stNumberInput"] > div > div > input,
+  [data-testid="stTextInput"] > div > div > input,
+  [data-testid="stMultiSelect"] > div > div {
+    min-height: 52px !important;
+    font-size: 1rem !important;
+  }
+
+  [data-testid="stSlider"] > div > div > div > div {
+    height: 52px !important;
+  }
+
+  [data-testid="stSlider"] [role="slider"] {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  /* Tabs */
+  .stTabs [data-baseweb="tab-list"] {
+    flex-wrap: wrap !important;
+  }
+
+  .stTabs [data-baseweb="tab"] {
+    min-width: 120px !important;
+    font-size: 0.875rem !important;
+    padding: var(--space-3) var(--space-4) !important;
+    min-height: 48px !important;
+  }
+
+  /* Sidebar */
+  [data-testid="stSidebar"] {
+    min-width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Prediction boxes */
+  .prediction-box {
+    padding: var(--space-5) !important;
+  }
+
+  .prediction-numbers {
+    font-size: 1.5rem !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  .prediction-meta {
+    flex-direction: column;
+    gap: var(--space-2) !important;
+  }
+
+  /* Metrics */
+  [data-testid="stMetric"] {
+    padding: var(--space-4) !important;
+  }
+
+  [data-testid="stMetricValue"] {
+    font-size: 1.75rem !important;
+  }
+
+  /* Columns stack */
+  .stColumns {
+    flex-direction: column !important;
+  }
+
+  .stColumns > div {
+    width: 100% !important;
+    min-width: 100% !important;
+  }
+
+  /* Dataframe scroll */
+  [data-testid="stDataFrame"] {
+    overflow-x: auto !important;
+  }
+
+  /* Expander */
+  [data-testid="stExpander"] summary {
+    padding: var(--space-4) !important;
+    font-size: 1rem !important;
+  }
+
+  /* Radio/Checkbox */
+  [data-testid="stRadio"] label,
+  [data-testid="stCheckbox"] label {
+    font-size: 1rem !important;
+    padding: var(--space-3) !important;
+  }
+}
+
+/* ============================================================
+   RESPONSIVE: LANDSCAPE MOBILE
+   ============================================================ */
+@media (max-height: 500px) and (orientation: landscape) {
+  .main-header {
+    font-size: 1.5rem !important;
+    margin-bottom: var(--space-2) !important;
+  }
+
+  .stTabs [data-baseweb="tab"] {
+    min-height: 40px !important;
+    padding: var(--space-2) var(--space-4) !important;
+  }
+
+  [data-testid="stButton"] > button {
+    min-height: 40px !important;
+  }
+}
+
+/* ============================================================
+   PWA MODE
+   ============================================================ */
+.pwa-mode .main-header {
+  padding-top: var(--space-4);
+}
+
+.pwa-mode .stAppHeader {
+  display: none !important;
+}
+
+/* Bottom nav for PWA */
+@media (max-width: 768px) {
+  .bottom-nav {
+    display: none;
+  }
+
+  .pwa-mode .bottom-nav {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--bg-elevated) !important;
+    border-top: 1px solid var(--border-light) !important;
+    z-index: 9999;
+    justify-content: space-around;
+    padding: var(--space-2) 0;
+    box-shadow: var(--shadow-xl) !important;
+  }
+
+  .bottom-nav a {
+    color: var(--fg-tertiary) !important;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    min-width: 64px;
+    transition: color var(--transition-fast);
+    border-radius: var(--radius-md);
+  }
+
+  .bottom-nav a.active,
+  .bottom-nav a:hover {
+    color: var(--color-primary) !important;
+    background: var(--color-primary-light) !important;
+  }
+
+  .bottom-nav svg {
+    width: 24px;
+    height: 24px;
+    margin-bottom: var(--space-1);
+  }
+
+  .bottom-nav span {
+    font-size: 0.6875rem !important;
+    font-weight: 600 !important;
+    font-family: var(--font-body) !important;
+  }
+
+  .pwa-mode .main .block-container {
+    padding-bottom: 88px !important;
+  }
+}
+
+/* ============================================================
+   TOUCH FEEDBACK
+   ============================================================ */
+@media (hover: none) and (pointer: coarse) {
+  [data-testid="stButton"] > button:active,
+  .stTabs [data-baseweb="tab"]:active,
+  [data-testid="stSelectbox"] > div:active,
+  [data-testid="stCheckbox"]:active,
+  [data-testid="stRadio"] label:active {
+    transform: scale(0.98);
+    transition: transform 80ms;
+  }
+}
+
+/* ============================================================
+   SCROLLBAR STYLING
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-tertiary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-tertiary);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--bg-tertiary);
+}
+
+/* ============================================================
+   FOCUS VISIBLE (Accessibility)
+   ============================================================ */
+*:focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+}
+
+[data-testid="stButton"] > button:focus-visible,
+[data-testid="stSelectbox"] > div > div:focus-visible,
+[data-testid="stNumberInput"] > div > div > input:focus-visible,
+[data-testid="stTextInput"] > div > div > input:focus-visible,
+.stTabs [data-baseweb="tab"]:focus-visible {
+  outline: 2px solid var(--color-primary) !important;
+  outline-offset: 2px !important;
+}
+
+/* ============================================================
+   REDUCED MOTION
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================
+   PRINT STYLES
+   ============================================================ */
+@media print {
+  [data-testid="stSidebar"],
+  [data-testid="stButton"],
+  [data-testid="stDownloadButton"],
+  .stTabs [data-baseweb="tab-list"],
+  .bottom-nav {
+    display: none !important;
+  }
+
+  .main .block-container {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+
+  .prediction-box {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
+
+
+/* ============================================================
+   VISUAL FLAIR - LOTTERY THEME
+   ============================================================ */
+
+/* Animated background particles */
+@keyframes floatUp {
+  0% { transform: translateY(100vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+}
+
+@keyframes floatUpReverse {
+  0% { transform: translateY(-10vh) scale(0); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(100vh) scale(1); opacity: 0; }
+}
+
+@keyframes sparkle {
+  0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(180deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 20px rgba(212, 168, 42, 0.3), 0 0 40px rgba(45, 58, 140, 0.2); }
+  50% { box-shadow: 0 0 40px rgba(212, 168, 42, 0.5), 0 0 80px rgba(45, 58, 140, 0.4); }
+}
+
+@keyframes jackpotCount {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes ballPop {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  50% { transform: scale(1.2) rotate(10deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+@keyframes shimmerSweep {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* Background particle container */
+.lottery-bg {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: -1;
+  overflow: hidden;
+  opacity: 0.15;
+}
+
+.lottery-bg::before,
+.lottery-bg::after {
+  content: "";
+  position: absolute;
+  width: 200%;
+  height: 200%;
+  background-image: 
+    radial-gradient(circle at 20% 30%, var(--color-primary) 2px, transparent 2px),
+    radial-gradient(circle at 80% 70%, var(--color-accent) 2px, transparent 2px),
+    radial-gradient(circle at 40% 80%, var(--color-primary) 1px, transparent 1px),
+    radial-gradient(circle at 60% 20%, var(--color-accent) 1px, transparent 1px);
+  background-size: 300px 300px;
+  animation: floatUp 60s linear infinite;
+}
+
+.lottery-bg::after {
+  animation: floatUpReverse 45s linear infinite;
+  opacity: 0.5;
+}
+
+/* Sparkle particles */
+.sparkle {
+  position: fixed;
+  width: 8px; height: 8px;
+  pointer-events: none;
+  z-index: 9998;
+  background: var(--color-accent);
+  clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+  animation: sparkle 1.5s ease-in-out infinite;
+}
+
+/* Main header enhanced */
+.main-header {
+  position: relative;
+  z-index: 1;
+}
+
+.main-header::before {
+  content: "";
+  position: absolute;
+  top: -20px; left: 50%;
+  transform: translateX(-50%);
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--color-primary-light) 0%, transparent 70%);
+  border-radius: 50%;
+  z-index: -1;
+  animation: pulseGlow 4s ease-in-out infinite;
+}
+
+/* Lottery ball styling for prediction numbers */
+.lottery-ball {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  font-family: var(--font-display) !important;
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  color: white !important;
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.3),
+    inset 0 -2px 6px rgba(0,0,0,0.2),
+    inset 0 2px 4px rgba(255,255,255,0.3);
+  position: relative;
+  overflow: hidden;
+  animation: ballPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  margin: 2px 4px;
+}
+
+.lottery-ball::before {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%);
+  transform: rotate(30deg);
+}
+
+.lottery-ball::after {
+  content: "";
+  position: absolute;
+  bottom: 2px; right: 2px;
+  width: 12px; height: 12px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+/* Ball colors by number range */
+.lottery-ball.ball-1 { background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); }
+.lottery-ball.ball-2 { background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); }
+.lottery-ball.ball-3 { background: linear-gradient(135deg, #f39c12 0%, #d4ac0d 100%); }
+.lottery-ball.ball-4 { background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%); }
+.lottery-ball.ball-5 { background: linear-gradient(135deg, #9b59b6 0%, #8e44ad 100%); }
+.lottery-ball.ball-6 { background: linear-gradient(135deg, #e67e22 0%, #d35400 100%); }
+.lottery-ball.ball-7 { background: linear-gradient(135deg, #1abc9c 0%, #16a085 100%); }
+.lottery-ball.ball-8 { background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); }
+.lottery-ball.ball-9 { background: linear-gradient(135deg, #e91e63 0%, #c2185b 100%); }
+.lottery-ball.ball-0 { background: linear-gradient(135deg, #607d8b 0%, #455a64 100%); }
+
+/* Bonus ball - gold */
+.lottery-ball.bonus {
+  background: linear-gradient(135deg, #ffd700 0%, #daa520 100%) !important;
+  box-shadow:
+    0 4px 12px rgba(218, 165, 32, 0.5),
+    inset 0 -2px 6px rgba(0,0,0,0.2),
+    inset 0 2px 4px rgba(255,255,255,0.4),
+    0 0 30px rgba(218, 165, 32, 0.3) !important;
+  animation: ballPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.lottery-ball.bonus:hover {
+  animation: pulseGlow 1.5s ease-in-out infinite, ballPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Prediction box enhanced */
+.prediction-box {
+  position: relative;
+  z-index: 1;
+}
+
+.prediction-box::after {
+  content: "";
+  position: absolute;
+  top: 0; right: 0;
+  width: 100px; height: 100px;
+  background: radial-gradient(circle at top right, var(--color-accent-light) 0%, transparent 70%);
+  border-radius: 0 0 0 100%;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+/* Jackpot counter animation */
+.jackpot-counter {
+  font-family: var(--font-display) !important;
+  font-size: 2.5rem !important;
+  font-weight: 700 !important;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-accent), var(--color-primary));
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmerSweep 3s linear infinite, jackpotCount 2s ease-in-out infinite;
+}
+
+/* Confetti burst */
+@keyframes confettiFall {
+  0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+.confetti {
+  position: fixed;
+  width: 12px; height: 12px;
+  pointer-events: none;
+  z-index: 10000;
+  animation: confettiFall 3s ease-out forwards;
+}
+
+.confetti:nth-child(odd) { border-radius: 50%; }
+.confetti:nth-child(even) { clip-path: polygon(50% 0%, 0% 100%, 100% 100%); }
+
+/* Shimmer on cards */
+.prediction-box,
+.metric-card,
+.card {
+  position: relative;
+  overflow: hidden;
+}
+
+.prediction-box::before,
+.metric-card::before,
+.card::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  animation: none;
+  pointer-events: none;
+  transition: left 0.6s ease-out, opacity 0.3s;
+  opacity: 0;
+}
+
+.prediction-box:hover::before,
+.metric-card:hover::before,
+.card:hover::before {
+  animation: shimmerSweep 0.8s ease-out forwards;
+  opacity: 1;
+}
+
+/* Gold accent divider */
+.gold-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-accent), transparent);
+  border: none;
+  margin: var(--space-6) 0;
+}
+
+/* Floating action hint */
+.floating-hint {
+  position: fixed;
+  bottom: 100px; right: 24px;
+  background: var(--color-primary);
+  color: white;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 500;
+  box-shadow: var(--shadow-xl);
+  z-index: 1000;
+  animation: floatUp 3s ease-in-out infinite;
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+/* Lottery ticket style card */
+.ticket-card {
+  background: linear-gradient(135deg, #fff8e1 0%, #fff3c4 100%);
+  border: 2px dashed var(--color-accent);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  position: relative;
+  overflow: hidden;
+}
+
+.ticket-card::before {
+  content: "";
+  position: absolute;
+  top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background-image: 
+    radial-gradient(circle, var(--color-accent) 1px, transparent 1px);
+  background-size: 30px 30px;
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  .ticket-card {
+    background: linear-gradient(135deg, #3d3300 0%, #2d2200 100%);
+    border-color: var(--color-accent);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .lottery-bg::before,
+  .lottery-bg::after,
+  .sparkle,
+  .main-header::before,
+  .lottery-ball,
+  .jackpot-counter,
+  .confetti,
+  .prediction-box::before,
+  .metric-card::before,
+  .card::before,
+  .floating-hint {
+    animation: none !important;
+  }
+}
+</style>
+""")
 
 # Initialize session state
 if 'predictions' not in st.session_state:
@@ -478,110 +2011,106 @@ def get_manager():
 manager = get_manager()
 
 # Header
-st.markdown('<div class="main-header">🎲 Lottery Predictor</div>', unsafe_allow_html=True)
-st.markdown('<div style="text-align: center; color: #666; margin-bottom: 2rem;">AI-Powered Lottery Number Prediction</div>', unsafe_allow_html=True)
+st.title("Lottery predictor", icon=":material/casino:")
+st.caption("AI-powered lottery number prediction")
 
 # Disclaimer
-st.markdown("""
-<div class="disclaimer">
-⚠️ <strong>IMPORTANT DISCLAIMER:</strong> This tool is for <strong>entertainment and educational purposes only</strong>.
-Lottery draws are random events. No algorithm, AI, or statistical analysis can predict future lottery numbers with certainty.
-Past performance does not guarantee future results. Please play responsibly and within your means.
-</div>
-""", unsafe_allow_html=True)
+st.error(
+    "Lottery draws are random events. No algorithm, AI, or statistical analysis can predict future lottery "
+    "numbers with certainty. Past performance does not guarantee future results. Please play responsibly and "
+    "within your means.",
+    title="Important disclaimer — entertainment and educational purposes only",
+    icon=":material/warning:",
+)
 
 # Sidebar
 with st.sidebar:
-    st.header("⚙️ Settings")
+    st.header("Settings", icon=":material/settings:")
 
     # Lottery selection - filter out "no lottery" states
     games = [g for g in manager.list_games() if g.main_numbers > 0]
     game_options = {f"{g.name} ({g.key})": g.key for g in games}
     selected_game_label = st.selectbox(
-        "🎰 Select Lottery",
+        "Select lottery",
         options=list(game_options.keys()),
         index=list(game_options.values()).index(st.session_state.current_lottery) if st.session_state.current_lottery in game_options.values() else 0
     )
     selected_lottery = game_options[selected_game_label]
     st.session_state.current_lottery = selected_lottery
 
-    # Auto-detect location button
-    if st.button("📍 Detect My Location", use_container_width=True):
-        with st.spinner("Detecting your location..."):
-            try:
-                from lottery_predictor.universal import auto_select_lottery, detect_state_from_ip
-                detected = auto_select_lottery()
-                state = detect_state_from_ip()
-                if detected and state:
-                    # Find the index of the detected lottery
-                    if detected in game_options.values():
-                        detected_label = [k for k, v in game_options.items() if v == detected][0]
-                        st.session_state.current_lottery = detected
-                        st.success(f"Detected: {state} → {detected_label}")
-                        st.rerun()
-                else:
-                    st.warning("Could not detect location. Using current selection.")
-            except Exception as e:
-                st.error(f"Location detection failed: {e}")
-
     game = manager.get_game(selected_lottery)
 
-    # Show lottery info
-    st.info(f"""
-    **{game.name}**
-    - Main: {game.main_numbers} numbers (1-{game.main_max})
-    - Bonus: {game.bonus_numbers} numbers (1-{game.bonus_max})
-    - Draws: {', '.join(game.draw_days)}
-    - Since: {game.start_date}
-    """)
+    # Show lottery info in a bordered card
+    with st.container(border=True):
+        st.subheader(game.name, anchor=False)
+        st.caption(f"Key: {game.key}")
+        c1, c2 = st.columns(2)
+        with c1:
+            st.metric("Main numbers", f"{game.main_numbers} (1-{game.main_max})")
+        with c2:
+            st.metric("Bonus numbers", f"{game.bonus_numbers} (1-{game.bonus_max})")
+        st.caption(f"Draws: {', '.join(game.draw_days)}  ·  Since: {game.start_date}")
 
     # Official website link
     if game.website:
-        st.markdown(f"🔗 [Official Website]({game.website})", unsafe_allow_html=True)
+        st.link_button("Official website", game.website, icon=":material/launch:")
+
+    # Animation / Visual Settings
+    with st.expander("Visual settings", icon=":material/palette:", expanded=False):
+        reduce_animations = st.checkbox("Reduce animations", value=False, help="Disable background particles, shimmer effects, and pulsing animations")
+        if reduce_animations:
+            st.markdown("""
+            <style>
+            .lottery-bg, .sparkle, .main-header::before, .floating-hint { display: none !important; }
+            .prediction-box::before, .metric-card::before, .card::before { animation: none !important; }
+            .lottery-ball.bonus { animation: ballPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both !important; }
+            .jackpot-counter { animation: jackpotCount 2s ease-in-out infinite !important; }
+            </style>
+            """, unsafe_allow_html=True)
+            st.caption("Animations disabled. Refresh to re-enable.")
 
     # Prediction settings
-    st.subheader("🔮 Prediction Settings")
+    st.subheader("Prediction settings", anchor=False)
     method = st.selectbox(
         "Method",
         ["ensemble", "statistical", "frequency", "cold", "pairs", "ml"],
         format_func=lambda x: {
-            "ensemble": "🎯 Ensemble (Recommended)",
-            "statistical": "📊 Statistical (Balanced)",
-            "frequency": "🔥 Frequency (Hot Numbers)",
-            "cold": "❄️ Cold Numbers (Due)",
-            "pairs": "🔗 Pair-Based",
-            "ml": "🤖 Machine Learning"
+            "ensemble": "Ensemble (recommended)",
+            "statistical": "Statistical (balanced)",
+            "frequency": "Frequency (hot numbers)",
+            "cold": "Cold numbers (due)",
+            "pairs": "Pair-based",
+            "ml": "Machine learning",
         }[x]
     )
 
-    num_predictions = st.slider("Number of Predictions", 1, 10, 5)
+    num_predictions = st.slider("Number of predictions", 1, 10, 5)
 
     # Full history toggle (v2.4)
-    use_all_history = st.checkbox("📚 Use All Historical Data (from lottery start date)", value=False, help="Analyze all available draws instead of recent N draws")
+    use_all_history = st.checkbox("Use all historical data (from lottery start date)", value=False, help="Analyze all available draws instead of recent N draws")
 
     if not use_all_history:
-        last_n_draws = st.slider("Historical Draws to Analyze", 50, 1000, 200, step=50)
+        last_n_draws = st.slider("Historical draws to analyze", 50, 1000, 200, step=50)
     else:
         last_n_draws = None
-        st.info("Using all historical data from lottery start date")
+        st.caption("Using all historical data from lottery start date")
 
     # Advanced settings
-    with st.expander("Advanced Settings"):
-        retrain = st.checkbox("Retrain ML Models", value=False)
-        lookback = st.slider("Lookback Window (ML)", 5, 20, 10)
+    with st.expander("Advanced settings", icon=":material/tune:"):
+        retrain = st.checkbox("Retrain ML models", value=False)
+        lookback = st.slider("Lookback window (ML)", 5, 20, 10)
 
 # Main tabs
 tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-    "🎯 Predict",
-    "📊 Analyze",
-    "📈 Visualize",
-    "📜 History",
-    "⚔️ Compare",
-    "👤 Profile & Social",
-    "🏥 Data Health (v2.4)",
-    "🔗 Cross-Lottery (v2.4)"
+    "Predict",
+    "Analyze",
+    "Visualize",
+    "History",
+    "Compare",
+    "Profile & social",
+    "Data health (v2.4)",
+    "Cross-lottery (v2.4)",
 ])
-
 # Helper functions
 @st.cache_data(ttl=300)
 def load_lottery_data(lottery_key, last_n=None):
@@ -616,94 +2145,116 @@ def generate_predictions(lottery_key, method, count, last_n, retrain=False, look
             preds = pred.get_consensus_prediction(num_predictions=count)
     return preds
 
+def format_numbers_html(numbers, bonus=False):
+    """Format numbers as lottery ball HTML."""
+    ball_class = "bonus" if bonus else ""
+    return "".join(
+        f'<span class="lottery-ball {ball_class} ball-{{n % 10}}">{n:2d}</span>'
+        for n in numbers
+    )
+
 def format_numbers(numbers):
-    """Format numbers for display."""
+    """Format numbers for display (markdown fallback)."""
     return "  ".join(f"**{n:2d}**" for n in numbers)
 
 # Tab 1: Predict
 with tab1:
-    st.markdown('<div class="sub-header">🎯 Generate Predictions</div>', unsafe_allow_html=True)
+    st.subheader("Generate predictions", icon=":material/analytics:", anchor=False)
 
-    col1, col2 = st.columns([2, 1])
+    # Jackpot display for selected lottery
+    lottery_info = LOTTERY_CONFIGS.get(selected_lottery, {})
+    jackpot_amount = lottery_info.get('jackpot', 0)
+    if jackpot_amount:
+        st.metric("Estimated jackpot", f"${jackpot_amount:,}")
+
+    col1, col2, col3 = st.columns([2, 1, 1])
 
     with col1:
-        if st.button("🎲 Generate Predictions", type="primary", width='stretch'):
+        if st.button("Generate predictions", type="primary", width='stretch'):
             preds = generate_predictions(
                 selected_lottery, method, num_predictions, last_n_draws, retrain, lookback
             )
             st.session_state.predictions = preds
-            st.success(f"Generated {len(preds)} predictions!")
+            st.toast(f"Generated {len(preds)} predictions!", icon=":material/check_circle:")
 
     with col2:
-        if st.button("💾 Save to JSON", width='stretch'):
-            if st.session_state.predictions:
-                data = {
-                    "lottery": selected_lottery,
-                    "method": method,
-                    "predictions": [
-                        {
-                            "main_numbers": p.main_numbers,
-                            "bonus_numbers": p.bonus_numbers,
-                            "confidence": p.confidence,
-                            "method": p.method,
-                            "metadata": p.metadata
-                        }
-                        for p in st.session_state.predictions
-                    ]
-                }
-                st.download_button(
-                    "📥 Download JSON",
-                    json.dumps(data, indent=2),
-                    file_name=f"{selected_lottery}_predictions.json",
-                    mime="application/json"
-                )
-            else:
-                st.warning("No predictions to save!")
+        if st.button("Quick pick", width='stretch'):
+            # Quick single prediction
+            quick_pred = generate_predictions(selected_lottery, method, 1, last_n_draws, retrain, lookback)
+            st.session_state.predictions = quick_pred
+            st.toast("Quick pick generated!", icon=":material/auto_awesome:")
+
+    with col3:
+        if st.session_state.predictions:
+            data = {
+                "lottery": selected_lottery,
+                "method": method,
+                "predictions": [
+                    {
+                        "main_numbers": p.main_numbers,
+                        "bonus_numbers": p.bonus_numbers,
+                        "confidence": p.confidence,
+                        "method": p.method,
+                        "metadata": p.metadata
+                    }
+                    for p in st.session_state.predictions
+                ]
+            }
+            st.download_button(
+                "Download JSON",
+                json.dumps(data, indent=2),
+                file_name=f"{selected_lottery}_predictions.json",
+                mime="application/json",
+                icon=":material/download:",
+                width='stretch',
+            )
+        else:
+            st.button("Download JSON", disabled=True, width='stretch')
 
     # Display predictions
     if st.session_state.predictions:
-        st.markdown("### 🎯 Your Predictions")
+        st.subheader("Your predictions", anchor=False)
 
         for i, pred in enumerate(st.session_state.predictions, 1):
-            with st.container():
-                st.markdown(f"""
-                <div class="prediction-box">
-                    <h4>Prediction #{i}</h4>
-                    <p style="font-size: 1.5rem; font-family: monospace; letter-spacing: 2px;">
-                        {format_numbers(pred.main_numbers)}
-                    </p>
-                    {f'<p><strong>Bonus:</strong> {format_numbers(pred.bonus_numbers)}</p>' if pred.bonus_numbers else ''}
-                    <p><strong>Confidence:</strong> {pred.confidence:.1%} | <strong>Method:</strong> {pred.method}</p>
-                </div>
-                """, unsafe_allow_html=True)
+            with st.container(border=True):
+                main_str = "  ".join(f"{n:2d}" for n in pred.main_numbers)
+                bonus_str = "  ".join(f"{n:2d}" for n in pred.bonus_numbers) if pred.bonus_numbers else ""
+                c1, c2 = st.columns([3, 1])
+                with c1:
+                    st.markdown(f"**Prediction #{i}**  `{main_str}`")
+                    if bonus_str:
+                        st.caption(f"Bonus: `{bonus_str}`")
+                with c2:
+                    st.badge(f"{pred.confidence:.0%}", icon=":material/trending_up:", color="blue")
+                    st.caption(pred.method)
 
         # Quick stats
-        st.markdown("### 📊 Prediction Statistics")
+        st.subheader("Prediction statistics", anchor=False)
         cols = st.columns(4)
 
         all_nums = [n for p in st.session_state.predictions for n in p.main_numbers]
         with cols[0]:
-            st.metric("Avg Sum", f"{np.mean([sum(p.main_numbers) for p in st.session_state.predictions]):.1f}")
+            st.metric("Avg sum", f"{np.mean([sum(p.main_numbers) for p in st.session_state.predictions]):.1f}")
         with cols[1]:
-            st.metric("Most Common", f"{pd.Series(all_nums).mode()[0] if all_nums else 'N/A'}")
+            st.metric("Most common", f"{pd.Series(all_nums).mode()[0] if all_nums else 'N/A'}")
         with cols[2]:
             evens = sum(1 for n in all_nums if n % 2 == 0)
-            st.metric("Even/Odd Ratio", f"{evens}/{len(all_nums)-evens}")
+            st.metric("Even/odd ratio", f"{evens}/{len(all_nums)-evens}")
         with cols[3]:
             avg_conf = np.mean([p.confidence for p in st.session_state.predictions])
-            st.metric("Avg Confidence", f"{avg_conf:.1%}")
+            st.metric("Avg confidence", f"{avg_conf:.1%}")
 
 # Tab 2: Analyze
 with tab2:
-    st.markdown('<div class="sub-header">📊 Historical Analysis</div>', unsafe_allow_html=True)
+    st.subheader("Historical analysis", icon=":material/bar_chart:", anchor=False)
 
     # Full history toggle for analysis
-    analyze_all_history = st.checkbox("📚 Use All Historical Data (from lottery start date)", value=(last_n_draws is None), key="analyze_all_history")
+    analyze_all_history = st.checkbox("Use all historical data (from lottery start date)", value=(last_n_draws is None), key="analyze_all_history")
 
     if analyze_all_history:
         dm, df = load_lottery_data(selected_lottery, None)
         analysis_last_n = None
-        st.info(f"Using all {len(df)} historical draws from {df['date'].min().strftime('%Y-%m-%d')}")
+        st.caption(f"Using all {len(df)} historical draws from {df['date'].min().strftime('%Y-%m-%d')}")
     else:
         dm, df = load_lottery_data(selected_lottery, last_n_draws)
 
@@ -711,16 +2262,18 @@ with tab2:
     col1, col2, col3 = st.columns(3)
     with col1:
         if not analyze_all_history:
-            analysis_last_n = st.slider("Draws to Analyze", 50, len(df), min(last_n_draws, len(df)), key="analyze_n")
+            # Use sidebar value or default to 200
+            default_draws = last_n_draws if last_n_draws is not None else 200
+            analysis_last_n = st.slider("Draws to Analyze", 50, len(df), min(default_draws, len(df)), key="analyze_n")
         else:
             analysis_last_n = None
-            st.write("Analyzing all draws")
+            st.caption("Analyzing all draws")
     with col2:
-        if st.button("🔄 Refresh Analysis", key="refresh_analyze"):
+        if st.button("Refresh analysis", key="refresh_analyze"):
             st.cache_data.clear()
             st.rerun()
     with col3:
-        show_viz = st.checkbox("Show Charts", value=True)
+        show_viz = st.checkbox("Show charts", value=True)
 
     # Recalculate with selected draws
     if not analyze_all_history:
@@ -729,24 +2282,24 @@ with tab2:
     # Metrics row
     col1, col2, col3, col4 = st.columns(4)
     with col1:
-        st.metric("Total Draws", len(df))
+        st.metric("Total draws", len(df))
     with col2:
         date_range = f"{df['date'].min().strftime('%Y-%m-%d')} to {df['date'].max().strftime('%Y-%m-%d')}"
-        st.metric("Date Range", date_range)
+        st.metric("Date range", date_range)
     with col3:
         sums = df['main_numbers'].apply(sum)
-        st.metric("Avg Sum", f"{sums.mean():.1f}")
+        st.metric("Avg sum", f"{sums.mean():.1f}")
     with col4:
-        st.metric("Sum Std Dev", f"{sums.std():.1f}")
+        st.metric("Sum std dev", f"{sums.std():.1f}")
 
     # Hot/Cold Numbers
-    st.subheader("🔥 Hot & Cold Numbers")
+    st.subheader("Hot & cold numbers", icon=":material/trending_up:", anchor=False)
     freq = dm.get_number_frequency(analysis_last_n)
     hot, cold = dm.get_hot_cold_numbers(analysis_last_n)
 
     col1, col2 = st.columns(2)
     with col1:
-        st.markdown("**🔥 Hottest Numbers**")
+        st.markdown("**Hottest numbers**")
         hot_df = pd.DataFrame({
             'Number': hot,
             'Frequency': [freq[n] for n in hot]
@@ -754,7 +2307,7 @@ with tab2:
         st.dataframe(hot_df, width='stretch', hide_index=True)
 
     with col2:
-        st.markdown("**❄️ Coldest Numbers**")
+        st.markdown("**Coldest numbers**")
         cold_df = pd.DataFrame({
             'Number': cold,
             'Frequency': [freq[n] for n in cold]
@@ -762,7 +2315,7 @@ with tab2:
         st.dataframe(cold_df, width='stretch', hide_index=True)
 
     # Top Pairs
-    st.subheader("🔗 Top Number Pairs")
+    st.subheader("Top number pairs", icon=":material/link:", anchor=False)
     pairs = dm.get_pair_frequency(analysis_last_n)
     top_pairs = list(pairs.items())[:15]
 
@@ -775,7 +2328,7 @@ with tab2:
 
     # Charts
     if show_viz:
-        st.subheader("📈 Charts")
+        st.subheader("Charts", icon=":material/bar_chart:", anchor=False)
 
         # Frequency chart
         fig_freq = go.Figure()
@@ -814,19 +2367,19 @@ with tab2:
 
 # Tab 3: Visualize
 with tab3:
-    st.markdown('<div class="sub-header">📈 Visualizations</div>', unsafe_allow_html=True)
+    st.subheader("Visualizations", icon=":material/bar_chart:", anchor=False)
 
     dm, df = load_lottery_data(selected_lottery, last_n_draws)
     viz = LotteryVisualizer(selected_lottery)
     viz.dm = dm
 
     viz_options = st.multiselect(
-        "Select Charts to Generate",
+        "Select charts to generate",
         ["Frequency", "Hot/Cold", "Sum Distribution", "Pair Heatmap", "Timeline"],
         default=["Frequency", "Hot/Cold", "Sum Distribution", "Pair Heatmap", "Timeline"]
     )
 
-    if st.button("🎨 Generate Visualizations", type="primary"):
+    if st.button("Generate visualizations", type="primary"):
         with st.spinner("Generating charts..."):
             # Use matplotlib visualizations
             import matplotlib
@@ -846,7 +2399,7 @@ with tab3:
                 charts.append(("Timeline", viz.plot_timeline_analysis(last_n_draws, save=False)))
 
             # Also create interactive Plotly charts
-            st.subheader("📊 Interactive Charts")
+            st.subheader("Interactive charts", icon=":material/insights:", anchor=False)
 
             # Frequency interactive
             freq = dm.get_number_frequency(last_n_draws)
@@ -876,7 +2429,7 @@ with tab3:
                 text=[freq[n] for n in cold], textposition='auto'
             ), row=1, col=2)
 
-            fig_hc.update_layout(height=500, showlegend=False, title="Hot vs Cold Numbers")
+            fig_hc.update_layout(height=500, showlegend=False, title="Cold numbers")
             fig_hc.update_yaxes(autorange="reversed")
             st.plotly_chart(fig_hc, width='stretch')
 
@@ -906,15 +2459,15 @@ with tab3:
                 )
                 st.plotly_chart(fig_heat, width='stretch')
 
-            st.success("Visualizations generated!")
+            st.toast("Visualizations generated!", icon=":material/check_circle:")
 
 # Tab 4: History
 with tab4:
-    st.markdown('<div class="sub-header">📜 Recent Draw History</div>', unsafe_allow_html=True)
+    st.subheader("Recent draw history", icon=":material/history:", anchor=False)
 
     dm, df = load_lottery_data(selected_lottery)
 
-    num_history = st.slider("Number of Recent Draws", 5, 50, 15)
+    num_history = st.slider("Number of recent draws", 5, 50, 15)
     recent = dm.get_recent_draws(num_history)
 
     # Format for display
@@ -933,7 +2486,7 @@ with tab4:
     # Download history
     csv = history_df.to_csv(index=False)
     st.download_button(
-        "📥 Download History as CSV",
+        "Download history as CSV",
         csv,
         file_name=f"{selected_lottery}_history.csv",
         mime="text/csv"
@@ -941,25 +2494,25 @@ with tab4:
 
 # Tab 5: Compare
 with tab5:
-    st.markdown('<div class="sub-header">⚔️ Method Comparison</div>', unsafe_allow_html=True)
+    st.subheader("Method comparison", icon=":material/compare_arrows:", anchor=False)
 
     compare_methods = st.multiselect(
-        "Methods to Compare",
+        "Methods to compare",
         ["statistical", "frequency", "cold", "pairs", "ml", "ensemble"],
         default=["statistical", "frequency", "cold", "ensemble"],
         format_func=lambda x: {
-            "ensemble": "🎯 Ensemble",
-            "statistical": "📊 Statistical",
-            "frequency": "🔥 Frequency",
-            "cold": "❄️ Cold",
-            "pairs": "🔗 Pairs",
-            "ml": "🤖 ML"
+            "ensemble": "Ensemble",
+            "statistical": "Statistical",
+            "frequency": "Frequency",
+            "cold": "Cold",
+            "pairs": "Pairs",
+            "ml": "Machine learning"
         }[x]
     )
 
-    compare_count = st.slider("Predictions per Method", 1, 5, 2)
+    compare_count = st.slider("Predictions per method", 1, 5, 2)
 
-    if st.button("⚔️ Compare Methods", type="primary") and compare_methods:
+    if st.button("Compare methods", type="primary") and compare_methods:
         with st.spinner("Comparing methods..."):
             all_results = {}
 
@@ -971,19 +2524,22 @@ with tab5:
 
             # Display comparison
             for method, preds in all_results.items():
-                st.markdown(f"### {method.upper()}")
+                st.subheader(method.replace("_", " ").title(), anchor=False)
 
                 for i, pred in enumerate(preds, 1):
-                    bonus_str = ' - '.join(f"{n:2d}" for n in pred.bonus_numbers) if pred.bonus_numbers else 'N/A'
-                    st.markdown(f"""
-                    <div class="prediction-box">
-                        <strong>#{i}:</strong> {' - '.join(f"{n:2d}" for n in pred.main_numbers)}
-                        | Bonus: {bonus_str} | Confidence: {pred.confidence:.1%}
-                    </div>
-                    """, unsafe_allow_html=True)
+                    with st.container(border=True):
+                        main_str = "  ".join(f"{n:2d}" for n in pred.main_numbers)
+                        bonus_str = "  ".join(f"{n:2d}" for n in pred.bonus_numbers) if pred.bonus_numbers else ""
+                        c1, c2 = st.columns([3, 1])
+                        with c1:
+                            st.markdown(f"**#{i}**  `{main_str}`")
+                            if bonus_str:
+                                st.caption(f"Bonus: `{bonus_str}`")
+                        with c2:
+                            st.badge(f"{pred.confidence:.0%}", icon=":material/trending_up:", color="blue")
 
             # Summary table
-            st.markdown("### 📋 Summary")
+            st.subheader("Summary", anchor=False)
             summary_data = []
             for method, preds in all_results.items():
                 avg_conf = np.mean([p.confidence for p in preds])
@@ -1018,7 +2574,7 @@ with tab5:
 
 # Tab 6: Profile & Social
 with tab6:
-    st.markdown('<div class="sub-header">👤 User Profile & Social</div>', unsafe_allow_html=True)
+    st.subheader("User profile & social", icon=":material/person:", anchor=False)
 
     # Import user profile manager
     try:
@@ -1041,12 +2597,12 @@ with tab6:
 
         # Login/Register section
         if st.session_state.current_user is None:
-            st.subheader("🔐 Login / Create Profile")
+            st.subheader("Login / create profile")
 
             col1, col2 = st.columns(2)
 
             with col1:
-                st.markdown("**Existing User**")
+                st.markdown("**Existing user**")
                 usernames = user_manager.list_profiles()
                 if usernames:
                     login_user = st.selectbox("Select User", usernames, key="login_user")
@@ -1091,11 +2647,11 @@ with tab6:
 
                 # Profile tabs
                 prof_tab1, prof_tab2, prof_tab3, prof_tab4, prof_tab5 = st.tabs([
-                    "📋 Profile", "⭐ Favorites", "⚙️ Preferences", "📤 Share", "🏆 Leaderboard"
+                    "📋 Profile", "⭐ Favorites", "Preferences", "📤 Share", "🏆 Leaderboard"
                 ])
 
                 with prof_tab1:
-                    st.subheader("📋 Your Profile")
+                    st.subheader("Your profile")
                     col1, col2 = st.columns(2)
                     with col1:
                         st.write(f"**Username:** {profile.username}")
@@ -1112,7 +2668,7 @@ with tab6:
                             st.write(f"**ROI:** {roi:+.2f}%")
 
                 with prof_tab2:
-                    st.subheader("⭐ Favorite Lotteries")
+                    st.subheader("Favorite lotteries")
 
                     # Add favorite
                     games = [g for g in manager.list_games() if g.main_numbers > 0]
@@ -1136,7 +2692,7 @@ with tab6:
                             with col1:
                                 st.write(f"⭐ {LOTTERY_CONFIGS[fav]['name']} ({fav})")
                             with col2:
-                                if st.button("🗑️", key=f"remove_{fav}", use_container_width=True):
+                                if st.button("Remove", key=f"remove_{fav}", use_container_width=True):
                                     if user_manager.remove_favorite_lottery(profile.username, fav):
                                         st.success(f"Removed {fav} from favorites")
                                         st.rerun()
@@ -1144,7 +2700,7 @@ with tab6:
                         st.info("No favorites yet. Add some above!")
 
                 with prof_tab3:
-                    st.subheader("⚙️ Preferences")
+                    st.subheader("Preferences")
 
                     col1, col2 = st.columns(2)
 
@@ -1160,15 +2716,15 @@ with tab6:
                         # Default method
                         methods = ["ensemble", "statistical", "frequency", "cold", "pairs", "ml", "time_series", "transformer", "online_learning"]
                         method_labels = {
-                            "ensemble": "🎯 Ensemble",
-                            "statistical": "📊 Statistical",
-                            "frequency": "🔥 Frequency",
-                            "cold": "❄️ Cold Numbers",
-                            "pairs": "🔗 Pair-Based",
-                            "ml": "🤖 Machine Learning",
-                            "time_series": "📈 Time Series",
-                            "transformer": "🔮 Transformer",
-                            "online_learning": "🔄 Online Learning"
+                            "ensemble": "Ensemble",
+                            "statistical": "Statistical",
+                            "frequency": "Frequency",
+                            "cold": "Cold numbers",
+                            "pairs": "Pair-based",
+                            "ml": "Machine learning",
+                            "time_series": "Time series",
+                            "transformer": "Transformer",
+                            "online_learning": "Online learning"
                         }
                         default_method = st.selectbox(
                             "Default Method",
@@ -1221,7 +2777,7 @@ with tab6:
                             key="pref_all_history"
                         )
 
-                    if st.button("💾 Save Preferences", type="primary", use_container_width=True):
+                    if st.button("Preferences", type="primary", use_container_width=True):
                         updates = {}
                         if game_options[default_lottery] != profile.preferences.default_lottery:
                             updates["default_lottery"] = game_options[default_lottery]
@@ -1248,7 +2804,7 @@ with tab6:
                             st.info("No changes to save")
 
                 with prof_tab4:
-                    st.subheader("📤 Share Predictions")
+                    st.subheader("Share predictions")
 
                     share_lottery = st.selectbox(
                         "Lottery",
@@ -1267,7 +2823,7 @@ with tab6:
                     share_count = st.number_input("Number of Predictions", min_value=1, max_value=10, value=3, key="share_count")
                     share_anonymous = st.checkbox("Share Anonymously", key="share_anonymous")
 
-                    if st.button("📤 Generate & Share", type="primary", use_container_width=True):
+                    if st.button("Generate & share", type="primary", use_container_width=True):
                         with st.spinner("Generating predictions..."):
                             try:
                                 lottery_key = game_options[share_lottery]
@@ -1335,18 +2891,20 @@ with tab6:
 
                                 # Show preview
                                 for i, p in enumerate(pred_dicts, 1):
-                                    bonus_str = ' - '.join(f"{n:2d}" for n in p["bonus_numbers"]) if p["bonus_numbers"] else 'N/A'
+                                    main_balls = format_numbers_html(p["main_numbers"])
+                                    bonus_balls = format_numbers_html(p["bonus_numbers"], bonus=True) if p["bonus_numbers"] else ""
                                     st.markdown(f"""
                                     <div class="prediction-box">
-                                        <strong>#{i}:</strong> {' - '.join(f"{n:2d}" for n in p["main_numbers"])}
-                                        | Bonus: {bonus_str} | Confidence: {p["confidence"]:.1%}
+                                        <strong>#{i}:</strong> <div class="prediction-numbers" style="display: inline;">{main_balls}</div>
+                                        {f' | Bonus: <div class="prediction-numbers" style="display: inline;">{bonus_balls}</div>' if bonus_balls else ''}
+                                        | Confidence: {p["confidence"]:.1%}
                                     </div>
                                     """, unsafe_allow_html=True)
                             except Exception as e:
                                 st.error(f"Error sharing prediction: {e}")
 
                 with prof_tab5:
-                    st.subheader("🏆 Accuracy Leaderboard")
+                    st.subheader("Accuracy leaderboard")
 
                     leaderboard_filter = st.selectbox(
                         "Filter by Lottery",
@@ -1371,11 +2929,11 @@ with tab6:
 
     # Community Pools section (visible to all)
     st.markdown("---")
-    st.subheader("🤝 Community Prediction Pools")
+    st.subheader("Community prediction pools")
 
     if social_manager:
         # Create pool form
-        with st.expander("📝 Create New Pool"):
+        with st.expander("Create new pool"):
             if st.session_state.current_user:
                 pool_name = st.text_input("Pool Name", key="pool_name")
                 pool_lottery = st.selectbox(
@@ -1432,7 +2990,7 @@ with tab6:
 
 # Tab 7: Data Health Dashboard (v2.4)
 with tab7:
-    st.markdown('<div class="sub-header">🏥 Historical Data Health Dashboard (v2.4)</div>', unsafe_allow_html=True)
+    st.subheader("Historical data health dashboard (v2.4)", icon=":material/health_and_safety:", anchor=False)
 
     st.markdown("""
     Monitor data freshness, detect gaps in draw schedules, identify anomalies, and schedule backfills
@@ -1454,7 +3012,7 @@ with tab7:
     with col2:
         auto_refresh = st.checkbox("Auto-refresh on load", value=True)
     with col3:
-        if st.button("🔄 Analyze Health", type="primary", width='stretch'):
+        if st.button("Analyze health", type="primary", width='stretch'):
             st.cache_data.clear()
             st.rerun()
 
@@ -1466,22 +3024,22 @@ with tab7:
             st.warning("No health data available. Click 'Analyze Health' to run analysis.")
         else:
             # Summary metrics
-            st.subheader("📊 Overall Health Summary")
+            st.subheader("Overall health summary")
             cols = st.columns(4)
             with cols[0]:
-                st.metric("Total Lotteries", len(health_data))
+                st.metric("Total lotteries", len(health_data))
             with cols[1]:
                 avg_completeness = np.mean([float(h['completeness_score'].rstrip('%'))/100 for h in health_data])
-                st.metric("Avg Completeness", f"{avg_completeness:.1%}")
+                st.metric("Avg completeness", f"{avg_completeness:.1%}")
             with cols[2]:
                 avg_freshness = np.mean([float(h['freshness_score'].rstrip('%'))/100 for h in health_data])
-                st.metric("Avg Freshness", f"{avg_freshness:.1%}")
+                st.metric("Avg freshness", f"{avg_freshness:.1%}")
             with cols[3]:
                 total_anomalies = sum(h['anomalies_count'] for h in health_data)
-                st.metric("Total Anomalies", total_anomalies)
+                st.metric("Total anomalies", total_anomalies)
 
             # Health table
-            st.subheader("📋 Detailed Health Report")
+            st.subheader("Detailed health report")
             health_df = pd.DataFrame(health_data)
             health_df['Lottery Name'] = health_df['lottery'].apply(lambda x: LOTTERY_CONFIGS.get(x, {}).get('name', x))
             display_cols = ['Lottery Name', 'total_draws', 'date_range', 'days_since_last_draw', 'expected_draws', 'missing_draws', 'completeness_score', 'freshness_score', 'gaps_count', 'anomalies_count']
@@ -1492,7 +3050,7 @@ with tab7:
             # Download button
             csv = health_df_display.to_csv(index=False)
             st.download_button(
-                "📥 Download Health Report (CSV)",
+                "Download health report (CSV)",
                 csv,
                 file_name="data_health_report.csv",
                 mime="text/csv"
@@ -1507,13 +3065,13 @@ with tab7:
         # Metrics
         cols = st.columns(5)
         with cols[0]:
-            st.metric("Total Draws", record.total_draws)
+            st.metric("Total draws", record.total_draws)
         with cols[1]:
-            st.metric("Days Since Last Draw", record.days_since_last_draw)
+            st.metric("Days since last draw", record.days_since_last_draw)
         with cols[2]:
-            st.metric("Expected Draws", record.expected_draws)
+            st.metric("Expected draws", record.expected_draws)
         with cols[3]:
-            st.metric("Missing Draws", record.missing_draws)
+            st.metric("Missing draws", record.missing_draws)
         with cols[4]:
             st.metric("Completeness", f"{record.completeness_score:.1%}")
 
@@ -1521,7 +3079,7 @@ with tab7:
         with cols2[0]:
             st.metric("Freshness", f"{record.freshness_score:.1%}")
         with cols2[1]:
-            st.metric("Gaps Detected", len(record.gaps))
+            st.metric("Gaps detected", len(record.gaps))
         with cols2[2]:
             st.metric("Anomalies", len(record.anomalies))
 
@@ -1529,12 +3087,12 @@ with tab7:
 
         # Gaps
         if record.gaps:
-            st.subheader("⚠️ Detected Gaps")
+            st.subheader("Detected gaps")
             gaps_df = pd.DataFrame(record.gaps)
             st.dataframe(gaps_df, width='stretch', hide_index=True)
 
             # Backfill button
-            if st.button("📥 Schedule Backfill for Missing Data", type="secondary"):
+            if st.button("Schedule backfill for missing data", type="secondary"):
                 result = dashboard.schedule_backfill(lottery_key)
                 st.success(f"Backfill scheduled: {result}")
         else:
@@ -1542,7 +3100,7 @@ with tab7:
 
         # Anomalies
         if record.anomalies:
-            st.subheader("🔍 Detected Anomalies")
+            st.subheader("Detected anomalies")
             anomalies_df = pd.DataFrame(record.anomalies)
             st.dataframe(anomalies_df, width='stretch', hide_index=True)
         else:
@@ -1550,7 +3108,7 @@ with tab7:
 
 # Tab 8: Cross-Lottery Correlation (v2.4)
 with tab8:
-    st.markdown('<div class="sub-header">🔗 Cross-Lottery Historical Correlation (v2.4)</div>', unsafe_allow_html=True)
+    st.subheader("Cross-lottery historical correlation (v2.4)", icon=":material/compare:", anchor=False)
 
     st.markdown("""
     Analyze historical correlations between different lottery games to discover patterns.
@@ -1563,23 +3121,23 @@ with tab8:
 
     # Mode selection
     mode = st.radio(
-        "Analysis Mode",
-        ["Compare Two Lotteries", "Find Correlated Lotteries"],
+        "Analysis mode",
+        ["Compare two lotteries", "Find correlated lotteries"],
         horizontal=True
     )
 
-    if mode == "Compare Two Lotteries":
+    if mode == "Compare two lotteries":
         col1, col2 = st.columns(2)
         with col1:
             lotto_a = st.selectbox(
-                "First Lottery",
+                "First lottery",
                 options=[f"{g.name} ({g.key})" for g in manager.list_games() if g.main_numbers > 0],
                 index=0,
                 key="corr_lotto_a"
             )
         with col2:
             lotto_b = st.selectbox(
-                "Second Lottery",
+                "Second lottery",
                 options=[f"{g.name} ({g.key})" for g in manager.list_games() if g.main_numbers > 0],
                 index=1,
                 key="corr_lotto_b"
@@ -1659,7 +3217,7 @@ with tab8:
 
         base_key = base_lotto.split("(")[-1].rstrip(")")
 
-        if st.button("🔍 Find Correlated Lotteries", type="primary", width='stretch'):
+        if st.button("Find correlated lotteries", type="primary", width='stretch'):
             with st.spinner(f"Finding lotteries correlated with {LOTTERY_CONFIGS[base_key]['name']}..."):
                 results = analyzer.find_correlated_lotteries(base_key, top_n)
 
