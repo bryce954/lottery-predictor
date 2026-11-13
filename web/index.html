@@ -510,6 +510,7 @@ function showTab(name, evt) {
   if (panel) {
     panel.style.display = "block";
     panel.classList.add("fade-in");
+    panel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
   if (evt && evt.target) evt.target.classList.add("active");
 }
