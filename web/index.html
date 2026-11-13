@@ -93,20 +93,34 @@
   .hero .cta { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--gold); color: #7a5a0a; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; font-family: Inter, sans-serif; }
   .hero .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 16px var(--gold-glow); }
 
-  /* ---------- Disclaimer ---------- */
-  .disclaimer {
+  /* ---------- Connection status ---------- */
+  .conn-status, .conn-error {
+    border-radius: var(--radius);
+    padding: 0.85rem 1.25rem;
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+    animation: fadeIn 0.3s ease both;
+  }
+  .conn-status { background: #f0fdf4; border: 1px solid #bbf7d0; }
+  .conn-error { background: #fef2f2; border: 1px solid #fecaca; }
+  .conn-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 2px rgba(5, 150, 69, 0.2); }
+  .conn-dot-bad { background: var(--warn); box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2); }
+  .conn-text { font-size: 0.9rem; color: var(--ink); font-weight: 500; }
+  .conn-error .conn-text { color: var(--ink); }
+  .conn-error code { background: #fee2e2; color: #991b1b; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.85rem; }
+  .conn-retry {
+    margin-left: auto;
     background: #fff;
     border: 1px solid var(--line);
-    border-left: 4px solid var(--warn);
-    border-radius: var(--radius);
-    padding: 1rem 1.25rem;
-    margin-bottom: 2rem;
+    border-radius: 8px;
+    padding: 0.35rem 0.9rem;
     font-size: 0.85rem;
-    color: var(--muted);
-    box-shadow: var(--shadow-sm);
-    display: flex; align-items: flex-start; gap: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--ink);
   }
-  .disclaimer b { color: var(--ink); }
+  .conn-retry:hover { border-color: var(--accent); background: var(--accent-glow); }
 
   /* ---------- Tabs ---------- */
   .tabs {
@@ -114,6 +128,7 @@
     gap: 0;
     border-bottom: 1px solid var(--line);
     margin-bottom: 2rem;
+    overflow-x: auto;
   }
   .tabs button {
     background: transparent;
@@ -126,6 +141,7 @@
     cursor: pointer;
     transition: all 0.2s;
     font-family: Inter, sans-serif;
+    white-space: nowrap;
   }
   .tabs button:hover { color: var(--ink); background: rgba(45, 58, 140, 0.04); }
   .tabs button.active {
@@ -186,6 +202,19 @@
   button.quick { background: var(--gold); color: #7a5a0a; }
   button.quick:hover { background: #c4961e; color: #7a5a0a; transform: translateY(-1px); box-shadow: 0 6px 12px var(--gold-glow); }
 
+  /* ---------- Jackpot ---------- */
+  .jackpot {
+    background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    color: #fff;
+    margin-bottom: 1rem;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+  .jackpot .amount { font-family: "Space Grotesk", sans-serif; font-size: 2rem; font-weight: 800; }
+  .jackpot .label { font-size: 0.85rem; opacity: 0.9; }
+
   /* ---------- Results ---------- */
   .results { margin-top: 1.5rem; display: grid; gap: 1rem; }
   .ticket {
@@ -236,6 +265,12 @@
   tr:last-child td { border-bottom: none; }
   tr:hover td { background: rgba(45, 58, 140, 0.03); }
 
+  /* ---------- Compare ---------- */
+  .compare-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 768px) { .compare-row { grid-template-columns: 1fr; } }
+  .compare-card { border: 1px solid var(--line); border-radius: 12px; padding: 1rem; background: #fff; }
+  .compare-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 1rem; margin-bottom: 0.75rem; color: var(--ink); }
+
   /* ---------- Misc ---------- */
   .badge {
     display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.75rem; border-radius: 999px;
@@ -248,35 +283,6 @@
   canvas { max-height: 300px; }
   .fade-in { animation: fadeIn 0.4s ease both; }
   @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* ---------- Connection status ---------- */
-  .conn-status, .conn-error {
-    border-radius: var(--radius);
-    padding: 0.85rem 1.25rem;
-    margin-bottom: 1.5rem;
-    display: flex; align-items: center; gap: 0.75rem;
-    box-shadow: var(--shadow-sm);
-    animation: fadeIn 0.3s ease both;
-  }
-  .conn-status { background: #f0fdf4; border: 1px solid #bbf7d0; }
-  .conn-error { background: #fef2f2; border: 1px solid #fecaca; }
-  .conn-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--ok); box-shadow: 0 0 0 2px rgba(5, 150, 69, 0.2); }
-  .conn-dot-bad { background: var(--warn); box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.2); }
-  .conn-text { font-size: 0.9rem; color: var(--ink); font-weight: 500; }
-  .conn-error .conn-text { color: var(--ink); }
-  .conn-error code { background: #fee2e2; color: #991b1b; padding: 0.15rem 0.4rem; border-radius: 6px; font-size: 0.85rem; }
-  .conn-retry {
-    margin-left: auto;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 0.35rem 0.9rem;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    color: var(--ink);
-  }
-  .conn-retry:hover { border-color: var(--accent); background: var(--accent-glow); }
 </style>
 </head>
 <body>
@@ -295,14 +301,14 @@
     <div class="conn-ok">
       <span class="conn-dot"></span>
       <span class="conn-text">Checking API…</span>
-      <button class="conn-retry" onclick="loadLotteries()">Retry</button>
+      <button class="conn-retry" onclick="loadLotteries(event)">Retry</button>
     </div>
   </div>
   <div id="conn-error" class="conn-error" style="display:none;">
     <div class="conn-bad">
       <span class="conn-dot conn-dot-bad"></span>
       <span class="conn-text" id="conn-msg">Cannot reach API</span>
-      <button class="conn-retry" onclick="loadLotteries()">Retry</button>
+      <button class="conn-retry" onclick="loadLotteries(event)">Retry</button>
     </div>
   </div>
 
@@ -319,6 +325,8 @@
   <div class="tabs">
     <button class="active" onclick="showTab('predict', event)">Predict</button>
     <button onclick="showTab('analyze', event)">Analyze</button>
+    <button onclick="showTab('visualize', event)">Visualize</button>
+    <button onclick="showTab('compare', event)">Compare</button>
     <button onclick="showTab('history', event)">History</button>
   </div>
 
@@ -326,10 +334,14 @@
   <section id="tab-predict" class="tab-panel fade-in">
     <div class="panel">
       <h2>🎲 Generate predictions</h2>
+      <div id="pl-jackpot" class="jackpot" style="display:none;">
+        <div class="label">Estimated jackpot</div>
+        <div class="amount" id="pl-jackpot-amount">—</div>
+      </div>
       <div class="row">
         <div class="control-group">
           <label>Lottery</label>
-          <select id="pl-lottery"></select>
+          <select id="pl-lottery" onchange="loadJackpot(event)"></select>
         </div>
         <div class="control-group">
           <label>Method</label>
@@ -352,6 +364,7 @@
         </div>
       </div>
       <div id="pl-results" class="results"></div>
+      <div id="pl-stats" class="metrics" style="margin-top:1.5rem; display:none;"></div>
     </div>
   </section>
 
@@ -390,6 +403,63 @@
     </div>
   </section>
 
+  <!-- Visualize tab -->
+  <section id="tab-visualize" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>📈 Visualizations</h2>
+      <div class="row">
+        <div class="control-group">
+          <label>Lottery</label>
+          <select id="vl-lottery"></select>
+        </div>
+        <div class="control-group">
+          <label>Draws to analyze</label>
+          <input type="number" id="vl-count" min="50" max="2000" value="200">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button class="primary" onclick="doVisualize(event)">Generate charts</button>
+        </div>
+      </div>
+      <div id="vl-metrics" class="metrics" style="margin-bottom:1rem;"></div>
+      <div id="vl-charts" style="display:grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+        <div class="panel" style="padding:1rem;">
+          <h2 style="margin-bottom:1rem;">Number Frequency</h2>
+          <canvas id="vl-freq-chart"></canvas>
+        </div>
+        <div class="panel" style="padding:1rem;">
+          <h2 style="margin-bottom:1rem;">Sum Distribution</h2>
+          <canvas id="vl-sum-chart"></canvas>
+        </div>
+        <div class="panel" style="padding:1rem; grid-column: 1 / -1;">
+          <h2 style="margin-bottom:1rem;">Top Number Pairs</h2>
+          <table id="vl-pairs"><thead><tr><th>Pair</th><th>Count</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Compare tab -->
+  <section id="tab-compare" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>⚔️ Compare methods</h2>
+      <div class="row">
+        <div class="control-group">
+          <label>Lottery</label>
+          <select id="cl-lottery"></select>
+        </div>
+        <div class="control-group">
+          <label>Predictions per method</label>
+          <input type="number" id="cl-count" min="1" max="5" value="3">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button class="primary" onclick="doCompare(event)">Compare methods</button>
+        </div>
+      </div>
+      <div id="cl-results" class="compare-row"></div>
+      <div id="cl-summary" style="margin-top:1.5rem;"></div>
+    </div>
+  </section>
+
   <!-- History tab -->
   <section id="tab-history" class="tab-panel" style="display:none;">
     <div class="panel">
@@ -414,23 +484,20 @@
 
 <script>
 const API = "http://127.0.0.1:8000";
-let chartInstance = null;
+let chartInstances = {};
 
-function setConnected(ok) {
-  document.getElementById("conn-status").style.display = ok ? "flex" : "none";
-  document.getElementById("conn-error").style.display = ok ? "none" : "flex";
-}
-
-async function apiRequest(path, opts = {}) {
-  const res = await fetch(API + path, {
-    headers: {"Content-Type": "application/json", ...opts.headers},
-    ...opts,
-  });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`HTTP ${res.status}${body ? ": " + body : ""}`);
+function setConnected(ok, msg) {
+  const s = document.getElementById("conn-status");
+  const e = document.getElementById("conn-error");
+  if (ok) {
+    s.style.display = "flex";
+    e.style.display = "none";
+    document.querySelector("#conn-status .conn-text").textContent = msg || "Connected to API";
+  } else {
+    s.style.display = "none";
+    e.style.display = "flex";
+    document.getElementById("conn-msg").textContent = msg || "Cannot reach API";
   }
-  return res.json();
 }
 
 function showTab(name, evt) {
@@ -447,7 +514,19 @@ function showTab(name, evt) {
   if (evt && evt.target) evt.target.classList.add("active");
 }
 
-async function loadLotteries() {
+async function apiRequest(path, opts = {}) {
+  const res = await fetch(API + path, {
+    headers: {"Content-Type": "application/json", ...opts.headers},
+    ...opts,
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`HTTP ${res.status}${body ? ": " + body : ""}`);
+  }
+  return res.json();
+}
+
+async function loadLotteries(evt) {
   try {
     const lotteries = await apiRequest("/lotteries");
     setConnected(true);
@@ -455,10 +534,25 @@ async function loadLotteries() {
       const el = document.getElementById(id);
       el.innerHTML = lotteries.map(l => `<option value="${l.key}">${l.name}</option>`).join("");
     };
-    ["pl-lottery", "al-lottery", "hl-lottery"].forEach(sel);
+    ["pl-lottery", "al-lottery", "vl-lottery", "cl-lottery", "hl-lottery"].forEach(sel);
+    loadJackpot(evt);
   } catch (e) {
-    setConnected(false);
+    setConnected(false, e.message);
     console.error("Failed to load lotteries:", e);
+  }
+}
+
+async function loadJackpot(evt) {
+  const key = document.getElementById("pl-lottery").value;
+  const box = document.getElementById("pl-jackpot");
+  const amt = document.getElementById("pl-jackpot-amount");
+  try {
+    const info = await apiRequest("/lotteries/" + key);
+    // LOTTERY_CONFIGS jackpot isn't in API; show a note instead
+    box.style.display = "block";
+    amt.textContent = "See lottery site";
+  } catch (e) {
+    box.style.display = "none";
   }
 }
 
@@ -469,20 +563,19 @@ function formatNums(nums, bonus) {
 async function doPredict(evt) {
   const btn = evt.target;
   const results = document.getElementById("pl-results");
+  const stats = document.getElementById("pl-stats");
   results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Generating predictions…</div></div>`;
+  stats.style.display = "none";
   btn.disabled = true;
   try {
-    const resp = await fetch(API + "/predict", {
+    const data = await apiRequest("/predict", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         lottery: document.getElementById("pl-lottery").value,
         method: document.getElementById("pl-method").value,
         count: parseInt(document.getElementById("pl-count").value) || 3,
       }),
     });
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
     results.innerHTML = data.predictions.map((p, i) => `
       <div class="ticket fade-in">
         <div class="main">
@@ -501,6 +594,19 @@ async function doPredict(evt) {
         </div>
       </div>
     `).join("");
+    // Statistics
+    const allNums = data.predictions.flatMap(p => p.main_numbers);
+    const avgSum = (allNums.reduce((a,b)=>a+b,0) / allNums.length).toFixed(1);
+    const evens = allNums.filter(n => n % 2 === 0).length;
+    const odds = allNums.length - evens;
+    const avgConf = (data.predictions.reduce((a,p)=>a+p.confidence,0) / data.predictions.length * 100).toFixed(0);
+    stats.style.display = "grid";
+    stats.innerHTML = `
+      <div class="metric"><div class="v">${avgSum}</div><div class="k">Avg sum</div></div>
+      <div class="metric"><div class="v">${evens}/${odds}</div><div class="k">Even/odd</div></div>
+      <div class="metric"><div class="v">${avgConf}%</div><div class="k">Avg confidence</div></div>
+      <div class="metric"><div class="v">${data.predictions.length}</div><div class="k">Predictions</div></div>
+    `;
   } catch (e) {
     results.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to generate predictions: ${e.message}</div>`;
   } finally {
@@ -514,17 +620,14 @@ async function doQuickPick(evt) {
   results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Quick pick…</div></div>`;
   btn.disabled = true;
   try {
-    const resp = await fetch(API + "/predict", {
+    const data = await apiRequest("/predict", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         lottery: document.getElementById("pl-lottery").value,
         method: "statistical",
         count: 1,
       }),
     });
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
     results.innerHTML = `<div class="ticket fade-in" style="background:#fef7e0;border-color:#e3d8a4;">
       <div class="main">
         <div class="label">Quick pick</div>
@@ -554,16 +657,13 @@ async function doAnalyze(evt) {
   document.getElementById("al-hot").querySelector("tbody").innerHTML = "";
   document.getElementById("al-cold").querySelector("tbody").innerHTML = "";
   try {
-    const resp = await fetch(API + "/analyze", {
+    const data = await apiRequest("/analyze", {
       method: "POST",
-      headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
         lottery: document.getElementById("al-lottery").value,
         last_n: parseInt(document.getElementById("al-count").value) || 200,
       }),
     });
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
     results.innerHTML = `
       <div class="metric"><div class="v">${data.total_draws}</div><div class="k">Total draws</div></div>
       <div class="metric"><div class="v">${data.date_range.start} → ${data.date_range.end}</div><div class="k">Date range</div></div>
@@ -574,38 +674,97 @@ async function doAnalyze(evt) {
     data.hot_numbers.forEach(h => { hotBody.innerHTML += `<tr><td>${h.number}</td><td>${h.frequency}</td></tr>`; });
     const coldBody = document.getElementById("al-cold").querySelector("tbody");
     data.cold_numbers.forEach(c => { coldBody.innerHTML += `<tr><td>${c.number}</td><td>${c.frequency}</td></tr>`; });
-    drawChart(data);
+    drawChart("al-chart", data.hot_numbers.slice(0, 12).map(h=>h.number), data.hot_numbers.slice(0, 12).map(h=>h.frequency), "Most frequent numbers");
   } catch (e) {
     results.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to analyze: ${e.message}</div>`;
   }
 }
 
-function drawChart(data) {
-  const ctx = document.getElementById("al-chart").getContext("2d");
-  if (chartInstance) chartInstance.destroy();
-  const labels = [];
-  const values = [];
-  data.hot_numbers.slice(0, 12).forEach(h => { labels.push(h.number); values.push(h.frequency); });
-  chartInstance = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: labels,
-      datasets: [{
-        label: "Frequency",
-        data: values,
-        backgroundColor: "rgba(45, 58, 140, 0.7)",
-        borderColor: "rgba(45, 58, 140, 1)",
-        borderWidth: 1,
-        borderRadius: 6,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false }, title: { display: true, text: "Most frequent numbers", color: "#64748b", font: { size: 13 } } },
-      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "#f1f5f9" } }, x: { grid: { display: false } } }
+async function doVisualize(evt) {
+  const metrics = document.getElementById("vl-metrics");
+  const charts = document.getElementById("vl-charts");
+  metrics.innerHTML = `<div class="empty"><div class="spinner"></div><div style="margin-top:0.75rem;">Loading…</div></div>`;
+  charts.style.display = "none";
+  try {
+    const data = await apiRequest("/analyze", {
+      method: "POST",
+      body: JSON.stringify({
+        lottery: document.getElementById("vl-lottery").value,
+        last_n: parseInt(document.getElementById("vl-count").value) || 200,
+      }),
+    });
+    charts.style.display = "grid";
+    metrics.innerHTML = `
+      <div class="metric"><div class="v">${data.total_draws}</div><div class="k">Total draws</div></div>
+      <div class="metric"><div class="v">${data.date_range.start} → ${data.date_range.end}</div><div class="k">Date range</div></div>
+      <div class="metric"><div class="v">${(data.sum_statistics?.mean ?? 0).toFixed(1)}</div><div class="k">Avg sum</div></div>
+      <div class="metric"><div class="v">${(data.sum_statistics?.std ?? 0).toFixed(1)}</div><div class="k">Sum std dev</div></div>
+    `;
+    // Frequency chart
+    drawChart("vl-freq-chart", data.hot_numbers.slice(0, 15).map(h=>h.number), data.hot_numbers.slice(0, 15).map(h=>h.frequency), "Number frequency");
+    // Sum distribution placeholder (bar of sum stats)
+    const ss = data.sum_statistics || {};
+    drawChart("vl-sum-chart", ["Min","Mean","Median","Max"], [ss.min??0, ss.mean??0, ss.median??0, ss.max??0], "Sum statistics");
+    // Pairs table
+    const pairsBody = document.getElementById("vl-pairs").querySelector("tbody");
+    pairsBody.innerHTML = "";
+    (data.top_pairs || []).forEach(p => {
+      const [n1, n2] = p.pair.split("-");
+      pairsBody.innerHTML += `<tr><td>${n1} - ${n2}</td><td>${p.count}</td></tr>`;
+    });
+  } catch (e) {
+    metrics.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to visualize: ${e.message}</div>`;
+  }
+}
+
+async function doCompare(evt) {
+  const results = document.getElementById("cl-results");
+  const summary = document.getElementById("cl-summary");
+  results.innerHTML = `<div class="empty"><div class="spinner"></div><div style="margin-top:0.75rem;">Comparing…</div></div>`;
+  summary.innerHTML = "";
+  try {
+    const lottery = document.getElementById("cl-lottery").value;
+    const count = parseInt(document.getElementById("cl-count").value) || 3;
+    const methods = ["ensemble", "statistical", "frequency", "cold", "pairs", "ml"];
+    const allResults = {};
+    for (const m of methods) {
+      const data = await apiRequest("/predict", {
+        method: "POST",
+        body: JSON.stringify({ lottery, method: m, count }),
+      });
+      allResults[m] = data.predictions;
     }
-  });
+    results.innerHTML = methods.map(m => `
+      <div class="compare-card fade-in">
+        <h3>${m.charAt(0).toUpperCase() + m.slice(1)}</h3>
+        <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+          ${allResults[m].map((p, i) => `
+            <div style="display:flex; flex-direction:column; align-items:center; gap:0.25rem;">
+              <div style="font-size:0.7rem; color:var(--muted);">#${i+1}</div>
+              <div class="balls" style="justify-content:center;">${formatNums(p.main_numbers)}</div>
+              ${p.bonus_numbers && p.bonus_numbers.length ? `<div class="ball bonus" style="width:28px;height:28px;font-size:0.85rem;">${p.bonus_numbers[0]}</div>` : ""}
+              <div style="font-size:0.7rem; color:var(--accent); font-weight:700;">${(p.confidence*100).toFixed(0)}%</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `).join("");
+    // Summary
+    const summaryRows = methods.map(m => {
+      const preds = allResults[m];
+      const avgConf = (preds.reduce((a,p)=>a+p.confidence,0)/preds.length*100).toFixed(0);
+      const uniq = new Set(preds.map(p=>JSON.stringify(p.main_numbers))).size;
+      return `<tr><td>${m}</td><td>${avgConf}%</td><td>${uniq}</td></tr>`;
+    }).join("");
+    summary.innerHTML = `
+      <table style="margin-top:1rem;">
+        <thead><tr><th>Method</th><th>Avg confidence</th><th>Unique sets</th></tr></thead>
+        <tbody>${summaryRows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    results.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to compare: ${e.message}</div>`;
+  }
 }
 
 async function doHistory(evt) {
@@ -613,9 +772,7 @@ async function doHistory(evt) {
   results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Loading history…</div></div>`;
   try {
     const count = parseInt(document.getElementById("hl-count").value) || 15;
-    const resp = await fetch(API + "/history/" + document.getElementById("hl-lottery").value + `?count=${count}`);
-    if (!resp.ok) throw new Error(await resp.text());
-    const data = await resp.json();
+    const data = await apiRequest("/history/" + document.getElementById("hl-lottery").value + `?count=${count}`);
     results.innerHTML = `
       <table>
         <thead><tr><th>Date</th><th>Draw #</th><th>Main numbers</th><th>Bonus</th><th>Jackpot</th></tr></thead>
@@ -636,16 +793,36 @@ async function doHistory(evt) {
   }
 }
 
-loadLotteries();
+function drawChart(canvasId, labels, values, title) {
+  const ctx = document.getElementById(canvasId).getContext("2d");
+  if (chartInstances[canvasId]) chartInstances[canvasId].destroy();
+  chartInstances[canvasId] = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: title,
+        data: values,
+        backgroundColor: "rgba(45, 58, 140, 0.7)",
+        borderColor: "rgba(45, 58, 140, 1)",
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: { display: true, text: title, color: "#64748b", font: { size: 13 } } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "#f1f5f9" } }, x: { grid: { display: false } } }
+    }
+  });
+}
 
-// Global error handler for unhandled JS errors
 window.addEventListener("error", (e) => {
   console.error("JS error:", e.error || e.message);
-  const results = document.getElementById("pl-results");
-  if (results && !results.querySelector(".conn-error")) {
-    results.innerHTML = `<div class="empty" style="color:var(--warn);">Page error: ${(e.error || e.message || "unknown").toString().slice(0, 120)}</div>`;
-  }
 });
+
+loadLotteries();
 </script>
 </body>
 </html>
