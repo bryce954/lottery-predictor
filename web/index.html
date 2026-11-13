@@ -309,7 +309,7 @@
   <section class="hero fade-in">
     <h2>Pick smarter numbers.</h2>
     <p>AI-powered lottery predictions using historical draw data, frequency analysis, and ensemble models. Supports Powerball, Mega Millions, Florida Lotto, and 40+ more games.</p>
-    <button class="cta" onclick="showTab('predict')">Start predicting <span>▸</span></button>
+    <button class="cta" onclick="showTab('predict', event)">Start predicting <span>▸</span></button>
   </section>
 
   <div class="disclaimer">
@@ -317,9 +317,9 @@
   </div>
 
   <div class="tabs">
-    <button class="active" onclick="showTab('predict')">Predict</button>
-    <button onclick="showTab('analyze')">Analyze</button>
-    <button onclick="showTab('history')">History</button>
+    <button class="active" onclick="showTab('predict', event)">Predict</button>
+    <button onclick="showTab('analyze', event)">Analyze</button>
+    <button onclick="showTab('history', event)">History</button>
   </div>
 
   <!-- Predict tab -->
@@ -347,8 +347,8 @@
           <input type="number" id="pl-count" min="1" max="10" value="3">
         </div>
         <div class="button-group">
-          <button class="primary" onclick="doPredict()">Generate predictions</button>
-          <button class="primary quick" onclick="doQuickPick()">Quick pick</button>
+          <button class="primary" onclick="doPredict(event)">Generate predictions</button>
+          <button class="primary quick" onclick="doQuickPick(event)">Quick pick</button>
         </div>
       </div>
       <div id="pl-results" class="results"></div>
@@ -369,7 +369,7 @@
           <input type="number" id="al-count" min="50" max="2000" value="200">
         </div>
         <div style="grid-column: 1 / -1;">
-          <button class="primary" onclick="doAnalyze()">Analyze</button>
+          <button class="primary" onclick="doAnalyze(event)">Analyze</button>
         </div>
       </div>
       <div id="al-metrics" class="metrics"></div>
@@ -404,7 +404,7 @@
           <input type="number" id="hl-count" min="5" max="100" value="15">
         </div>
         <div style="grid-column: 1 / -1;">
-          <button class="primary" onclick="doHistory()">Load history</button>
+          <button class="primary" onclick="doHistory(event)">Load history</button>
         </div>
       </div>
       <div id="hl-results" class="results"></div>
@@ -433,16 +433,18 @@ async function apiRequest(path, opts = {}) {
   return res.json();
 }
 
-function showTab(name) {
+function showTab(name, evt) {
   document.querySelectorAll(".tab-panel").forEach(el => {
     el.style.display = "none";
     el.classList.remove("fade-in");
   });
   document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
   const panel = document.getElementById("tab-" + name);
-  panel.style.display = "block";
-  panel.classList.add("fade-in");
-  event.target.classList.add("active");
+  if (panel) {
+    panel.style.display = "block";
+    panel.classList.add("fade-in");
+  }
+  if (evt && evt.target) evt.target.classList.add("active");
 }
 
 async function loadLotteries() {
@@ -464,8 +466,8 @@ function formatNums(nums, bonus) {
   return nums.map(n => `<div class="ball ${bonus ? 'bonus' : ''}">${n}</div>`).join("");
 }
 
-async function doPredict() {
-  const btn = event.target;
+async function doPredict(evt) {
+  const btn = evt.target;
   const results = document.getElementById("pl-results");
   results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Generating predictions…</div></div>`;
   btn.disabled = true;
@@ -506,8 +508,8 @@ async function doPredict() {
   }
 }
 
-async function doQuickPick() {
-  const btn = event.target;
+async function doQuickPick(evt) {
+  const btn = evt.target;
   const results = document.getElementById("pl-results");
   results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Quick pick…</div></div>`;
   btn.disabled = true;
@@ -546,7 +548,7 @@ async function doQuickPick() {
   }
 }
 
-async function doAnalyze() {
+async function doAnalyze(evt) {
   const results = document.getElementById("al-metrics");
   results.innerHTML = `<div class="empty"><div class="spinner"></div><div style="margin-top:0.75rem;">Analyzing…</div></div>`;
   document.getElementById("al-hot").querySelector("tbody").innerHTML = "";
@@ -606,7 +608,7 @@ function drawChart(data) {
   });
 }
 
-async function doHistory() {
+async function doHistory(evt) {
   const results = document.getElementById("hl-results");
   results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Loading history…</div></div>`;
   try {
@@ -635,6 +637,15 @@ async function doHistory() {
 }
 
 loadLotteries();
+
+// Global error handler for unhandled JS errors
+window.addEventListener("error", (e) => {
+  console.error("JS error:", e.error || e.message);
+  const results = document.getElementById("pl-results");
+  if (results && !results.querySelector(".conn-error")) {
+    results.innerHTML = `<div class="empty" style="color:var(--warn);">Page error: ${(e.error || e.message || "unknown").toString().slice(0, 120)}</div>`;
+  }
+});
 </script>
 </body>
 </html>
