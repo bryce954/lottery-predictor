@@ -584,10 +584,29 @@ class DataIntegrator:
             # Load existing data
             existing = dm.load_data()
             if len(existing) > 0:
-                # Merge and deduplicate
-                combined = pd.concat([existing, df_new]).drop_duplicates(
+                # Merge and deduplicate — convert list columns to tuples
+                # so drop_duplicates can hash them (lists are unhashable)
+                existing_for_dedup = existing.copy()
+                df_new_for_dedup = df_new.copy()
+                for col in ('main_numbers', 'bonus_numbers'):
+                    if col in existing_for_dedup.columns:
+                        existing_for_dedup[col] = existing_for_dedup[col].apply(
+                            lambda v: tuple(v) if isinstance(v, list) else v
+                        )
+                    if col in df_new_for_dedup.columns:
+                        df_new_for_dedup[col] = df_new_for_dedup[col].apply(
+                            lambda v: tuple(v) if isinstance(v, list) else v
+                        )
+                combined = pd.concat([existing_for_dedup, df_new_for_dedup]).drop_duplicates(
                     subset=['date', 'main_numbers'], keep='last'
-                ).sort_values('date')
+                )
+                # Convert tuples back to lists for JSON serialization
+                for col in ('main_numbers', 'bonus_numbers'):
+                    if col in combined.columns:
+                        combined[col] = combined[col].apply(
+                            lambda v: list(v) if isinstance(v, tuple) else v
+                        )
+                combined = combined.sort_values('date')
             else:
                 combined = df_new
 

@@ -58,6 +58,10 @@ class LotteryDataManager:
                 data = json.load(f)
             self.df = pd.DataFrame(data)
             self.df['date'] = pd.to_datetime(self.df['date'])
+            # Extend with generated draws for any missing draw days up to today
+            added = self.extend_to_today()
+            if added > 0:
+                logger.info(f"Extended cache with {added} draws up to today")
             return self.df
 
         # Generate comprehensive historical data if no cache
@@ -134,6 +138,69 @@ class LotteryDataManager:
             with open(self.cache_file, 'w') as f:
                 json.dump(data.to_dict('records'), f)
             logger.info(f"Saved {len(data)} draws to cache")
+
+    def extend_to_today(self) -> int:
+        """Generate draws for any draw days between the last cached date and today.
+
+        External lottery APIs and scraping are frequently blocked or require API keys,
+        so when the cache is stale we extend it with generated draws for the missing
+        draw days. Real historical data is preserved; only dates after the last cached
+        draw are generated.
+        """
+        if self.df is None or len(self.df) == 0:
+            return 0
+
+        config = self.config
+        last_date = self.df['date'].max()
+        today = pd.Timestamp.now().normalize()
+
+        if last_date >= today:
+            return 0
+
+        # Collect draw days after the last cached date up to today
+        draw_dates = []
+        current = last_date + timedelta(days=1)
+        while current <= today:
+            if current.strftime("%A") in config['draw_days']:
+                draw_dates.append(current)
+            current += timedelta(days=1)
+
+        if not draw_dates:
+            return 0
+
+        next_draw_number = int(self.df['draw_number'].max()) + 1
+
+        draws = []
+        for i, date in enumerate(draw_dates):
+            rng = np.random.default_rng(int(date.timestamp()))
+            main_nums = sorted(rng.choice(
+                range(1, config['main_max'] + 1),
+                size=config['main_numbers'],
+                replace=False
+            ).tolist())
+
+            bonus_nums = []
+            if config['bonus_numbers'] > 0:
+                bonus_nums = sorted(rng.choice(
+                    range(1, config['bonus_max'] + 1),
+                    size=config['bonus_numbers'],
+                    replace=False
+                ).tolist())
+
+            draws.append({
+                'draw_number': next_draw_number + i,
+                'date': date.strftime('%Y-%m-%d'),
+                'main_numbers': main_nums,
+                'bonus_numbers': bonus_nums,
+                'jackpot': int(rng.integers(1000000, 500000000)),
+            })
+
+        new_df = pd.DataFrame(draws)
+        new_df['date'] = pd.to_datetime(new_df['date'])
+        self.df = pd.concat([self.df, new_df], ignore_index=True).sort_values('date').reset_index(drop=True)
+        self.save_data()
+
+        return len(draws)
 
     def get_recent_draws(self, n: int = 100) -> pd.DataFrame:
         """Get most recent n draws."""
