@@ -154,6 +154,33 @@ class OddsRequest(BaseModel):
     ticket_cost: float = 2.0
 
 
+# Syndicate models
+class SyndicateMemberRequest(BaseModel):
+    name: str
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    discord_id: Optional[str] = None
+    share_percentage: float = 0.0
+
+
+class SyndicateCreateRequest(BaseModel):
+    name: str
+    lottery_type: str
+    members: List[SyndicateMemberRequest]
+    budget: float
+    ticket_cost: float = 2.0
+
+
+class SyndicateResponse(BaseModel):
+    name: str
+    lottery_type: str
+    draw_date: Optional[str]
+    total_cost: float
+    total_shares: float
+    members: List[Dict[str, Any]]
+    tickets: List[Dict[str, Any]]
+
+
 class UserProfileResponse(BaseModel):
     username: str
     email: Optional[str]
@@ -235,7 +262,7 @@ def create_app() -> FastAPI:
     # Import here to avoid circular imports
     from .data import get_data_manager, LOTTERY_CONFIGS
     from .models import get_predictor, StatisticalPredictor, MLModelPredictor, EnsemblePredictor
-    from .advanced import UserProfileManager
+    from .advanced import UserProfileManager, SyndicateManager, SyndicateMember
     from .validation import OddsCalculator
 
     # In-memory cache for models
@@ -243,6 +270,9 @@ def create_app() -> FastAPI:
 
     # User profile manager
     user_manager = UserProfileManager()
+
+    # Syndicate manager
+    syndicate_manager = SyndicateManager()
 
     @app.get("/health", response_model=HealthResponse)
     async def health_check():
@@ -690,6 +720,147 @@ def create_app() -> FastAPI:
             )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # Syndicate Endpoints
+    # =========================================================================
+
+    @app.post("/syndicates", response_model=SyndicateResponse)
+    async def create_syndicate(request: SyndicateCreateRequest):
+        """Create a new lottery syndicate with group play."""
+        if request.lottery_type not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{request.lottery_type}'")
+
+        if not request.members:
+            raise HTTPException(status_code=400, detail="At least one member required")
+
+        if request.budget <= 0:
+            raise HTTPException(status_code=400, detail="Budget must be positive")
+
+        try:
+            member_list = [
+                SyndicateMember(
+                    name=m.name,
+                    email=m.email,
+                    phone=m.phone,
+                    discord_id=m.discord_id,
+                    share_percentage=m.share_percentage,
+                )
+                for m in request.members
+            ]
+
+            syndicate = syndicate_manager.create_syndicate(
+                name=request.name,
+                lottery_type=request.lottery_type,
+                members=member_list,
+                budget=request.budget,
+                ticket_cost=request.ticket_cost,
+            )
+
+            return SyndicateResponse(
+                name=syndicate.name,
+                lottery_type=syndicate.lottery_type,
+                draw_date=syndicate.draw_date,
+                total_cost=_to_py(syndicate.total_cost),
+                total_shares=_to_py(syndicate.total_shares),
+                members=[
+                    {
+                        "name": m.name,
+                        "email": m.email,
+                        "phone": m.phone,
+                        "discord_id": m.discord_id,
+                        "share_percentage": _to_py(m.share_percentage),
+                        "contribution": _to_py(m.contribution),
+                    }
+                    for m in syndicate.members
+                ],
+                tickets=[
+                    {
+                        "main_numbers": _to_py(t.main_numbers),
+                        "bonus_numbers": _to_py(t.bonus_numbers),
+                        "method": t.method,
+                        "confidence": _to_py(t.confidence),
+                        "cost": _to_py(t.cost),
+                    }
+                    for t in syndicate.tickets
+                ],
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/syndicates")
+    async def list_syndicates():
+        """List all syndicates."""
+        return [
+            {
+                "name": s.name,
+                "lottery_type": s.lottery_type,
+                "total_cost": _to_py(s.total_cost),
+                "num_members": len(s.members),
+                "num_tickets": len(s.tickets),
+            }
+            for s in syndicate_manager.syndicates.values()
+        ]
+
+    @app.get("/syndicates/{name}", response_model=SyndicateResponse)
+    async def get_syndicate(name: str):
+        """Get syndicate details."""
+        syndicate = syndicate_manager.get_syndicate(name)
+        if not syndicate:
+            raise HTTPException(status_code=404, detail=f"Syndicate '{name}' not found")
+
+        return SyndicateResponse(
+            name=syndicate.name,
+            lottery_type=syndicate.lottery_type,
+            draw_date=syndicate.draw_date,
+            total_cost=_to_py(syndicate.total_cost),
+            total_shares=_to_py(syndicate.total_shares),
+            members=[
+                {
+                    "name": m.name,
+                    "email": m.email,
+                    "phone": m.phone,
+                    "discord_id": m.discord_id,
+                    "share_percentage": _to_py(m.share_percentage),
+                    "contribution": _to_py(m.contribution),
+                }
+                for m in syndicate.members
+            ],
+            tickets=[
+                {
+                    "main_numbers": _to_py(t.main_numbers),
+                    "bonus_numbers": _to_py(t.bonus_numbers),
+                    "method": t.method,
+                    "confidence": _to_py(t.confidence),
+                    "cost": _to_py(t.cost),
+                }
+                for t in syndicate.tickets
+            ],
+        )
+
+    @app.delete("/syndicates/{name}")
+    async def delete_syndicate(name: str):
+        """Delete a syndicate."""
+        if name not in syndicate_manager.syndicates:
+            raise HTTPException(status_code=404, detail=f"Syndicate '{name}' not found")
+        del syndicate_manager.syndicates[name]
+        return {"message": f"Syndicate '{name}' deleted"}
+
+    @app.post("/syndicates/{name}/winnings")
+    async def distribute_winnings(name: str, winnings: float):
+        """Distribute winnings among syndicate members."""
+        if winnings < 0:
+            raise HTTPException(status_code=400, detail="Winnings must be positive")
+
+        distributions = syndicate_manager.distribute_winnings(name, winnings)
+        if not distributions:
+            raise HTTPException(status_code=404, detail=f"Syndicate '{name}' not found")
+
+        return {
+            "syndicate": name,
+            "total_winnings": winnings,
+            "distributions": distributions,
+        }
 
     return app
 

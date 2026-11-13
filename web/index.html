@@ -295,6 +295,36 @@
   .odds-table tr:hover td { background: rgba(45, 58, 140, 0.03); }
   .odds-table .jackpot-row { background: rgba(45, 58, 140, 0.05); font-weight: 600; }
 
+  /* ---------- Syndicate ---------- */
+  .syndicate-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+  }
+  .syndicate-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.25rem; margin-bottom: 1rem; color: var(--ink); }
+  .syndicate-form { display: grid; grid-template-columns: 1fr 1fr auto; gap: 1rem; align-items: end; }
+  @media (max-width: 768px) { .syndicate-form { grid-template-columns: 1fr; } }
+  .member-row { display: grid; grid-template-columns: 1fr 1fr auto auto; gap: 0.5rem; align-items: end; margin-bottom: 0.5rem; }
+  @media (max-width: 768px) { .member-row { grid-template-columns: 1fr 1fr; } }
+  .remove-member { background: #fee2e2; color: #991b1b; border: none; border-radius: 8px; padding: 0.5rem; cursor: pointer; font-size: 0.85rem; }
+  .remove-member:hover { background: #fecaca; }
+  .add-member { background: var(--gold); color: #7a5a0a; border: none; border-radius: 8px; padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; margin-top: 0.5rem; }
+  .add-member:hover { background: #c4961e; }
+
+  .syndicate-result { background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 1.5rem; margin-top: 1.5rem; }
+  .syndicate-result h4 { font-family: "Space Grotesk", sans-serif; font-size: 1.1rem; margin-bottom: 1rem; color: var(--ink); }
+  .syndicate-members { display: flex; flex-direction: column; gap: 0.5rem; }
+  .syndicate-member { display: flex; justify-content: space-between; padding: 0.5rem; background: #fff; border-radius: 8px; border: 1px solid var(--line); }
+  .syndicate-tickets { margin-top: 1rem; }
+  .syndicate-tickets .balls { margin-top: 0.5rem; flex-wrap: wrap; }
+  .syndicate-stats { display: flex; gap: 1rem; margin-top: 1rem; }
+  .syndicate-stat { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 1rem; text-align: center; flex: 1; }
+  .syndicate-stat .v { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+  .syndicate-stat .k { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
   /* ---------- Profile ---------- */
   .profile-card {
     background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
@@ -405,6 +435,7 @@
     <button onclick="showTab('history', event)">History</button>
     <button onclick="showTab('profile', event)">Profile</button>
     <button onclick="showTab('odds', event)">Odds</button>
+    <button onclick="showTab('syndicate', event)">Syndicates</button>
   </div>
 
   <!-- Predict tab -->
@@ -669,6 +700,67 @@
       </div>
     </div>
   </section>
+
+  <!-- Syndicate tab -->
+  <section id="tab-syndicate" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>👥 Syndicates</h2>
+      <p class="note" style="margin-bottom:1rem;">Create a lottery syndicate — pool money with friends, buy more tickets, share winnings.</p>
+
+      <div class="syndicate-card">
+        <h3>Create syndicate</h3>
+        <div class="syndicate-form">
+          <div class="control-group">
+            <label>Syndicate name</label>
+            <input type="text" id="syndicate-name" placeholder="e.g. Office Pool">
+          </div>
+          <div class="control-group">
+            <label>Lottery</label>
+            <select id="syndicate-lottery"></select>
+          </div>
+          <div class="control-group">
+            <label>Budget ($)</label>
+            <input type="number" id="syndicate-budget" min="10" value="100" step="10">
+          </div>
+          <div class="control-group">
+            <label>Ticket cost ($)</label>
+            <input type="number" id="syndicate-ticket-cost" min="1" value="2" step="0.5">
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Members</label>
+            <div id="syndicate-members">
+              <div class="member-row">
+                <input type="text" class="m-name" placeholder="Member name">
+                <input type="email" class="m-email" placeholder="Email (optional)">
+                <input type="number" class="m-share" placeholder="Share %" min="0" max="100" value="33">
+                <button type="button" class="remove-member" onclick="this.parentElement.remove()">Remove</button>
+              </div>
+              <div class="member-row">
+                <input type="text" class="m-name" placeholder="Member name">
+                <input type="email" class="m-email" placeholder="Email (optional)">
+                <input type="number" class="m-share" placeholder="Share %" min="0" max="100" value="33">
+                <button type="button" class="remove-member" onclick="this.parentElement.remove()">Remove</button>
+              </div>
+              <div class="member-row">
+                <input type="text" class="m-name" placeholder="Member name">
+                <input type="email" class="m-email" placeholder="Email (optional)">
+                <input type="number" class="m-share" placeholder="Share %" min="0" max="100" value="34">
+                <button type="button" class="remove-member" onclick="this.parentElement.remove()">Remove</button>
+              </div>
+            </div>
+            <button type="button" class="add-member" onclick="addMemberRow(event)">+ Add member</button>
+            <button class="primary" onclick="doCreateSyndicate(event)">Create syndicate</button>
+          </div>
+        </div>
+        <div id="syndicate-detail"></div>
+      </div>
+
+      <div style="margin-top:1.5rem;">
+        <h3 style="font-family:'Space Grotesk',sans-serif; font-size:1.1rem; margin-bottom:0.5rem; color:var(--ink);">Existing syndicates</h3>
+        <div id="syndicate-list"></div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -706,6 +798,10 @@ function showTab(name, evt) {
   if (name === "profile") {
     loadProfile();
   }
+
+  if (name === "syndicate") {
+    loadSyndicates();
+  }
 }
 
 async function apiRequest(path, opts = {}) {
@@ -728,8 +824,9 @@ async function loadLotteries(evt) {
       const el = document.getElementById(id);
       el.innerHTML = lotteries.map(l => `<option value="${l.key}">${l.name}</option>`).join("");
     };
-    ["pl-lottery", "al-lottery", "vl-lottery", "cl-lottery", "hl-lottery", "ol-lottery"].forEach(sel);
+    ["pl-lottery", "al-lottery", "vl-lottery", "cl-lottery", "hl-lottery", "ol-lottery", "syndicate-lottery"].forEach(sel);
     loadJackpot(evt);
+    loadSyndicates();
   } catch (e) {
     setConnected(false, e.message);
     console.error("Failed to load lotteries:", e);
@@ -1143,6 +1240,124 @@ async function doOdds(evt) {
   } catch (e) {
     alert("Odds calculation failed: " + e.message);
   }
+}
+
+// ---------- Syndicate functions ----------
+
+async function loadSyndicates() {
+  const list = document.getElementById("syndicate-list");
+  if (!list) return;
+  try {
+    const syndicates = await apiRequest("/syndicates");
+    list.innerHTML = syndicates.map(s => `
+      <div class="syndicate-member" style="cursor:pointer;" onclick="viewSyndicate('${s.name}')">
+        <div>
+          <div style="font-weight:600; color:var(--ink);">${s.name}</div>
+          <div style="font-size:0.85rem; color:var(--muted);">${s.lottery_type} · ${s.num_members} members · ${s.num_tickets} tickets</div>
+        </div>
+        <div style="font-weight:700; color:var(--accent);">$${s.total_cost.toFixed(2)}</div>
+      </div>
+    `).join("");
+  } catch (e) {
+    list.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to load syndicates: ${e.message}</div>`;
+  }
+}
+
+async function viewSyndicate(name) {
+  const panel = document.getElementById("syndicate-detail");
+  try {
+    const s = await apiRequest("/syndicates/" + name);
+    panel.innerHTML = `
+      <div class="syndicate-result fade-in">
+        <h4>${s.name}</h4>
+        <div class="syndicate-stats">
+          <div class="syndicate-stat"><div class="v">$${s.total_cost.toFixed(2)}</div><div class="k">Total cost</div></div>
+          <div class="syndicate-stat"><div class="v">${s.members.length}</div><div class="k">Members</div></div>
+          <div class="syndicate-stat"><div class="v">${s.tickets.length}</div><div class="k">Tickets</div></div>
+          <div class="syndicate-stat"><div class="v">${s.total_shares.toFixed(0)}%</div><div class="k">Total shares</div></div>
+        </div>
+        <h4 style="margin-top:1.5rem;">Members</h4>
+        <div class="syndicate-members">
+          ${s.members.map(m => `
+            <div class="syndicate-member">
+              <span>${m.name} (${m.email || 'no email'})</span>
+              <span style="font-weight:700; color:var(--accent);">${m.share_percentage.toFixed(0)}% · $${m.contribution.toFixed(2)}</span>
+            </div>
+          `).join("")}
+        </div>
+        <h4 style="margin-top:1.5rem;">Tickets (${s.tickets.length})</h4>
+        <div class="syndicate-tickets">
+          ${s.tickets.map(t => `
+            <div style="margin-bottom:0.5rem;">
+              <span style="font-size:0.85rem; color:var(--muted);">${t.method} · $${t.cost.toFixed(2)}</span>
+              <div class="balls" style="margin-top:0.25rem;">${formatNums(t.main_numbers)}${t.bonus_numbers && t.bonus_numbers.length ? `<div class="ball bonus">${formatNums(t.bonus_numbers, true)}</div>` : ""}</div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    `);
+  } catch (e) {
+    panel.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to load syndicate: ${e.message}</div>`;
+  }
+}
+
+async function doCreateSyndicate(evt) {
+  if (evt) evt.preventDefault();
+  const name = document.getElementById("syndicate-name").value.trim();
+  const lottery = document.getElementById("syndicate-lottery").value;
+  const budget = parseFloat(document.getElementById("syndicate-budget").value) || 0;
+  const ticketCost = parseFloat(document.getElementById("syndicate-ticket-cost").value) || 2.0;
+
+  if (!name) { alert("Please enter a syndicate name"); return; }
+  if (budget <= 0) { alert("Budget must be positive"); return; }
+
+  const members = [];
+  const memberRows = document.querySelectorAll(".member-row");
+  for (const row of memberRows) {
+    const mName = row.querySelector(".m-name").value.trim();
+    const mEmail = row.querySelector(".m-email").value.trim();
+    const mShare = parseFloat(row.querySelector(".m-share").value) || 0;
+    if (mName) {
+      members.push({ name: mName, email: mEmail || undefined, share_percentage: mShare });
+    }
+  }
+
+  if (members.length === 0) { alert("Add at least one member"); return; }
+
+  try {
+    const result = await apiRequest("/syndicates", {
+      method: "POST",
+      body: JSON.stringify({ name, lottery_type: lottery, members, budget, ticket_cost }),
+    });
+    const detail = document.getElementById("syndicate-detail");
+    detail.innerHTML = `
+      <div class="syndicate-result fade-in">
+        <h4>✅ Syndicate created: ${result.name}</h4>
+        <div class="syndicate-stats">
+          <div class="syndicate-stat"><div class="v">$${result.total_cost.toFixed(2)}</div><div class="k">Total cost</div></div>
+          <div class="syndicate-stat"><div class="v">${result.members.length}</div><div class="k">Members</div></div>
+          <div class="syndicate-stat"><div class="v">${result.tickets.length}</div><div class="k">Tickets</div></div>
+          <div class="syndicate-stat"><div class="v">${result.total_shares.toFixed(0)}%</div><div class="k">Total shares</div></div>
+        </div>
+      </div>
+    `;
+    await loadSyndicates();
+  } catch (e) {
+    alert("Create failed: " + e.message);
+  }
+}
+
+function addMemberRow() {
+  const container = document.getElementById("syndicate-members");
+  const row = document.createElement("div");
+  row.className = "member-row";
+  row.innerHTML = `
+    <input type="text" class="m-name" placeholder="Member name">
+    <input type="email" class="m-email" placeholder="Email (optional)">
+    <input type="number" class="m-share" placeholder="Share %" min="0" max="100" value="0">
+    <button type="button" class="remove-member" onclick="this.parentElement.remove()">Remove</button>
+  `;
+  container.appendChild(row);
 }
 
 window.addEventListener("error", (e) => {
