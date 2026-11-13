@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lottery Predictor — AI number predictions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e2e8f0;
+    --bg: #f4f6fb;
+    --panel: #ffffff;
+    --accent: #2d3a8c;
+    --accent-hover: #1e2a6b;
+    --accent-glow: rgba(45, 58, 140, 0.15);
+    --gold: #d4a82a;
+    --gold-glow: rgba(212, 168, 42, 0.18);
+    --ok: #059669;
+    --warn: #d97706;
+    --radius: 16px;
+    --shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    --shadow-sm: 0 2px 8px rgba(15, 23, 42, 0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html {
+    background: linear-gradient(135deg, #f0f3fa 0%, #eef2f9 100%);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  body {
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  /* ---------- Header ---------- */
+  header {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    font-family: "Space Grotesk", sans-serif;
+    font-weight: 700;
+    font-size: 1.35rem;
+    letter-spacing: -0.02em;
+    color: var(--accent);
+  }
+  .brand svg { width: 30px; height: 30px; color: var(--accent); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+  .brand .tag { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-left: auto; font-family: Inter, sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* ---------- Layout ---------- */
+  main { flex: 1; padding: 2.5rem 2rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+  h1 { font-family: "Space Grotesk", sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 0.35rem; letter-spacing: -0.02em; color: var(--ink); }
+  .sub { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
+    border-radius: var(--radius);
+    padding: 2.5rem 2rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; top: -2rem; right: -2rem; width: 6rem; height: 6rem;
+    background: radial-gradient(circle, var(--gold-glow) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .hero h2 { font-family: "Space Grotesk", sans-serif; font-size: 1.75rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .hero p { font-size: 1rem; opacity: 0.95; margin-bottom: 1.5rem; line-height: 1.6; }
+  .hero .cta { display: inline-flex; align-items: center; gap: 0.5rem; background: var(--gold); color: #7a5a0a; border: none; border-radius: 10px; padding: 0.75rem 1.5rem; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; font-family: Inter, sans-serif; }
+  .hero .cta:hover { transform: translateY(-2px); box-shadow: 0 8px 16px var(--gold-glow); }
+
+  /* ---------- Disclaimer ---------- */
+  .disclaimer {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+    box-shadow: var(--shadow-sm);
+    display: flex; align-items: flex-start; gap: 0.75rem;
+  }
+  .disclaimer b { color: var(--ink); }
+
+  /* ---------- Tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 2rem;
+  }
+  .tabs button {
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.85rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: Inter, sans-serif;
+  }
+  .tabs button:hover { color: var(--ink); background: rgba(45, 58, 140, 0.04); }
+  .tabs button.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    background: rgba(45, 58, 140, 0.06);
+  }
+
+  /* ---------- Panels ---------- */
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .panel:hover { box-shadow: var(--shadow); }
+  .panel h2 { font-family: "Space Grotesk", sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 1.25rem; color: var(--ink); display: flex; align-items: center; gap: 0.5rem; }
+
+  /* ---------- Controls ---------- */
+  .row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 1rem; align-items: end; }
+  @media (max-width: 768px) { .row { grid-template-columns: 1fr; } }
+  .control-group { display: flex; flex-direction: column; gap: 0.5rem; }
+  label { font-size: 0.8rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  select, input[type="number"] {
+    width: 100%;
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: #fff;
+    font-size: 0.95rem;
+    color: var(--ink);
+    font-family: Inter, sans-serif;
+  }
+  select:focus, input[type="number"]:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+  }
+  .button-group { display: flex; gap: 0.75rem; }
+  button.primary {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 0.75rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: Inter, sans-serif;
+  }
+  button.primary:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 6px 12px var(--accent-glow); }
+  button.primary:active { transform: translateY(0); }
+  button.primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+  button.quick { background: var(--gold); color: #7a5a0a; }
+  button.quick:hover { background: #c4961e; color: #7a5a0a; transform: translateY(-1px); box-shadow: 0 6px 12px var(--gold-glow); }
+
+  /* ---------- Results ---------- */
+  .results { margin-top: 1.5rem; display: grid; gap: 1rem; }
+  .ticket {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 1.25rem 1.5rem;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .ticket:hover { transform: translateY(-2px); box-shadow: var(--shadow); border-color: var(--accent); }
+  .ticket .label { font-size: 0.8rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  .ticket .main { flex: 1; }
+  .ticket .bonus-col { display: flex; flex-direction: column; gap: 0.35rem; align-items: flex-start; }
+  .ticket .bonus-col .label { margin-bottom: 0.2rem; }
+  .ticket .side { text-align: right; white-space: nowrap; }
+  .balls { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .ball {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 1rem; color: #fff;
+    background: var(--accent);
+    box-shadow: 0 3px 6px rgba(45, 58, 140, 0.35), inset 0 1px 0 rgba(255,255,255,0.4);
+    font-family: "Space Grotesk", sans-serif;
+  }
+  .ball.bonus { background: var(--gold); color: #7a5a0a; box-shadow: 0 3px 6px rgba(212, 168, 42, 0.35), inset 0 1px 0 rgba(255,255,255,0.4); }
+  .conf { font-size: 0.9rem; font-weight: 800; color: var(--accent); font-family: "Space Grotesk", sans-serif; }
+  .conf-sub { font-size: 0.7rem; color: var(--muted); margin-top: 0.15rem; }
+
+  /* ---------- Metrics ---------- */
+  .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-top: 1rem; }
+  @media (max-width: 768px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+  .metric { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 1.25rem; text-align: center; box-shadow: var(--shadow-sm); }
+  .metric .v { font-family: "Space Grotesk", sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--ink); }
+  .metric .k { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+  /* ---------- Tables ---------- */
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1rem; }
+  @media (max-width: 768px) { .charts-row { grid-template-columns: 1fr; } }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th { text-align: left; color: var(--muted); font-weight: 600; padding: 0.75rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(45, 58, 140, 0.03); }
+
+  /* ---------- Misc ---------- */
+  .badge {
+    display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.75rem; border-radius: 999px;
+    font-size: 0.75rem; font-weight: 700; background: #eff2f8; color: var(--accent);
+  }
+  .empty { text-align: center; color: var(--muted); padding: 3rem 1rem; }
+  .spinner { display: inline-block; width: 20px; height: 20px; border: 2.5px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .note { font-size: 0.8rem; color: var(--muted); margin-top: 0.5rem; }
+  canvas { max-height: 300px; }
+  .fade-in { animation: fadeIn 0.4s ease both; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </svg>
+    Lottery Predictor
+    <span class="tag">AI number predictions</span>
+  </div>
+</header>
+<main>
+  <section class="hero fade-in">
+    <h2>Pick smarter numbers.</h2>
+    <p>AI-powered lottery predictions using historical draw data, frequency analysis, and ensemble models. Supports Powerball, Mega Millions, Florida Lotto, and 40+ more games.</p>
+    <button class="cta" onclick="showTab('predict')">Start predicting <span>▸</span></button>
+  </section>
+
+  <div class="disclaimer">
+    <strong>Entertainment only.</strong> Lottery draws are random. No algorithm or AI can predict future numbers with certainty. Play responsibly.
+  </div>
+
+  <div class="tabs">
+    <button class="active" onclick="showTab('predict')">Predict</button>
+    <button onclick="showTab('analyze')">Analyze</button>
+    <button onclick="showTab('history')">History</button>
+  </div>
+
+  <!-- Predict tab -->
+  <section id="tab-predict" class="tab-panel fade-in">
+    <div class="panel">
+      <h2>🎲 Generate predictions</h2>
+      <div class="row">
+        <div class="control-group">
+          <label>Lottery</label>
+          <select id="pl-lottery"></select>
+        </div>
+        <div class="control-group">
+          <label>Method</label>
+          <select id="pl-method">
+            <option value="ensemble">Ensemble (recommended)</option>
+            <option value="statistical">Statistical (balanced)</option>
+            <option value="frequency">Frequency (hot numbers)</option>
+            <option value="cold">Cold numbers (due)</option>
+            <option value="pairs">Pair-based</option>
+            <option value="ml">Machine learning</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Number of predictions</label>
+          <input type="number" id="pl-count" min="1" max="10" value="3">
+        </div>
+        <div class="button-group">
+          <button class="primary" onclick="doPredict()">Generate predictions</button>
+          <button class="primary quick" onclick="doQuickPick()">Quick pick</button>
+        </div>
+      </div>
+      <div id="pl-results" class="results"></div>
+    </div>
+  </section>
+
+  <!-- Analyze tab -->
+  <section id="tab-analyze" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>📊 Historical analysis</h2>
+      <div class="row">
+        <div class="control-group">
+          <label>Lottery</label>
+          <select id="al-lottery"></select>
+        </div>
+        <div class="control-group">
+          <label>Draws to analyze</label>
+          <input type="number" id="al-count" min="50" max="2000" value="200">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button class="primary" onclick="doAnalyze()">Analyze</button>
+        </div>
+      </div>
+      <div id="al-metrics" class="metrics"></div>
+      <div class="charts-row">
+        <div class="panel" style="padding:1.25rem;">
+          <h2 style="margin-bottom:1rem;">🔥 Hot numbers</h2>
+          <table id="al-hot"><thead><tr><th>Number</th><th>Frequency</th></tr></thead><tbody></tbody></table>
+        </div>
+        <div class="panel" style="padding:1.25rem;">
+          <h2 style="margin-bottom:1rem;">❄️ Cold numbers</h2>
+          <table id="al-cold"><thead><tr><th>Number</th><th>Frequency</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="panel" style="margin-top:1.5rem; padding:1.25rem;">
+        <h2 style="margin-bottom:1rem;">📈 Frequency chart</h2>
+        <canvas id="al-chart"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- History tab -->
+  <section id="tab-history" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>📜 Recent draw history</h2>
+      <div class="row" style="margin-bottom:1rem;">
+        <div class="control-group">
+          <label>Lottery</label>
+          <select id="hl-lottery"></select>
+        </div>
+        <div class="control-group">
+          <label>Recent draws</label>
+          <input type="number" id="hl-count" min="5" max="100" value="15">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button class="primary" onclick="doHistory()">Load history</button>
+        </div>
+      </div>
+      <div id="hl-results" class="results"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+const API = "http://127.0.0.1:8000";
+let chartInstance = null;
+
+function showTab(name) {
+  document.querySelectorAll(".tab-panel").forEach(el => {
+    el.style.display = "none";
+    el.classList.remove("fade-in");
+  });
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+  const panel = document.getElementById("tab-" + name);
+  panel.style.display = "block";
+  panel.classList.add("fade-in");
+  event.target.classList.add("active");
+}
+
+async function loadLotteries() {
+  try {
+    const r = await fetch(API + "/lotteries");
+    const lotteries = await r.json();
+    const sel = (id) => {
+      const el = document.getElementById(id);
+      el.innerHTML = lotteries.map(l => `<option value="${l.key}">${l.name}</option>`).join("");
+    };
+    ["pl-lottery", "al-lottery", "hl-lottery"].forEach(sel);
+  } catch (e) {
+    console.error("Failed to load lotteries:", e);
+  }
+}
+
+function formatNums(nums, bonus) {
+  return nums.map(n => `<div class="ball ${bonus ? 'bonus' : ''}">${n}</div>`).join("");
+}
+
+async function doPredict() {
+  const btn = event.target;
+  const results = document.getElementById("pl-results");
+  results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Generating predictions…</div></div>`;
+  btn.disabled = true;
+  try {
+    const resp = await fetch(API + "/predict", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        lottery: document.getElementById("pl-lottery").value,
+        method: document.getElementById("pl-method").value,
+        count: parseInt(document.getElementById("pl-count").value) || 3,
+      }),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    results.innerHTML = data.predictions.map((p, i) => `
+      <div class="ticket fade-in">
+        <div class="main">
+          <div class="label">Prediction #${i + 1}</div>
+          <div class="balls">${formatNums(p.main_numbers)}</div>
+        </div>
+        ${p.bonus_numbers && p.bonus_numbers.length ? `
+          <div class="bonus-col">
+            <div class="label">Bonus</div>
+            <div class="balls">${formatNums(p.bonus_numbers, true)}</div>
+          </div>
+        ` : ""}
+        <div class="side">
+          <div class="conf">${(p.confidence * 100).toFixed(0)}%</div>
+          <div class="conf-sub">confidence</div>
+        </div>
+      </div>
+    `).join("");
+  } catch (e) {
+    results.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to generate predictions: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function doQuickPick() {
+  const btn = event.target;
+  const results = document.getElementById("pl-results");
+  results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Quick pick…</div></div>`;
+  btn.disabled = true;
+  try {
+    const resp = await fetch(API + "/predict", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        lottery: document.getElementById("pl-lottery").value,
+        method: "statistical",
+        count: 1,
+      }),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    results.innerHTML = `<div class="ticket fade-in" style="background:#fef7e0;border-color:#e3d8a4;">
+      <div class="main">
+        <div class="label">Quick pick</div>
+        <div class="balls">${formatNums(data.predictions[0].main_numbers)}</div>
+      </div>
+      ${data.predictions[0].bonus_numbers && data.predictions[0].bonus_numbers.length ? `
+        <div class="bonus-col">
+          <div class="label">Bonus</div>
+          <div class="balls">${formatNums(data.predictions[0].bonus_numbers, true)}</div>
+        </div>
+      ` : ""}
+      <div class="side">
+        <div class="conf" style="color:var(--warn);">Random</div>
+        <div class="conf-sub">quick pick</div>
+      </div>
+    </div>`;
+  } catch (e) {
+    results.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to generate quick pick: ${e.message}</div>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function doAnalyze() {
+  const results = document.getElementById("al-metrics");
+  results.innerHTML = `<div class="empty"><div class="spinner"></div><div style="margin-top:0.75rem;">Analyzing…</div></div>`;
+  document.getElementById("al-hot").querySelector("tbody").innerHTML = "";
+  document.getElementById("al-cold").querySelector("tbody").innerHTML = "";
+  try {
+    const resp = await fetch(API + "/analyze", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        lottery: document.getElementById("al-lottery").value,
+        last_n: parseInt(document.getElementById("al-count").value) || 200,
+      }),
+    });
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    results.innerHTML = `
+      <div class="metric"><div class="v">${data.total_draws}</div><div class="k">Total draws</div></div>
+      <div class="metric"><div class="v">${data.date_range.start} → ${data.date_range.end}</div><div class="k">Date range</div></div>
+      <div class="metric"><div class="v">${(data.sum_statistics?.mean ?? 0).toFixed(1)}</div><div class="k">Avg sum</div></div>
+      <div class="metric"><div class="v">${(data.sum_statistics?.std ?? 0).toFixed(1)}</div><div class="k">Sum std dev</div></div>
+    `;
+    const hotBody = document.getElementById("al-hot").querySelector("tbody");
+    data.hot_numbers.forEach(h => { hotBody.innerHTML += `<tr><td>${h.number}</td><td>${h.frequency}</td></tr>`; });
+    const coldBody = document.getElementById("al-cold").querySelector("tbody");
+    data.cold_numbers.forEach(c => { coldBody.innerHTML += `<tr><td>${c.number}</td><td>${c.frequency}</td></tr>`; });
+    drawChart(data);
+  } catch (e) {
+    results.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to analyze: ${e.message}</div>`;
+  }
+}
+
+function drawChart(data) {
+  const ctx = document.getElementById("al-chart").getContext("2d");
+  if (chartInstance) chartInstance.destroy();
+  const labels = [];
+  const values = [];
+  data.hot_numbers.slice(0, 12).forEach(h => { labels.push(h.number); values.push(h.frequency); });
+  chartInstance = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: labels,
+      datasets: [{
+        label: "Frequency",
+        data: values,
+        backgroundColor: "rgba(45, 58, 140, 0.7)",
+        borderColor: "rgba(45, 58, 140, 1)",
+        borderWidth: 1,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: { display: true, text: "Most frequent numbers", color: var(--muted), font: { size: 13 } } },
+      scales: { y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: "#f1f5f9" } }, x: { grid: { display: false } } }
+    }
+  });
+}
+
+async function doHistory() {
+  const results = document.getElementById("hl-results");
+  results.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Loading history…</div></div>`;
+  try {
+    const count = parseInt(document.getElementById("hl-count").value) || 15;
+    const resp = await fetch(API + "/history/" + document.getElementById("hl-lottery").value + `?count=${count}`);
+    if (!resp.ok) throw new Error(await resp.text());
+    const data = await resp.json();
+    results.innerHTML = `
+      <table>
+        <thead><tr><th>Date</th><th>Draw #</th><th>Main numbers</th><th>Bonus</th><th>Jackpot</th></tr></thead>
+        <tbody>
+          ${data.draws.map(d => `
+            <tr>
+              <td>${d.date}</td><td>${d.draw_number}</td>
+              <td>${(d.main_numbers || []).map(n => `<span class="ball">${n}</span>`).join("")}</td>
+              <td>${(d.bonus_numbers || []).map(n => `<span class="ball bonus">${n}</span>`).join("") || "—"}</td>
+              <td>$${Number(d.jackpot || 0).toLocaleString()}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    results.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to load history: ${e.message}</div>`;
+  }
+}
+
+loadLotteries();
+</script>
+</body>
+</html>
