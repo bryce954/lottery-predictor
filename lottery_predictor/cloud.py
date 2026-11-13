@@ -28,6 +28,23 @@ except ImportError:
     HAS_REDIS = False
 
 
+def _to_py(value):
+    """Recursively convert numpy / non-standard types to JSON-safe Python natives."""
+    import numpy as np
+
+    if isinstance(value, np.integer):
+        return int(value)
+    if isinstance(value, np.floating):
+        return float(value)
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, list):
+        return [_to_py(v) for v in value]
+    if isinstance(value, dict):
+        return {k: _to_py(v) for k, v in value.items()}
+    return value
+
+
 # Pydantic models for API
 class PredictionRequest(BaseModel):
     lottery: str = "powerball"
@@ -233,11 +250,11 @@ def create_app() -> FastAPI:
 
             pred_data = [
                 {
-                    "main_numbers": p.main_numbers,
-                    "bonus_numbers": p.bonus_numbers,
-                    "confidence": p.confidence,
+                    "main_numbers": _to_py(p.main_numbers),
+                    "bonus_numbers": _to_py(p.bonus_numbers),
+                    "confidence": _to_py(p.confidence),
                     "method": p.method,
-                    "metadata": p.metadata
+                    "metadata": _to_py(p.metadata),
                 }
                 for p in predictions
             ]
@@ -265,6 +282,8 @@ def create_app() -> FastAPI:
             freq = dm.get_number_frequency(request.last_n)
             hot, cold = dm.get_hot_cold_numbers(request.last_n)
             stats = dm.get_sum_statistics(request.last_n)
+            # 'recent' is a list; AnalysisResponse requires all float values
+            stats.pop("recent", None)
             pairs = dm.get_pair_frequency(request.last_n)
             top_pairs = list(pairs.items())[:10]
 
