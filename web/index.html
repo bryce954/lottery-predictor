@@ -325,6 +325,30 @@
   .syndicate-stat .v { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; font-weight: 800; color: var(--accent); }
   .syndicate-stat .k { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
 
+  /* ---------- Notifications ---------- */
+  .notification-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    margin-bottom: 1.5rem;
+    box-shadow: var(--shadow-sm);
+  }
+  .notification-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.25rem; margin-bottom: 1rem; color: var(--ink); }
+  .notification-channel {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: #fff;
+  }
+  .notification-channel h4 { font-size: 1rem; margin-bottom: 0.75rem; color: var(--ink); font-weight: 600; }
+  .notification-channel .configured { color: var(--ok); font-weight: 600; }
+  .notification-channel .not-configured { color: var(--muted); }
+  .notification-channel .status-badge { display: inline-block; padding: 0.15rem 0.6rem; border-radius: 999px; font-size: 0.75rem; font-weight: 700; margin-left: 0.5rem; }
+  .notification-channel .status-badge.configured { background: #dcfce7; color: #166534; }
+  .notification-channel .status-badge.not-configured { background: #f1f5f9; color: #64748b; }
+
   /* ---------- Profile ---------- */
   .profile-card {
     background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
@@ -436,6 +460,7 @@
     <button onclick="showTab('profile', event)">Profile</button>
     <button onclick="showTab('odds', event)">Odds</button>
     <button onclick="showTab('syndicate', event)">Syndicates</button>
+    <button onclick="showTab('notifications', event)">Notifications</button>
   </div>
 
   <!-- Predict tab -->
@@ -761,6 +786,64 @@
       </div>
     </div>
   </section>
+
+  <!-- Notifications tab -->
+  <section id="tab-notifications" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>📢 Notifications</h2>
+      <p class="note" style="margin-bottom:1rem;">Send prediction notifications via email, Discord, or Pushbullet.</p>
+
+      <div class="notification-card">
+        <h3>Configure notification channels</h3>
+
+        <div class="notification-channel">
+          <h4>Email <span class="status-badge" id="email-status" class="not-configured">Not configured</span></h4>
+          <div class="control-group" style="margin-bottom:0.5rem;">
+            <label>SMTP Server</label>
+            <input type="text" id="email-smtp-server" placeholder="smtp.gmail.com">
+          </div>
+          <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+            <input type="number" id="email-smtp-port" placeholder="587" style="flex:1;">
+            <input type="text" id="email-smtp-user" placeholder="Username" style="flex:1;">
+            <input type="password" id="email-smtp-pass" placeholder="Password" style="flex:1;">
+          </div>
+          <button class="primary" onclick="doConfigureEmail(event)">Configure Email</button>
+        </div>
+
+        <div class="notification-channel">
+          <h4>Discord <span class="status-badge" id="discord-status" class="not-configured">Not configured</span></h4>
+          <div class="control-group" style="margin-bottom:1rem;">
+            <label>Webhook URL</label>
+            <input type="text" id="discord-webhook" placeholder="https://discord.com/api/webhooks/...">
+          </div>
+          <button class="primary" onclick="doConfigureDiscord(event)">Configure Discord</button>
+        </div>
+
+        <div class="notification-channel">
+          <h4>Pushbullet <span class="status-badge" id="pushbullet-status" class="not-configured">Not configured</span></h4>
+          <div class="control-group" style="margin-bottom:1rem;">
+            <label>Access Token</label>
+            <input type="password" id="pushbullet-token" placeholder="o.xxxxxxxxxxxxxxxxxxxxxx">
+          </div>
+          <button class="primary" onclick="doConfigurePushbullet(event)">Configure Pushbullet</button>
+        </div>
+
+        <div style="margin-top:1.5rem;">
+          <h4>Send test notification</h4>
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+            <select id="test-channel" style="flex:1; padding:0.7rem 0.9rem; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:0.95rem; color:var(--ink); font-family:Inter,sans-serif;">
+              <option value="email">Email</option>
+              <option value="discord">Discord</option>
+              <option value="pushbullet">Pushbullet</option>
+            </select>
+            <input type="text" id="test-recipient" placeholder="Recipient (optional)" style="flex:1; padding:0.7rem 0.9rem; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:0.95rem; color:var(--ink); font-family:Inter,sans-serif;">
+            <input type="text" id="test-message" placeholder="Message (optional)" style="flex:1; padding:0.7rem 0.9rem; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:0.95rem; color:var(--ink); font-family:Inter,sans-serif;">
+          </div>
+          <button class="primary" onclick="doTestNotification(event)">Send Test</button>
+        </div>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -801,6 +884,10 @@ function showTab(name, evt) {
 
   if (name === "syndicate") {
     loadSyndicates();
+  }
+
+  if (name === "notifications") {
+    loadNotificationStatus();
   }
 }
 
@@ -1358,6 +1445,119 @@ function addMemberRow() {
     <button type="button" class="remove-member" onclick="this.parentElement.remove()">Remove</button>
   `;
   container.appendChild(row);
+}
+
+// ---------- Notification functions ----------
+
+async function loadNotificationStatus() {
+  try {
+    const status = await apiRequest("/notifications/status");
+
+    updateStatusBadge("email-status", status.email_configured);
+    updateStatusBadge("discord-status", status.discord_configured);
+    updateStatusBadge("pushbullet-status", status.pushbullet_configured);
+  } catch (e) {
+    console.error("Failed to load notification status:", e);
+  }
+}
+
+function updateStatusBadge(elementId, configured) {
+  const el = document.getElementById(elementId);
+  if (configured) {
+    el.textContent = "Configured";
+    el.className = "status-badge configured";
+  } else {
+    el.textContent = "Not configured";
+    el.className = "status-badge not-configured";
+  }
+}
+
+async function doConfigureEmail(evt) {
+  if (evt) evt.preventDefault();
+  const smtpServer = document.getElementById("email-smtp-server").value.trim();
+  const smtpPort = parseInt(document.getElementById("email-smtp-port").value) || 587;
+  const smtpUser = document.getElementById("email-smtp-user").value.trim();
+  const smtpPass = document.getElementById("email-smtp-pass").value;
+
+  if (!smtpServer || !smtpUser || !smtpPass) {
+    alert("Please fill in all email fields");
+    return;
+  }
+
+  try {
+    await apiRequest("/notifications/configure/email", {
+      method: "POST",
+      body: JSON.stringify({ smtp_server: smtpServer, smtp_port: smtpPort, smtp_user: smtpUser, smtp_pass: smtpPass }),
+    });
+    updateStatusBadge("email-status", true);
+    alert("Email configured successfully!");
+  } catch (e) {
+    alert("Failed to configure email: " + e.message);
+  }
+}
+
+async function doConfigureDiscord(evt) {
+  if (evt) evt.preventDefault();
+  const webhookUrl = document.getElementById("discord-webhook").value.trim();
+
+  if (!webhookUrl) {
+    alert("Please enter a Discord webhook URL");
+    return;
+  }
+
+  try {
+    await apiRequest("/notifications/configure/discord", {
+      method: "POST",
+      body: JSON.stringify({ webhook_url: webhookUrl }),
+    });
+    updateStatusBadge("discord-status", true);
+    alert("Discord configured successfully!");
+  } catch (e) {
+    alert("Failed to configure Discord: " + e.message);
+  }
+}
+
+async function doConfigurePushbullet(evt) {
+  if (evt) evt.preventDefault();
+  const token = document.getElementById("pushbullet-token").value.trim();
+
+  if (!token) {
+    alert("Please enter a Pushbullet access token");
+    return;
+  }
+
+  try {
+    await apiRequest("/notifications/configure/pushbullet", {
+      method: "POST",
+      body: JSON.stringify({ pushbullet_token: token }),
+    });
+    updateStatusBadge("pushbullet-status", true);
+    alert("Pushbullet configured successfully!");
+  } catch (e) {
+    alert("Failed to configure Pushbullet: " + e.message);
+  }
+}
+
+async function doTestNotification(evt) {
+  if (evt) evt.preventDefault();
+  const channel = document.getElementById("test-channel").value;
+  const recipient = document.getElementById("test-recipient").value.trim();
+  const message = document.getElementById("test-message").value.trim();
+
+  try {
+    const result = await apiRequest("/notifications/test", {
+      method: "POST",
+      body: JSON.stringify({ channel, recipient: recipient || undefined, message: message || undefined }),
+    });
+
+    if (result.success) {
+      alert("Test notification sent successfully!");
+    } else {
+      alert("Test failed: " + result.message);
+    }
+  } catch (e) {
+    alert("Test failed: " + e.message);
+  }
 }
 
 window.addEventListener("error", (e) => {

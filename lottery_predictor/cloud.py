@@ -181,6 +181,40 @@ class SyndicateResponse(BaseModel):
     tickets: List[Dict[str, Any]]
 
 
+# Notification models
+class EmailConfigRequest(BaseModel):
+    smtp_server: str
+    smtp_port: int = 587
+    smtp_user: str
+    smtp_pass: str
+
+
+class DiscordConfigRequest(BaseModel):
+    webhook_url: str
+
+
+class PushbulletConfigRequest(BaseModel):
+    pushbullet_token: str
+
+
+class NotificationStatusResponse(BaseModel):
+    email_configured: bool
+    discord_configured: bool
+    pushbullet_configured: bool
+
+
+class NotificationTestRequest(BaseModel):
+    channel: str  # email, discord, pushbullet
+    recipient: Optional[str] = None
+    message: Optional[str] = None
+
+
+class NotificationTestResponse(BaseModel):
+    channel: str
+    success: bool
+    message: str
+
+
 class UserProfileResponse(BaseModel):
     username: str
     email: Optional[str]
@@ -262,7 +296,7 @@ def create_app() -> FastAPI:
     # Import here to avoid circular imports
     from .data import get_data_manager, LOTTERY_CONFIGS
     from .models import get_predictor, StatisticalPredictor, MLModelPredictor, EnsemblePredictor
-    from .advanced import UserProfileManager, SyndicateManager, SyndicateMember
+    from .advanced import UserProfileManager, SyndicateManager, SyndicateMember, NotificationSystem
     from .validation import OddsCalculator
 
     # In-memory cache for models
@@ -273,6 +307,9 @@ def create_app() -> FastAPI:
 
     # Syndicate manager
     syndicate_manager = SyndicateManager()
+
+    # Notification system
+    notification_system = NotificationSystem()
 
     @app.get("/health", response_model=HealthResponse)
     async def health_check():
@@ -861,6 +898,87 @@ def create_app() -> FastAPI:
             "total_winnings": winnings,
             "distributions": distributions,
         }
+
+    # =========================================================================
+    # Notification Endpoints
+    # =========================================================================
+
+    @app.get("/notifications/status", response_model=NotificationStatusResponse)
+    async def notification_status():
+        """Check which notification channels are configured."""
+        return NotificationStatusResponse(
+            email_configured=notification_system.email_config is not None,
+            discord_configured=notification_system.discord_webhook is not None,
+            pushbullet_configured=notification_system.pushbullet_token is not None,
+        )
+
+    @app.post("/notifications/configure/email")
+    async def configure_email(request: EmailConfigRequest):
+        """Configure email notifications via SMTP."""
+        try:
+            notification_system.configure_email(
+                request.smtp_server, request.smtp_port, request.smtp_user, request.smtp_pass
+            )
+            return {"message": "Email configured successfully"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/notifications/configure/discord")
+    async def configure_discord(request: DiscordConfigRequest):
+        """Configure Discord webhook notifications."""
+        try:
+            notification_system.configure_discord(request.webhook_url)
+            return {"message": "Discord configured successfully"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/notifications/configure/pushbullet")
+    async def configure_pushbullet(request: PushbulletConfigRequest):
+        """Configure Pushbullet push notifications."""
+        try:
+            notification_system.configure_pushbullet(request.pushbullet_token)
+            return {"message": "Pushbullet configured successfully"}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/notifications/test", response_model=NotificationTestResponse)
+    async def test_notification(request: NotificationTestRequest):
+        """Send a test notification to verify configuration."""
+        try:
+            if request.channel == "email":
+                if not notification_system.email_config:
+                    raise HTTPException(status_code=400, detail="Email not configured")
+                recipient = request.recipient or notification_system.email_config.get("smtp_user")
+                success = notification_system.send_email(
+                    recipient,
+                    "Lottery Predictor — Test Notification",
+                    "This is a test notification from your Lottery Predictor app.",
+                )
+            elif request.channel == "discord":
+                if not notification_system.discord_webhook:
+                    raise HTTPException(status_code=400, detail="Discord not configured")
+                success = notification_system.send_discord(
+                    request.message or "🎲 Lottery Predictor — Test notification"
+                )
+            elif request.channel == "pushbullet":
+                if not notification_system.pushbullet_token:
+                    raise HTTPException(status_code=400, detail="Pushbullet not configured")
+                success = notification_system.send_pushbullet(
+                    "Lottery Predictor — Test",
+                    request.message or "This is a test notification from your Lottery Predictor app.",
+                )
+            else:
+                raise HTTPException(status_code=400, detail=f"Unknown channel '{request.channel}'")
+
+            return NotificationTestResponse(
+                channel=request.channel,
+                success=success,
+                message="Sent successfully" if success else "Failed to send",
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
 
     return app
 
