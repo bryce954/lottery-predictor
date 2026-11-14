@@ -215,6 +215,22 @@ class NotificationTestResponse(BaseModel):
     message: str
 
 
+# Data health models
+class DataHealthResponse(BaseModel):
+    lottery: str
+    timestamp: str
+    total_draws: int
+    date_range_start: str
+    date_range_end: str
+    days_since_last_draw: int
+    expected_draws: int
+    missing_draws: int
+    gaps: List[Dict[str, Any]]
+    anomalies: List[Dict[str, Any]]
+    completeness_score: str
+    freshness_score: str
+
+
 class UserProfileResponse(BaseModel):
     username: str
     email: Optional[str]
@@ -296,7 +312,7 @@ def create_app() -> FastAPI:
     # Import here to avoid circular imports
     from .data import get_data_manager, LOTTERY_CONFIGS
     from .models import get_predictor, StatisticalPredictor, MLModelPredictor, EnsemblePredictor
-    from .advanced import UserProfileManager, SyndicateManager, SyndicateMember, NotificationSystem
+    from .advanced import UserProfileManager, SyndicateManager, SyndicateMember, NotificationSystem, HistoricalDataHealthDashboard
     from .validation import OddsCalculator
 
     # In-memory cache for models
@@ -310,6 +326,9 @@ def create_app() -> FastAPI:
 
     # Notification system
     notification_system = NotificationSystem()
+
+    # Data health dashboard
+    health_dashboard = HistoricalDataHealthDashboard()
 
     @app.get("/health", response_model=HealthResponse)
     async def health_check():
@@ -977,6 +996,62 @@ def create_app() -> FastAPI:
             )
         except HTTPException:
             raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # Data Health Dashboard Endpoints
+    # =========================================================================
+
+    @app.get("/health-dashboard/{lottery}", response_model=DataHealthResponse)
+    async def get_lottery_health(lottery: str):
+        """Get data health metrics for a specific lottery."""
+        if lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{lottery}'")
+
+        try:
+            record = health_dashboard.analyze_lottery_health(lottery)
+
+            return DataHealthResponse(
+                lottery=record.lottery,
+                timestamp=record.timestamp,
+                total_draws=record.total_draws,
+                date_range_start=record.date_range_start,
+                date_range_end=record.date_range_end,
+                days_since_last_draw=record.days_since_last_draw,
+                expected_draws=record.expected_draws,
+                missing_draws=record.missing_draws,
+                gaps=record.gaps,
+                anomalies=record.anomalies,
+                completeness_score=f"{record.completeness_score:.1%}",
+                freshness_score=f"{record.freshness_score:.1%}",
+            )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/health-dashboard", response_model=List[DataHealthResponse])
+    async def get_all_lotteries_health():
+        """Get data health metrics for all lotteries."""
+        try:
+            records = health_dashboard.get_all_lotteries_health()
+
+            return [
+                DataHealthResponse(
+                    lottery=r["lottery"],
+                    timestamp=r.get("last_checked", ""),
+                    total_draws=r.get("total_draws", 0),
+                    date_range_start=r.get("date_range", "").split(" to ")[0] if r.get("date_range") else "",
+                    date_range_end=r.get("date_range", "").split(" to ")[1] if r.get("date_range") else "",
+                    days_since_last_draw=r.get("days_since_last_draw", 0),
+                    expected_draws=r.get("expected_draws", 0),
+                    missing_draws=r.get("missing_draws", 0),
+                    gaps=[],  # get_health_summary doesn't include gap details
+                    anomalies=[],  # get_health_summary doesn't include anomaly details
+                    completeness_score=r.get("completeness_score", "0%"),
+                    freshness_score=r.get("freshness_score", "0%"),
+                )
+                for r in records
+            ]
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 

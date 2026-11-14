@@ -405,6 +405,18 @@
   .health-table tr:last-child td { border-bottom: none; }
   .health-table tr:hover td { background: rgba(45, 58, 140, 0.03); }
 
+  /* ---------- Data Health ---------- */
+  .health-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+  .health-badge.good { background: #dcfce7; color: #166534; }
+  .health-badge.warn { background: #fef3c7; color: #92400e; }
+  .health-badge.bad { background: #fee2e2; color: #991b1b; }
+
   /* ---------- Profile ---------- */
   .profile-card {
     background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
@@ -902,6 +914,35 @@
       </div>
     </div>
   </section>
+
+  <!-- Data Health tab -->
+  <section id="tab-health" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>🏥 Data Health Dashboard</h2>
+      <p class="note" style="margin-bottom:1rem;">Monitor data freshness, detect gaps in draw schedules, identify anomalies, and track completeness across all lotteries.</p>
+
+      <div class="health-card">
+        <h3>All Lotteries Health Overview</h3>
+        <div id="health-metrics" class="health-metrics"></div>
+        <table class="health-table">
+          <thead>
+            <tr>
+              <th>Lottery</th>
+              <th>Total Draws</th>
+              <th>Date Range</th>
+              <th>Completeness</th>
+              <th>Freshness</th>
+              <th>Days Since Last</th>
+              <th>Missing</th>
+              <th>Gaps</th>
+              <th>Anomalies</th>
+            </tr>
+          </thead>
+          <tbody id="health-table-body"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </main>
 
 <script>
@@ -962,6 +1003,10 @@ function showTab(name, evt) {
 
   if (name === "notifications") {
     loadNotificationStatus();
+  }
+
+  if (name === "health") {
+    loadHealthData();
   }
 }
 
@@ -1631,6 +1676,62 @@ async function doTestNotification(evt) {
     }
   } catch (e) {
     alert("Test failed: " + e.message);
+  }
+}
+
+// ---------- Data Health functions ----------
+
+async function loadHealthData() {
+  const metrics = document.getElementById("health-metrics");
+  const tbody = document.getElementById("health-table-body");
+
+  try {
+    const lotteries = await apiRequest("/health-dashboard");
+
+    if (lotteries.length === 0) {
+      metrics.innerHTML = '<div class="empty">No health data available.</div>';
+      tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:var(--muted);">No health data available.</td></tr>';
+      return;
+    }
+
+    // Metrics overview
+    const totalDraws = lotteries.reduce((sum, l) => sum + l.total_draws, 0);
+    const avgCompleteness = lotteries.reduce((sum, l) => sum + parseFloat(l.completeness_score.replace("%","")), 0) / lotteries.length;
+    const avgFreshness = lotteries.reduce((sum, l) => sum + parseFloat(l.freshness_score.replace("%","")), 0) / lotteries.length;
+    const totalMissing = lotteries.reduce((sum, l) => sum + l.missing_draws, 0);
+    const totalAnomalies = lotteries.reduce((sum, l) => sum + l.anomalies_count, 0);
+
+    metrics.innerHTML = `
+      <div class="health-metric"><div class="v">${lotteries.length}</div><div class="k">Lotteries</div></div>
+      <div class="health-metric"><div class="v">${totalDraws}</div><div class="k">Total Draws</div></div>
+      <div class="health-metric"><div class="v good">${avgCompleteness.toFixed(1)}%</div><div class="k">Avg Completeness</div></div>
+      <div class="health-metric"><div class="v good">${avgFreshness.toFixed(1)}%</div><div class="k">Avg Freshness</div></div>
+      <div class="health-metric"><div class="v ${totalMissing > 0 ? 'bad' : 'good'}">${totalMissing}</div><div class="k">Missing Draws</div></div>
+      <div class="health-metric"><div class="v ${totalAnomalies > 0 ? 'bad' : 'good'}">${totalAnomalies}</div><div class="k">Anomalies</div></div>
+    `;
+
+    // Table rows
+    tbody.innerHTML = lotteries.map(l => {
+      const compBadge = parseFloat(l.completeness_score.replace("%","")) >= 90 ? 'good' : parseFloat(l.completeness_score.replace("%","")) >= 70 ? 'warn' : 'bad';
+      const freshBadge = parseFloat(l.freshness_score.replace("%","")) >= 90 ? 'good' : parseFloat(l.freshness_score.replace("%","")) >= 70 ? 'warn' : 'bad';
+      const dateRange = l.date_range || "N/A";
+      return `
+        <tr>
+          <td><strong>${l.lottery.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</strong></td>
+          <td>${l.total_draws}</td>
+          <td>${dateRange}</td>
+          <td><span class="health-badge ${compBadge}">${l.completeness_score}</span></td>
+          <td><span class="health-badge ${freshBadge}">${l.freshness_score}</span></td>
+          <td>${l.days_since_last_draw}</td>
+          <td>${l.missing_draws}</td>
+          <td>${l.gaps_count}</td>
+          <td>${l.anomalies_count}</td>
+        </tr>
+      `).join("");
+    });
+  } catch (e) {
+    metrics.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to load health data: ${e.message}</div>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:var(--warn);">Error loading data.</td></tr>`;
   }
 }
 
