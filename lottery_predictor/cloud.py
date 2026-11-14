@@ -231,6 +231,26 @@ class DataHealthResponse(BaseModel):
     freshness_score: str
 
 
+# Cross-lottery correlation models
+class CorrelationResponse(BaseModel):
+    lottery_a: str
+    lottery_b: str
+    correlation_type: str
+    correlation_coefficient: float
+    p_value: float
+    significant: bool
+    sample_size: int
+    details: Dict[str, Any]
+
+
+class CorrelatedLotteryResponse(BaseModel):
+    lottery: str
+    correlation_coefficient: float
+    p_value: float
+    significant: bool
+    details: Dict[str, Any]
+
+
 class UserProfileResponse(BaseModel):
     username: str
     email: Optional[str]
@@ -312,7 +332,7 @@ def create_app() -> FastAPI:
     # Import here to avoid circular imports
     from .data import get_data_manager, LOTTERY_CONFIGS
     from .models import get_predictor, StatisticalPredictor, MLModelPredictor, EnsemblePredictor
-    from .advanced import UserProfileManager, SyndicateManager, SyndicateMember, NotificationSystem, HistoricalDataHealthDashboard
+    from .advanced import UserProfileManager, SyndicateManager, SyndicateMember, NotificationSystem, HistoricalDataHealthDashboard, CrossLotteryCorrelationAnalyzer
     from .validation import OddsCalculator
 
     # In-memory cache for models
@@ -329,6 +349,9 @@ def create_app() -> FastAPI:
 
     # Data health dashboard
     health_dashboard = HistoricalDataHealthDashboard()
+
+    # Cross-lottery correlation analyzer
+    correlation_analyzer = CrossLotteryCorrelationAnalyzer()
 
     @app.get("/health", response_model=HealthResponse)
     async def health_check():
@@ -1052,6 +1075,57 @@ def create_app() -> FastAPI:
                 )
                 for r in records
             ]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    # =========================================================================
+    # Cross-Lottery Correlation Endpoints
+    # =========================================================================
+
+    @app.get("/correlations/find-correlated/{lottery}", response_model=List[CorrelatedLotteryResponse])
+    async def find_correlated_lotteries(lottery: str, top_n: int = 5):
+        """Find lotteries most correlated with a given lottery."""
+        if lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{lottery}'")
+
+        try:
+            results = correlation_analyzer.find_correlated_lotteries(lottery, top_n=top_n)
+
+            return [
+                CorrelatedLotteryResponse(
+                    lottery=r["lottery"],
+                    correlation_coefficient=r["avg_correlation"],
+                    p_value=r["min_p_value"],
+                    significant=r["significant"],
+                    sample_size=0,
+                    details=r.get("details", {}),
+                )
+                for r in results
+            ]
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get("/correlations/{lottery_a}/{lottery_b}", response_model=CorrelationResponse)
+    async def get_correlation(lottery_a: str, lottery_b: str):
+        """Analyze correlation between two lottery games."""
+        if lottery_a not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{lottery_a}'")
+        if lottery_b not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{lottery_b}'")
+
+        try:
+            result = correlation_analyzer.analyze_number_frequency_correlation(lottery_a, lottery_b)
+
+            return CorrelationResponse(
+                lottery_a=result.lottery_a,
+                lottery_b=result.lottery_b,
+                correlation_type=result.correlation_type,
+                correlation_coefficient=result.correlation_coefficient,
+                p_value=result.p_value,
+                significant=result.significant,
+                sample_size=result.sample_size,
+                details=result.details,
+            )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
