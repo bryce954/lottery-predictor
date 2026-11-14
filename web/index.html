@@ -98,7 +98,23 @@
   [data-theme="dark"] .empty { color: #94a3b8; }
 
   /* ---------- Layout ---------- */
-  main { flex: 1; padding: 2.5rem 2rem; max-width: 1100px; margin: 0 auto; width: 100%; }
+  .app-shell {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    align-items: start;
+  }
+  .app-sidebar {
+    position: sticky;
+    top: 76px;
+    align-self: start;
+    height: calc(100vh - 76px);
+    overflow-y: auto;
+    padding: 1.25rem 1rem;
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+  }
+  main { min-width: 0; width: 100%; padding: 2rem clamp(1.25rem, 3vw, 3rem); }
   h1 { font-family: "Space Grotesk", sans-serif; font-size: 2rem; font-weight: 700; margin-bottom: 0.35rem; letter-spacing: -0.02em; color: var(--ink); }
   .sub { color: var(--muted); font-size: 1rem; margin-bottom: 2rem; }
 
@@ -153,20 +169,21 @@
   }
   .conn-retry:hover { border-color: var(--accent); background: var(--accent-glow); }
 
-  /* ---------- Tabs ---------- */
+  /* ---------- Sidebar navigation ---------- */
   .tabs {
     display: flex;
-    gap: 0;
-    border-bottom: 1px solid var(--line);
-    margin-bottom: 2rem;
-    overflow-x: auto;
+    flex-direction: column;
+    gap: 0.25rem;
   }
   .tabs button {
+    width: 100%;
     background: transparent;
-    border: none;
-    border-bottom: 3px solid transparent;
-    padding: 0.85rem 1.5rem;
-    font-size: 0.95rem;
+    border: 0;
+    border-left: 3px solid transparent;
+    border-radius: 10px;
+    padding: 0.72rem 0.85rem;
+    text-align: left;
+    font-size: 0.92rem;
     font-weight: 600;
     color: var(--muted);
     cursor: pointer;
@@ -174,13 +191,36 @@
     font-family: Inter, sans-serif;
     white-space: nowrap;
   }
-  .tabs button:hover { color: var(--ink); background: rgba(45, 58, 140, 0.04); }
+  .tabs button:hover { color: var(--ink); background: rgba(45, 58, 140, 0.05); }
   .tabs button.active {
     color: var(--accent);
-    border-bottom-color: var(--accent);
-    background: rgba(45, 58, 140, 0.06);
+    border-left-color: var(--accent);
+    background: rgba(45, 58, 140, 0.08);
   }
-
+  @media (max-width: 850px) {
+    .app-shell { display: flex; flex-direction: column; }
+    .app-sidebar {
+      position: sticky;
+      top: 66px;
+      z-index: 50;
+      width: 100%;
+      height: auto;
+      padding: 0.5rem 0.75rem;
+      border-right: 0;
+      border-bottom: 1px solid var(--line);
+    }
+    .tabs { flex-direction: row; gap: 0.35rem; overflow-x: auto; }
+    .tabs button {
+      width: auto;
+      border-left: 0;
+      border-bottom: 3px solid transparent;
+      border-radius: 8px;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.85rem;
+    }
+    .tabs button.active { border-left-color: transparent; border-bottom-color: var(--accent); }
+    main { padding: 1.25rem 1rem; }
+  }
   /* ---------- Panels ---------- */
   .panel {
     background: var(--panel);
@@ -493,7 +533,23 @@
     <button class="theme-toggle" onclick="toggleTheme(event)" title="Toggle dark mode">🌙</button>
   </div>
 </header>
-<main>
+<div class="app-shell">
+  <aside class="app-sidebar" aria-label="Main navigation">
+    <nav class="tabs" aria-label="Lottery tools">
+      <button class="active" data-tab="predict" onclick="showTab('predict', event)">Predict</button>
+      <button data-tab="analyze" onclick="showTab('analyze', event)">Analyze</button>
+      <button data-tab="visualize" onclick="showTab('visualize', event)">Visualize</button>
+      <button data-tab="compare" onclick="showTab('compare', event)">Compare</button>
+      <button data-tab="history" onclick="showTab('history', event)">History</button>
+      <button data-tab="profile" onclick="showTab('profile', event)">Profile</button>
+      <button data-tab="odds" onclick="showTab('odds', event)">Odds</button>
+      <button data-tab="syndicate" onclick="showTab('syndicate', event)">Syndicates</button>
+      <button data-tab="notifications" onclick="showTab('notifications', event)">Notifications</button>
+      <button data-tab="health" onclick="showTab('health', event)">Data Health</button>
+      <button data-tab="correlation" onclick="showTab('correlation', event)">Correlations</button>
+    </nav>
+  </aside>
+  <main>
   <!-- Connection status -->
   <div id="conn-status" class="conn-status">
     <div class="conn-ok">
@@ -518,20 +574,6 @@
 
   <div class="disclaimer">
     <strong>Entertainment only.</strong> Lottery draws are random. No algorithm or AI can predict future numbers with certainty. Play responsibly.
-  </div>
-
-  <div class="tabs">
-    <button class="active" onclick="showTab('predict', event)">Predict</button>
-    <button onclick="showTab('analyze', event)">Analyze</button>
-    <button onclick="showTab('visualize', event)">Visualize</button>
-    <button onclick="showTab('compare', event)">Compare</button>
-    <button onclick="showTab('history', event)">History</button>
-    <button onclick="showTab('profile', event)">Profile</button>
-    <button onclick="showTab('odds', event)">Odds</button>
-    <button onclick="showTab('syndicate', event)">Syndicates</button>
-    <button onclick="showTab('notifications', event)">Notifications</button>
-    <button onclick="showTab('health', event)">Data Health</button>
-    <button onclick="showTab('correlation', event)">Correlations</button>
   </div>
 
   <!-- Predict tab -->
@@ -989,6 +1031,7 @@
     </div>
   </section>
 </main>
+</div>
 
 <script>
 const API = "http://127.0.0.1:8000";
@@ -1029,14 +1072,14 @@ function showTab(name, evt) {
     el.style.display = "none";
     el.classList.remove("fade-in");
   });
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll(".tabs button").forEach(button => {
+    button.classList.toggle("active", button.dataset.tab === name);
+  });
   const panel = document.getElementById("tab-" + name);
   if (panel) {
     panel.style.display = "block";
     panel.classList.add("fade-in");
-    panel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
-  if (evt && evt.target) evt.target.classList.add("active");
 
   if (name === "profile") {
     loadProfile();

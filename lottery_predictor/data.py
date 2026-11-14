@@ -3,15 +3,18 @@ Historical Lottery Data Management
 Fetches, caches, and manages historical lottery data for Florida Lotto and Powerball.
 """
 
-import os
 import json
 import requests
 import pandas as pd
 import numpy as np
-from datetime import datetime, timedelta
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 import logging
+import io
+import re
+
+from pypdf import PdfReader
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -48,85 +51,136 @@ class LotteryDataManager:
         self.lottery_type = lottery_type
         self.config = LOTTERY_CONFIGS.get(lottery_type, LOTTERY_CONFIGS["powerball"])
         self.cache_file = DATA_DIR / f"{lottery_type}_history.json"
+        self.refresh_meta_file = DATA_DIR / f"{lottery_type}_refresh.json"
         self.df: Optional[pd.DataFrame] = None
 
     def load_data(self) -> pd.DataFrame:
-        """Load historical data from cache or generate sample data."""
+        """Load the stored draw history without inventing missing results."""
         if self.cache_file.exists():
             logger.info(f"Loading cached data for {self.config['name']}")
-            with open(self.cache_file, 'r') as f:
-                data = json.load(f)
+            with open(self.cache_file, "r", encoding="utf-8") as handle:
+                data = json.load(handle)
             self.df = pd.DataFrame(data)
-            self.df['date'] = pd.to_datetime(self.df['date'])
-            # Extend with generated draws for any missing draw days up to today
-            added = self.extend_to_today()
-            if added > 0:
-                logger.info(f"Extended cache with {added} draws up to today")
-            return self.df
-
-        # Generate comprehensive historical data if no cache
-        logger.info(f"Generating historical data for {self.config['name']}")
-        self.df = self._generate_historical_data()
-        self.save_data()
+            if not self.df.empty:
+                self.df["date"] = pd.to_datetime(self.df["date"], errors="raise")
+        else:
+            self.df = pd.DataFrame(columns=["draw_number", "date", "main_numbers", "bonus_numbers", "jackpot"])
+            self.df["date"] = pd.to_datetime(self.df["date"])
+        self.refresh_status = self.refresh_official_results()
+        if self.df.empty:
+            raise RuntimeError(self.refresh_status["message"])
         return self.df
 
-    def _generate_historical_data(self) -> pd.DataFrame:
-        """Generate realistic historical lottery data based on actual game rules."""
-        config = self.config
-        start_date = pd.Timestamp(config['start_date'])
-        end_date = pd.Timestamp.now()
+    def refresh_official_results(self) -> Dict:
+        """Refresh draw history from an official lottery authority source."""
+        if self.cache_file.exists() and self.refresh_meta_file.exists():
+            try:
+                previous = json.loads(self.refresh_meta_file.read_text(encoding="utf-8"))
+                refreshed_at = datetime.fromisoformat(previous["updated_at"])
+                if (datetime.now(timezone.utc) - refreshed_at).total_seconds() < 300:
+                    previous["message"] = "Official results refreshed within the last five minutes."
+                    return previous
+            except (KeyError, TypeError, ValueError, OSError):
+                pass
+        if self.lottery_type == "florida_lotto":
+            url = "https://files.floridalottery.com/exptkt/l6.pdf"
+            source = "Florida Lottery Winning Numbers History"
+            try:
+                response = requests.get(url, timeout=30, headers={"User-Agent": "LotteryPredictor/1.0"})
+                response.raise_for_status()
+                reader = PdfReader(io.BytesIO(response.content))
+                rows = []
+                date_pattern = re.compile(r"\d{2}/\d{2}/\d{2}")
+                numbers_pattern = re.compile(r"\d{1,2}(?:\s*-\s*\d{1,2}){5}")
+                for page in reader.pages:
+                    text = page.extract_text(extraction_mode="layout") or ""
+                    for line in text.splitlines():
+                        dates = list(date_pattern.finditer(line))
+                        for index, date_match in enumerate(dates):
+                            end = dates[index + 1].start() if index + 1 < len(dates) else len(line)
+                            draw_record = line[date_match.end():end]
+                            if re.search(r"\bLOTTO\s+DP\b", draw_record):
+                                continue
+                            numbers_match = numbers_pattern.search(draw_record)
+                            if not numbers_match:
+                                continue
+                            draw_date = pd.to_datetime(date_match.group(), format="%m/%d/%y").normalize()
+                            numbers = [int(value) for value in re.findall(r"\d+", numbers_match.group())]
+                            if len(numbers) != 6 or len(set(numbers)) != 6 or min(numbers) < 1 or max(numbers) > self.config["main_max"]:
+                                raise ValueError(f"Official Florida Lotto record is invalid for {draw_date.date()}")
+                            rows.append({"date": draw_date, "main_numbers": sorted(numbers),
+                                         "bonus_numbers": [], "jackpot": 0})
+                official = pd.DataFrame(rows).drop_duplicates("date", keep="last").sort_values("date")
+                if official.empty:
+                    raise ValueError("Official Florida Lottery history contained no draw records")
+                official["draw_number"] = range(1, len(official) + 1)
+                self.df = official.reset_index(drop=True)
+                self.save_data()
+                status = {"verified": True, "source": source, "source_url": url,
+                          "updated_at": datetime.now(timezone.utc).isoformat(),
+                          "latest_draw_date": official["date"].max().date().isoformat(),
+                          "message": "Results refreshed from the official Florida Lottery history."}
+                self.refresh_meta_file.write_text(json.dumps(status, indent=2), encoding="utf-8")
+                return status
+            except Exception as exc:
+                logger.warning("Official Florida Lotto refresh failed: %s", exc)
+                return {"verified": False, "source": None, "updated_at": None,
+                        "message": f"Official refresh unavailable; cached results retained. ({exc})"}
 
-        # Calculate draw dates based on draw days
-        draw_dates = []
-        current = start_date
-        while current <= end_date:
-            if current.strftime("%A") in config['draw_days']:
-                draw_dates.append(current)
-            current += timedelta(days=1)
-
-        # Generate draws with some realistic patterns
-        np.random.seed(42)  # For reproducibility
-        draws = []
-
-        for i, date in enumerate(draw_dates):
-            # Main numbers
-            main_nums = sorted(np.random.choice(
-                range(1, config['main_max'] + 1),
-                size=config['main_numbers'],
-                replace=False
-            ).tolist())
-
-            # Bonus numbers
-            bonus_nums = []
-            if config['bonus_numbers'] > 0:
-                bonus_nums = sorted(np.random.choice(
-                    range(1, config['bonus_max'] + 1),
-                    size=config['bonus_numbers'],
-                    replace=False
-                ).tolist())
-
-            draws.append({
-                'draw_number': i + 1,
-                'date': date.strftime('%Y-%m-%d'),
-                'main_numbers': main_nums,
-                'bonus_numbers': bonus_nums,
-                'jackpot': np.random.randint(1000000, 500000000),
-            })
-
-        df = pd.DataFrame(draws)
-        logger.info(f"Generated {len(df)} historical draws for {config['name']}")
-        return df
-
-    def fetch_from_api(self) -> Optional[pd.DataFrame]:
-        """Attempt to fetch real data from lottery APIs."""
+        sources = {
+            "powerball": ("d6yy-54nr", pd.Timestamp("2010-02-03")),
+            "mega_millions": ("5xaw-6ayf", pd.Timestamp("2002-05-17")),
+        }
+        if self.lottery_type not in sources:
+            return {"verified": False, "source": None, "updated_at": None,
+                    "message": "No official automatic feed is configured; cached results were retained."}
+        dataset_id, coverage_start = sources[self.lottery_type]
+        url = f"https://data.ny.gov/resource/{dataset_id}.json"
         try:
-            # This would be implemented with actual API endpoints
-            # For now, we use generated data
-            logger.warning("Real API fetching not implemented, using generated data")
-            return None
-        except Exception as e:
-            logger.error(f"API fetch failed: {e}")
-            return None
+            response = requests.get(url, params={"$limit": 5000, "$order": "draw_date ASC"},
+                                    timeout=20, headers={"User-Agent": "LotteryPredictor/1.0"})
+            response.raise_for_status()
+            payload = response.json()
+            if not isinstance(payload, list) or not payload:
+                raise ValueError("Official source returned no draw records")
+            rows = []
+            for item in payload:
+                values = [int(n) for n in item.get("winning_numbers", "").split() if n.isdigit()]
+                if self.lottery_type == "powerball":
+                    main, bonus = values[:5], values[5:6]
+                else:
+                    main = values[:5]
+                    bonus = [int(item["mega_ball"])] if item.get("mega_ball") else values[5:6]
+                if len(main) != 5 or len(bonus) != 1:
+                    continue
+                historical_main_max = 69 if self.lottery_type == "powerball" else 75
+                historical_bonus_max = 39 if self.lottery_type == "powerball" else 56
+                if len(set(main)) != 5 or min(main) < 1 or max(main) > historical_main_max:
+                    raise ValueError("Official source returned invalid main numbers")
+                if bonus[0] < 1 or bonus[0] > historical_bonus_max:
+                    raise ValueError("Official source returned invalid bonus number")
+                rows.append({"date": pd.to_datetime(item["draw_date"]).normalize(),
+                             "main_numbers": main, "bonus_numbers": bonus, "jackpot": 0})
+            official = pd.DataFrame(rows).drop_duplicates("date", keep="last").sort_values("date")
+            if official.empty:
+                raise ValueError("Official source contained no valid records")
+            preserved = self.df[self.df["date"] < coverage_start]
+            official["draw_number"] = range(len(preserved) + 1, len(preserved) + len(official) + 1)
+            combined = pd.concat([preserved, official], ignore_index=True)
+            combined = combined.sort_values("date").drop_duplicates("date", keep="last").reset_index(drop=True)
+            combined["draw_number"] = range(1, len(combined) + 1)
+            self.df = combined
+            self.save_data()
+            status = {"verified": True, "source": "New York State Gaming Commission Open Data",
+                      "source_url": url, "updated_at": datetime.now(timezone.utc).isoformat(),
+                      "latest_draw_date": official["date"].max().date().isoformat(),
+                      "message": "Results refreshed from the official state dataset."}
+            self.refresh_meta_file.write_text(json.dumps(status, indent=2), encoding="utf-8")
+            return status
+        except Exception as exc:
+            logger.warning("Official refresh failed for %s: %s", self.lottery_type, exc)
+            return {"verified": False, "source": None, "updated_at": None,
+                    "message": f"Official refresh unavailable; cached results retained. ({exc})"}
 
     def save_data(self):
         """Save data to cache."""
@@ -138,69 +192,6 @@ class LotteryDataManager:
             with open(self.cache_file, 'w') as f:
                 json.dump(data.to_dict('records'), f)
             logger.info(f"Saved {len(data)} draws to cache")
-
-    def extend_to_today(self) -> int:
-        """Generate draws for any draw days between the last cached date and today.
-
-        External lottery APIs and scraping are frequently blocked or require API keys,
-        so when the cache is stale we extend it with generated draws for the missing
-        draw days. Real historical data is preserved; only dates after the last cached
-        draw are generated.
-        """
-        if self.df is None or len(self.df) == 0:
-            return 0
-
-        config = self.config
-        last_date = self.df['date'].max()
-        today = pd.Timestamp.now().normalize()
-
-        if last_date >= today:
-            return 0
-
-        # Collect draw days after the last cached date up to today
-        draw_dates = []
-        current = last_date + timedelta(days=1)
-        while current <= today:
-            if current.strftime("%A") in config['draw_days']:
-                draw_dates.append(current)
-            current += timedelta(days=1)
-
-        if not draw_dates:
-            return 0
-
-        next_draw_number = int(self.df['draw_number'].max()) + 1
-
-        draws = []
-        for i, date in enumerate(draw_dates):
-            rng = np.random.default_rng(int(date.timestamp()))
-            main_nums = sorted(rng.choice(
-                range(1, config['main_max'] + 1),
-                size=config['main_numbers'],
-                replace=False
-            ).tolist())
-
-            bonus_nums = []
-            if config['bonus_numbers'] > 0:
-                bonus_nums = sorted(rng.choice(
-                    range(1, config['bonus_max'] + 1),
-                    size=config['bonus_numbers'],
-                    replace=False
-                ).tolist())
-
-            draws.append({
-                'draw_number': next_draw_number + i,
-                'date': date.strftime('%Y-%m-%d'),
-                'main_numbers': main_nums,
-                'bonus_numbers': bonus_nums,
-                'jackpot': int(rng.integers(1000000, 500000000)),
-            })
-
-        new_df = pd.DataFrame(draws)
-        new_df['date'] = pd.to_datetime(new_df['date'])
-        self.df = pd.concat([self.df, new_df], ignore_index=True).sort_values('date').reset_index(drop=True)
-        self.save_data()
-
-        return len(draws)
 
     def get_recent_draws(self, n: int = 100) -> pd.DataFrame:
         """Get most recent n draws."""

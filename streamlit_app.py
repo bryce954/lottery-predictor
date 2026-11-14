@@ -2025,6 +2025,14 @@ st.error(
 
 # Sidebar
 with st.sidebar:
+    st.header("Sections", icon=":material/menu:")
+    selected_section = st.radio(
+        "Navigate",
+        ["Predict", "Analyze", "Visualize", "Compare", "History", "Profile", "Data Health", "Correlations"],
+        key="main_navigation",
+        label_visibility="collapsed",
+    )
+    st.divider()
     st.header("Settings", icon=":material/settings:")
 
     # Lottery selection - filter out "no lottery" states
@@ -2100,17 +2108,6 @@ with st.sidebar:
         retrain = st.checkbox("Retrain ML models", value=False)
         lookback = st.slider("Lookback window (ML)", 5, 20, 10)
 
-# Main tabs
-tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
-    "Predict",
-    "Analyze",
-    "Visualize",
-    "History",
-    "Compare",
-    "Profile & social",
-    "Data health (v2.4)",
-    "Cross-lottery (v2.4)",
-])
 # Helper functions
 @st.cache_data(ttl=300)
 def load_lottery_data(lottery_key, last_n=None):
@@ -2170,9 +2167,18 @@ def _json_default(obj):
         return obj.tolist()
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
-# Tab 1: Predict
-with tab1:
+# Predict page
+if selected_section == "Predict":
     st.subheader("Generate predictions", icon=":material/analytics:", anchor=False)
+    try:
+        freshness_manager, _ = load_lottery_data(selected_lottery, 1)
+        freshness = freshness_manager.refresh_status
+        if freshness.get("verified"):
+            st.caption(f"Verified results · {freshness.get('source')} · latest draw {freshness.get('latest_draw_date')}")
+        else:
+            st.warning(freshness.get("message", "Results could not be verified from an official source."))
+    except Exception as exc:
+        st.warning(f"Verified results are unavailable: {exc}")
 
     # Jackpot display for selected lottery
     lottery_info = LOTTERY_CONFIGS.get(selected_lottery, {})
@@ -2257,8 +2263,8 @@ with tab1:
             avg_conf = np.mean([p.confidence for p in st.session_state.predictions])
             st.metric("Avg confidence", f"{avg_conf:.1%}")
 
-# Tab 2: Analyze
-with tab2:
+# Analyze page
+if selected_section == "Analyze":
     st.subheader("Historical analysis", icon=":material/bar_chart:", anchor=False)
 
     # Full history toggle for analysis
@@ -2378,8 +2384,8 @@ with tab2:
         )
         st.plotly_chart(fig_sum, width='stretch')
 
-# Tab 3: Visualize
-with tab3:
+# Visualize page
+if selected_section == "Visualize":
     st.subheader("Visualizations", icon=":material/bar_chart:", anchor=False)
 
     dm, df = load_lottery_data(selected_lottery, last_n_draws)
@@ -2474,8 +2480,8 @@ with tab3:
 
             st.toast("Visualizations generated!", icon=":material/check_circle:")
 
-# Tab 4: History
-with tab4:
+# History page
+if selected_section == "History":
     st.subheader("Recent draw history", icon=":material/history:", anchor=False)
 
     dm, df = load_lottery_data(selected_lottery)
@@ -2505,8 +2511,8 @@ with tab4:
         mime="text/csv"
     )
 
-# Tab 5: Compare
-with tab5:
+# Compare page
+if selected_section == "Compare":
     st.subheader("Method comparison", icon=":material/compare_arrows:", anchor=False)
 
     compare_methods = st.multiselect(
@@ -2585,8 +2591,8 @@ with tab5:
             )
             st.plotly_chart(fig_comp, width='stretch')
 
-# Tab 6: Profile & Social
-with tab6:
+# Profile page
+if selected_section == "Profile":
     st.subheader("User profile & social", icon=":material/person:", anchor=False)
 
     # Import user profile manager
@@ -3001,8 +3007,8 @@ with tab6:
         else:
             st.info("No open community pools. Create one above!")
 
-# Tab 7: Data Health Dashboard (v2.4)
-with tab7:
+# Data Health page
+if selected_section == "Data Health":
     st.subheader("Historical data health dashboard (v2.4)", icon=":material/health_and_safety:", anchor=False)
 
     st.markdown("""
@@ -3119,8 +3125,8 @@ with tab7:
         else:
             st.success("✅ No anomalies detected")
 
-# Tab 8: Cross-Lottery Correlation (v2.4)
-with tab8:
+# Correlations page
+if selected_section == "Correlations":
     st.subheader("Cross-lottery historical correlation (v2.4)", icon=":material/compare:", anchor=False)
 
     st.markdown("""
