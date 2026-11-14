@@ -1,0 +1,12 @@
+{
+  "id": "fd47c348",
+  "name": "Test Pool 2",
+  "lottery": "powerball",
+  "budget": 50.0,
+  "ticket_cost": 2.0,
+  "creator": "testuser2",
+  "participants": [],
+  "tickets": [],
+  "created_at": "2026-11-02T07:33:50.323911",
+  "status": "open"
+}

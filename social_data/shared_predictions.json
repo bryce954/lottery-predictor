@@ -1,0 +1,125 @@
+[
+  {
+    "id": "d5f1feb1",
+    "username": "testuser",
+    "lottery": "powerball",
+    "method": "ensemble",
+    "predictions": [
+      {
+        "main_numbers": [
+          5,
+          7,
+          11,
+          12,
+          15
+        ],
+        "bonus_numbers": [
+          25
+        ],
+        "confidence": 0.09222661396574439,
+        "method": "ensemble_consensus",
+        "metadata": {
+          "vote_score": 1.0499999999999998,
+          "methods_combined": 6
+        }
+      },
+      {
+        "main_numbers": [
+          1,
+          6,
+          20,
+          37,
+          40
+        ],
+        "bonus_numbers": [
+          12
+        ],
+        "confidence": 0.09222661396574439,
+        "method": "ensemble_consensus",
+        "metadata": {
+          "vote_score": 1.0499999999999998,
+          "methods_combined": 6
+        }
+      }
+    ],
+    "timestamp": "2026-11-02T07:23:14.904106",
+    "is_anonymous": false,
+    "likes": 0,
+    "comments": []
+  },
+  {
+    "id": "6f894481",
+    "username": "testuser2",
+    "lottery": "powerball",
+    "method": "ensemble",
+    "predictions": [
+      {
+        "main_numbers": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "bonus_numbers": [
+          10
+        ],
+        "confidence": 0.5,
+        "method": "ensemble",
+        "metadata": {}
+      }
+    ],
+    "timestamp": "2026-11-02T07:33:50.323751",
+    "is_anonymous": false,
+    "likes": 0,
+    "comments": []
+  },
+  {
+    "id": "8b764e57",
+    "username": "cliuser",
+    "lottery": "powerball",
+    "method": "ensemble",
+    "predictions": [
+      {
+        "main_numbers": [
+          5,
+          6,
+          11,
+          12,
+          26
+        ],
+        "bonus_numbers": [
+          26
+        ],
+        "confidence": 0.09222661396574439,
+        "method": "ensemble_consensus",
+        "metadata": {
+          "vote_score": 1.0499999999999998,
+          "methods_combined": 6
+        }
+      },
+      {
+        "main_numbers": [
+          1,
+          15,
+          22,
+          26,
+          33
+        ],
+        "bonus_numbers": [
+          6
+        ],
+        "confidence": 0.09222661396574439,
+        "method": "ensemble_consensus",
+        "metadata": {
+          "vote_score": 1.0499999999999998,
+          "methods_combined": 6
+        }
+      }
+    ],
+    "timestamp": "2026-11-02T07:35:20.356478",
+    "is_anonymous": false,
+    "likes": 0,
+    "comments": []
+  }
+]

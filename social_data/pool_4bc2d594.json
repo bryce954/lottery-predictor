@@ -1,0 +1,12 @@
+{
+  "id": "4bc2d594",
+  "name": "CLI Test Pool",
+  "lottery": "powerball",
+  "budget": 50.0,
+  "ticket_cost": 2.0,
+  "creator": "cliuser",
+  "participants": [],
+  "tickets": [],
+  "created_at": "2026-11-02T07:35:36.991624",
+  "status": "open"
+}

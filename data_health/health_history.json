@@ -1,0 +1,78 @@
+[
+  {
+    "timestamp": "2026-11-02T07:58:13.867713",
+    "lottery": "powerball",
+    "total_draws": 5405,
+    "date_range_start": "1992-04-22",
+    "date_range_end": "2026-10-31",
+    "days_since_last_draw": 2,
+    "expected_draws": 5405,
+    "missing_draws": 0,
+    "gaps": [],
+    "anomalies": [],
+    "completeness_score": 1.0,
+    "freshness_score": 0.8571428571428572
+  },
+  {
+    "timestamp": "2026-11-02T18:25:30.609362",
+    "lottery": "florida_lotto",
+    "total_draws": 4052,
+    "date_range_start": "1988-01-06",
+    "date_range_end": "2026-10-31",
+    "days_since_last_draw": 2,
+    "expected_draws": 4051,
+    "missing_draws": 0,
+    "gaps": [],
+    "anomalies": [],
+    "completeness_score": 1.0,
+    "freshness_score": 0.8571428571428572
+  },
+  {
+    "timestamp": "2026-11-02T18:25:36.589307",
+    "lottery": "mega_millions",
+    "total_draws": 5405,
+    "date_range_start": "1992-04-22",
+    "date_range_end": "2026-10-31",
+    "days_since_last_draw": 2,
+    "expected_draws": 3603,
+    "missing_draws": 0,
+    "gaps": [],
+    "anomalies": [],
+    "completeness_score": 1.0,
+    "freshness_score": 0.8571428571428572
+  },
+  {
+    "timestamp": "2026-11-02T18:25:41.116837",
+    "lottery": "new_york_lotto",
+    "total_draws": 5024,
+    "date_range_start": "1978-09-13",
+    "date_range_end": "2026-10-31",
+    "days_since_last_draw": 2,
+    "expected_draws": 5023,
+    "missing_draws": 0,
+    "gaps": [],
+    "anomalies": [],
+    "completeness_score": 1.0,
+    "freshness_score": 0.8571428571428572
+  },
+  {
+    "timestamp": "2026-11-02T18:28:28.871564",
+    "lottery": "texas_lotto",
+    "total_draws": 5321,
+    "date_range_start": "1992-11-07",
+    "date_range_end": "2026-11-02",
+    "days_since_last_draw": 0,
+    "expected_draws": 5320,
+    "missing_draws": 0,
+    "gaps": [],
+    "anomalies": [
+      {
+        "type": "duplicate_draws",
+        "count": 1,
+        "details": "Found 1 duplicate draw combinations"
+      }
+    ],
+    "completeness_score": 1.0,
+    "freshness_score": 1.0
+  }
+]

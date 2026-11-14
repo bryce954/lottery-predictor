@@ -1,0 +1,63 @@
+{
+  "lottery": "powerball",
+  "method": "statistical",
+  "predictions": [
+    {
+      "main_numbers": [
+        14,
+        23,
+        25,
+        40,
+        50
+      ],
+      "bonus_numbers": [
+        16
+      ],
+      "confidence": 0.65,
+      "method": "balanced_statistical",
+      "metadata": {
+        "target_sum": 172.64,
+        "actual_sum": 152,
+        "last_n_draws": 200
+      }
+    },
+    {
+      "main_numbers": [
+        6,
+        9,
+        19,
+        36,
+        63
+      ],
+      "bonus_numbers": [
+        26
+      ],
+      "confidence": 0.65,
+      "method": "balanced_statistical",
+      "metadata": {
+        "target_sum": 172.64,
+        "actual_sum": 133,
+        "last_n_draws": 200
+      }
+    },
+    {
+      "main_numbers": [
+        11,
+        24,
+        46,
+        50,
+        69
+      ],
+      "bonus_numbers": [
+        8
+      ],
+      "confidence": 0.65,
+      "method": "balanced_statistical",
+      "metadata": {
+        "target_sum": 172.64,
+        "actual_sum": 200,
+        "last_n_draws": 200
+      }
+    }
+  ]
+}

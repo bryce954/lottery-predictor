@@ -1,0 +1,4034 @@
+[
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 1.0,
+    "p_value": 0.0,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 5405,
+      "draws_b": 5405,
+      "date_range": "1992-04-22 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 1.0,
+    "p_value": 0.0,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 175.52654949121185,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 43.80357602893685,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": 1.0,
+    "p_value": 0.0,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "avg_odd_ratio_a": 0.5114893617021278,
+      "avg_odd_ratio_b": 0.5114893617021278,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.023464526581251584,
+    "p_value": 0.8675479761768035,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "max_common_number": 53,
+      "draws_a": 5405,
+      "draws_b": 3604,
+      "date_range": "1992-04-22 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9258161103714183,
+    "p_value": 1.3394517956273817e-08,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 162.14178690344062,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 35.99327284419577,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 1.0,
+    "p_value": 0.0,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 5405,
+      "draws_b": 5405,
+      "date_range": "1992-04-22 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 1.0,
+    "p_value": 0.0,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 175.52654949121185,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 43.80357602893685,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": 1.0,
+    "p_value": 0.0,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "avg_odd_ratio_a": 0.5114893617021278,
+      "avg_odd_ratio_b": 0.5114893617021278,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "california_superlotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.046324409630216064,
+    "p_value": 0.7571706095748215,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 5405,
+      "draws_b": 3604,
+      "date_range": "1992-04-22 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "california_superlotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.21840808003612214,
+    "p_value": 0.36902490019039574,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 120.18923418423974,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 28.821896264766988,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_york_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.0693370953338777,
+    "p_value": 0.6017944488724599,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "max_common_number": 59,
+      "draws_a": 5405,
+      "draws_b": 3604,
+      "date_range": "1992-04-22 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_york_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9860222735736984,
+    "p_value": 1.1346734841287405e-14,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 180.67175360710323,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 40.02170847011842,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.952207423574678,
+    "p_value": 3.493904051038594e-10,
+    "sample_size": 5320,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52124060150376,
+      "mean_sum_b": 165.30921052631578,
+      "std_sum_a": 43.80018625250515,
+      "std_sum_b": 36.43633429036994,
+      "draws_a": 5320,
+      "draws_b": 5320
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.009580435127848909,
+    "p_value": 0.4847815608931281,
+    "sample_size": 5320,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5116917293233082,
+      "avg_odd_ratio_b": 0.49884085213032575,
+      "draws_a": 5320,
+      "draws_b": 5320
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "georgia_fantasy5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.01806255379510671,
+    "p_value": 0.9414931773522227,
+    "sample_size": 5004,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.60151878497203,
+      "mean_sum_b": 107.73524625267666,
+      "std_sum_a": 43.769387455947246,
+      "std_sum_b": 25.623742078977024,
+      "draws_a": 5004,
+      "draws_b": 11675
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "illinois_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.8983209607990945,
+    "p_value": 1.7749584248459912e-07,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 159.1395004625347,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 34.67800027911403,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "illinois_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.005600615983465346,
+    "p_value": 0.6805900924391419,
+    "sample_size": 5405,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5114893617021278,
+      "avg_odd_ratio_b": 0.49777983348751154,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7766592483627343,
+    "p_value": 9.20336198796169e-05,
+    "sample_size": 3563,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.46365422396858,
+      "mean_sum_b": 149.57900645523435,
+      "std_sum_a": 43.71344202341085,
+      "std_sum_b": 33.089255415250534,
+      "draws_a": 3563,
+      "draws_b": 3563
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.004146544689626811,
+    "p_value": 0.8045792686022664,
+    "sample_size": 3563,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5142295818130788,
+      "avg_odd_ratio_b": 0.5083730938347835,
+      "draws_a": 3563,
+      "draws_b": 3563
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7644189935653429,
+    "p_value": 0.0001384292340552818,
+    "sample_size": 3096,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.93669250645993,
+      "mean_sum_b": 149.27228682170542,
+      "std_sum_a": 43.81997759704706,
+      "std_sum_b": 33.06040133411138,
+      "draws_a": 3096,
+      "draws_b": 3096
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": 0.025073875843630057,
+    "p_value": 0.16307337349513712,
+    "sample_size": 3096,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5139534883720931,
+      "avg_odd_ratio_b": 0.5092054263565892,
+      "draws_a": 3096,
+      "draws_b": 3096
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "michigan_lotto47",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6848564710010425,
+    "p_value": 0.0012154982602994898,
+    "sample_size": 2240,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.70080381065793,
+      "mean_sum_b": 143.16651785714285,
+      "std_sum_a": 43.74109974651696,
+      "std_sum_b": 31.871329542446965,
+      "draws_a": 3359,
+      "draws_b": 2240
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_jersey_pick6",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6137891987807919,
+    "p_value": 0.005184801805825085,
+    "sample_size": 3603,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 140.67471551484874,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 30.381736184491984,
+      "draws_a": 5405,
+      "draws_b": 3603
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "virginia_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.11893884796547062,
+    "p_value": 0.6276951255413366,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 117.36431742508324,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 24.61468126210637,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "massachusetts_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.48827534003583817,
+    "p_value": 0.03391616884431105,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 134.74944506104328,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 28.905241244282255,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7797814940386885,
+    "p_value": 8.259996350881828e-05,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 150.04736355226643,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 33.34624198843508,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.0073513934908962,
+    "p_value": 0.5889575955506406,
+    "sample_size": 5405,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5114893617021278,
+      "avg_odd_ratio_b": 0.5080481036077705,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "colorado_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.2523992692630838,
+    "p_value": 0.2971830949484209,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 123.38235294117646,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 26.53768872312649,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.49436512741563277,
+    "p_value": 0.03142994311599227,
+    "sample_size": 5405,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 135.090841813136,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 28.793232054596007,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.004178033728966328,
+    "p_value": 0.7587718813393914,
+    "sample_size": 5405,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5114893617021278,
+      "avg_odd_ratio_b": 0.4975023126734505,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "indiana_hoosier_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6190165747403805,
+    "p_value": 0.004714544369931003,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 141.080743618202,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 30.370179600917442,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "missouri_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4999224177930051,
+    "p_value": 0.0292871214046041,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 135.12680355160933,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 28.97822027821998,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "wisconsin_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.765374993768484,
+    "p_value": 0.00013420175517176933,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 149.56326304106548,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 33.04425855295935,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "maryland_multi_match",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.45952791524505265,
+    "p_value": 0.047773997097511185,
+    "sample_size": 2165,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.84323991376655,
+      "mean_sum_b": 132.41154734411086,
+      "std_sum_a": 43.844965862107486,
+      "std_sum_b": 29.640387459298942,
+      "draws_a": 3247,
+      "draws_b": 2165
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "connecticut_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4886057011954261,
+    "p_value": 0.0337775003603508,
+    "sample_size": 3603,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.530162842339,
+      "mean_sum_b": 134.75659172911463,
+      "std_sum_a": 43.806823272847076,
+      "std_sum_b": 28.87325048651559,
+      "draws_a": 5404,
+      "draws_b": 3603
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oregon_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7295341040352574,
+    "p_value": 0.0003929180602281635,
+    "sample_size": 3603,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 147.24895920066612,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 32.281063774817056,
+      "draws_a": 5405,
+      "draws_b": 3603
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.21255990385828294,
+    "p_value": 0.38229674458676627,
+    "sample_size": 5405,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 119.6268270120259,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 28.979977489597015,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.01074619840488961,
+    "p_value": 0.4295939595598386,
+    "sample_size": 5405,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5114893617021278,
+      "avg_odd_ratio_b": 0.5120074005550417,
+      "draws_a": 5405,
+      "draws_b": 5405
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kentucky_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4485528968448052,
+    "p_value": 0.054073581920171025,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 132.10432852386236,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 29.309784669616874,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "tennessee_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.0849571205417373,
+    "p_value": 0.5926927720134652,
+    "sample_size": 2334,
+    "significant": false,
+    "details": {
+      "max_common_number": 42,
+      "draws_a": 3500,
+      "draws_b": 2334,
+      "date_range": "2004-06-23 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "tennessee_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.38638012920257625,
+    "p_value": 0.10225042949386791,
+    "sample_size": 2334,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.56571428571428,
+      "mean_sum_b": 129.5407026563839,
+      "std_sum_a": 43.755260535046475,
+      "std_sum_b": 27.88147912141918,
+      "draws_a": 3500,
+      "draws_b": 2334
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "louisiana_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.3818708495812613,
+    "p_value": 0.1066651630011529,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 129.33851276359601,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 27.689319144400603,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "iowa_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4928204646757531,
+    "p_value": 0.032046692248219974,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 134.7644284128746,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 29.100180019555093,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oklahoma_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.5095944669440676,
+    "p_value": 0.0258313391617757,
+    "sample_size": 2198,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.85103155339806,
+      "mean_sum_b": 135.10600545950865,
+      "std_sum_a": 43.795288128809155,
+      "std_sum_b": 29.32974575021902,
+      "draws_a": 3296,
+      "draws_b": 2198
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.36955477262651115,
+    "p_value": 0.1194192658870678,
+    "sample_size": 3869,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.5355388989403,
+      "mean_sum_b": 82.64978030498837,
+      "std_sum_a": 43.5427982715094,
+      "std_sum_b": 18.76875956391824,
+      "draws_a": 3869,
+      "draws_b": 3869
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.0022880968323661295,
+    "p_value": 0.8868613998230611,
+    "sample_size": 3869,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5153269578702507,
+      "avg_odd_ratio_b": 0.49904368053760667,
+      "draws_a": 3869,
+      "draws_b": 3869
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.17623851262966606,
+    "p_value": 0.4704589174337198,
+    "sample_size": 2688,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.67559523809524,
+      "mean_sum_b": 99.44977678571429,
+      "std_sum_a": 43.83526181303267,
+      "std_sum_b": 24.095800395014187,
+      "draws_a": 2688,
+      "draws_b": 2688
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.014289584120999212,
+    "p_value": 0.4589663777577059,
+    "sample_size": 2688,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5142857142857143,
+      "avg_odd_ratio_b": 0.5093005952380952,
+      "draws_a": 2688,
+      "draws_b": 2688
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_mexico_roadrunner",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.25057970408480673,
+    "p_value": 0.3007966721158619,
+    "sample_size": 4506,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.60186418109188,
+      "mean_sum_b": 94.91591363074289,
+      "std_sum_a": 43.55811415285602,
+      "std_sum_b": 22.321606794785957,
+      "draws_a": 4506,
+      "draws_b": 10513
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "nebraska_pick5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.20410171696243498,
+    "p_value": 0.40195397836006785,
+    "sample_size": 3467,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.48168445341793,
+      "mean_sum_b": 97.69056743726048,
+      "std_sum_a": 43.727964369343624,
+      "std_sum_b": 23.140709965233896,
+      "draws_a": 3467,
+      "draws_b": 8089
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "idaho_weekly_grand",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.15515564865871087,
+    "p_value": 0.5259155673879372,
+    "sample_size": 1964,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.6754921928038,
+      "mean_sum_b": 102.33757637474542,
+      "std_sum_a": 43.8182142847157,
+      "std_sum_b": 24.4231950749657,
+      "draws_a": 2946,
+      "draws_b": 1964
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.4395165859605813,
+    "p_value": 0.05971674908429777,
+    "sample_size": 3990,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.634335839599,
+      "mean_sum_b": 71.99197994987469,
+      "std_sum_a": 43.51346836118149,
+      "std_sum_b": 16.588848984065752,
+      "draws_a": 3990,
+      "draws_b": 3990
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.006117218419393378,
+    "p_value": 0.6992852420212919,
+    "sample_size": 3990,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5145363408521303,
+      "avg_odd_ratio_b": 0.5011528822055138,
+      "draws_a": 3990,
+      "draws_b": 3990
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "euromillions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.15276365897735258,
+    "p_value": 0.2895485162503797,
+    "sample_size": 2371,
+    "significant": false,
+    "details": {
+      "max_common_number": 50,
+      "draws_a": 3555,
+      "draws_b": 2371,
+      "date_range": "2004-02-13 to 2026-10-30"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "euromillions",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4066254556434001,
+    "p_value": 0.08404619781303797,
+    "sample_size": 2371,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.46244725738396,
+      "mean_sum_b": 128.31210459721638,
+      "std_sum_a": 43.748944087587574,
+      "std_sum_b": 30.754473483107102,
+      "draws_a": 3555,
+      "draws_b": 2371
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "uk_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9803425836059464,
+    "p_value": 2.0197642864730248e-13,
+    "sample_size": 3335,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.61275489804078,
+      "mean_sum_b": 180.74992503748126,
+      "std_sum_a": 43.77411691768015,
+      "std_sum_b": 39.49320415789341,
+      "draws_a": 5002,
+      "draws_b": 3335
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "canada_lotto649",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7563810691478948,
+    "p_value": 0.00017868798177225363,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 148.73251942286348,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 33.271818626882855,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_ozlotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9417504509738901,
+    "p_value": 1.811985666216678e-09,
+    "sample_size": 1706,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.5448680351906,
+      "mean_sum_b": 167.3253223915592,
+      "std_sum_a": 43.78766515027932,
+      "std_sum_b": 33.68722459424698,
+      "draws_a": 5115,
+      "draws_b": 1706
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_powerball",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.2836665151898139,
+    "p_value": 0.23923509120412004,
+    "sample_size": 1589,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.51280436607894,
+      "mean_sum_b": 125.96161107614851,
+      "std_sum_a": 43.61942363401972,
+      "std_sum_b": 23.8815339564496,
+      "draws_a": 4764,
+      "draws_b": 1589
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "superenalotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.023674279316764496,
+    "p_value": 0.9233609719104197,
+    "sample_size": 4525,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.63049723756907,
+      "mean_sum_b": 271.6159964648696,
+      "std_sum_a": 43.54734564829897,
+      "std_sum_b": 60.95454541447191,
+      "draws_a": 4525,
+      "draws_b": 4526
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "eurojackpot",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.38411506884229096,
+    "p_value": 0.1044511792065723,
+    "sample_size": 1525,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 174.83552055993002,
+      "mean_sum_b": 128.97639344262296,
+      "std_sum_a": 43.450991870672986,
+      "std_sum_b": 30.601801620208246,
+      "draws_a": 2286,
+      "draws_b": 1525
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.023464526581251584,
+    "p_value": 0.8675479761768035,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "max_common_number": 53,
+      "draws_a": 5405,
+      "draws_b": 3604,
+      "date_range": "1992-04-22 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9258161103714183,
+    "p_value": 1.3394517956273817e-08,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 162.14178690344062,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 35.99327284419577,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.023464526581251584,
+    "p_value": 0.8675479761768035,
+    "sample_size": 3604,
+    "significant": false,
+    "details": {
+      "max_common_number": 53,
+      "draws_a": 5405,
+      "draws_b": 3604,
+      "date_range": "1992-04-22 to 2026-10-31"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9258161103714183,
+    "p_value": 1.3394517956273817e-08,
+    "sample_size": 3604,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52654949121185,
+      "mean_sum_b": 162.14178690344062,
+      "std_sum_a": 43.80357602893685,
+      "std_sum_b": 35.99327284419577,
+      "draws_a": 5405,
+      "draws_b": 3604
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.9991413574009775,
+    "p_value": 2.2316098619457762e-94,
+    "sample_size": 5408,
+    "significant": true,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 5410,
+      "draws_b": 5408,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.017435972764658567,
+    "p_value": 0.9013799336188946,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 53,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9259349788137831,
+    "p_value": 1.3218614993679523e-08,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 162.13473800942612,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 35.99526551949686,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.9991413574009775,
+    "p_value": 2.2316098619457762e-94,
+    "sample_size": 5408,
+    "significant": true,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 5410,
+      "draws_b": 5408,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9999966530410188,
+    "p_value": 1.988891012085427e-45,
+    "sample_size": 5408,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 175.5515902366864,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 43.81405202689573,
+      "draws_a": 5410,
+      "draws_b": 5408
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "california_superlotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.04588068552406212,
+    "p_value": 0.7594268197259062,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "california_superlotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.21853304777052002,
+    "p_value": 0.36874417442971996,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 120.17133351815913,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.825113980279347,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_york_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.07673837069336589,
+    "p_value": 0.5634803163758952,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 59,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_york_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9862111549820854,
+    "p_value": 1.0114030104257819e-14,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 180.6498475187136,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 40.03126293332041,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.10235303581955436,
+    "p_value": 0.46144080500813106,
+    "sample_size": 5325,
+    "significant": false,
+    "details": {
+      "max_common_number": 54,
+      "draws_a": 5325,
+      "draws_b": 5325,
+      "date_range": "1992-11-07 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9524148050388135,
+    "p_value": 3.3695059630270263e-10,
+    "sample_size": 5325,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50328638497652,
+      "mean_sum_b": 165.3092957746479,
+      "std_sum_a": 43.79412611478188,
+      "std_sum_b": 36.432007775908794,
+      "draws_a": 5325,
+      "draws_b": 5325
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.009958557344071759,
+    "p_value": 0.4675021536832786,
+    "sample_size": 5325,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5117370892018779,
+      "avg_odd_ratio_b": 0.4986541471048513,
+      "draws_a": 5325,
+      "draws_b": 5325
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "georgia_fantasy5",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.09344791535588243,
+    "p_value": 0.5561124516094335,
+    "sample_size": 5009,
+    "significant": false,
+    "details": {
+      "max_common_number": 42,
+      "draws_a": 5009,
+      "draws_b": 11686,
+      "date_range": "1994-11-14 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "georgia_fantasy5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.01742305819947012,
+    "p_value": 0.9435613814763079,
+    "sample_size": 5009,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.58235176681973,
+      "mean_sum_b": 107.74062981345199,
+      "std_sum_a": 43.76300600654308,
+      "std_sum_b": 25.62241934670794,
+      "draws_a": 5009,
+      "draws_b": 11686
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "illinois_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.1195675772463057,
+    "p_value": 0.39850777602659565,
+    "sample_size": 5409,
+    "significant": false,
+    "details": {
+      "max_common_number": 52,
+      "draws_a": 5410,
+      "draws_b": 5409,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "illinois_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.8986023704167179,
+    "p_value": 1.7353429007540773e-07,
+    "sample_size": 5409,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 159.13403586614902,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 34.676168287011635,
+      "draws_a": 5410,
+      "draws_b": 5409
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.05908442486485542,
+    "p_value": 0.6867520791615593,
+    "sample_size": 3568,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 3568,
+      "draws_b": 3568,
+      "date_range": "2004-01-28 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7772759404768307,
+    "p_value": 9.010071326334155e-05,
+    "sample_size": 3568,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.4369394618834,
+      "mean_sum_b": 149.58380044843048,
+      "std_sum_a": 43.704463205558554,
+      "std_sum_b": 33.08208021416583,
+      "draws_a": 3568,
+      "draws_b": 3568
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.0040892908858064765,
+    "p_value": 0.8070914363235413,
+    "sample_size": 3568,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5142937219730942,
+      "avg_odd_ratio_b": 0.5081745142002989,
+      "draws_a": 3568,
+      "draws_b": 3568
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.07687692224972544,
+    "p_value": 0.5995662772709488,
+    "sample_size": 3101,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 3101,
+      "draws_b": 3101,
+      "date_range": "2007-01-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7646679175322554,
+    "p_value": 0.00013731770107785782,
+    "sample_size": 3101,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.90519187358916,
+      "mean_sum_b": 149.23798774588843,
+      "std_sum_a": 43.80983401480374,
+      "std_sum_b": 33.06858383287494,
+      "draws_a": 3101,
+      "draws_b": 3101
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": 0.02547117148888407,
+    "p_value": 0.1561727453827475,
+    "sample_size": 3101,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5140277329893582,
+      "avg_odd_ratio_b": 0.5090293453724605,
+      "draws_a": 3101,
+      "draws_b": 3101
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "michigan_lotto47",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.11377830187979075,
+    "p_value": 0.4463594445272474,
+    "sample_size": 2243,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 3364,
+      "draws_b": 2243,
+      "date_range": "2005-05-18 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "michigan_lotto47",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6852270902599427,
+    "p_value": 0.001205118498707643,
+    "sample_size": 2243,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.67211652794293,
+      "mean_sum_b": 143.1395452518948,
+      "std_sum_a": 43.73169514986622,
+      "std_sum_b": 31.882302236035077,
+      "draws_a": 3364,
+      "draws_b": 2243
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_jersey_pick6",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.00103937962756365,
+    "p_value": 0.9945302189072363,
+    "sample_size": 3606,
+    "significant": false,
+    "details": {
+      "max_common_number": 46,
+      "draws_a": 5410,
+      "draws_b": 3606,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_jersey_pick6",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6140194167118463,
+    "p_value": 0.00516331279925086,
+    "sample_size": 3606,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 140.66361619523016,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 30.376008237433094,
+      "draws_a": 5410,
+      "draws_b": 3606
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "virginia_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.024216927063523935,
+    "p_value": 0.8852498702269577,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 38,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "virginia_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.11925043315844983,
+    "p_value": 0.6267876627912304,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 117.3490435264763,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 24.622616306309126,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "massachusetts_megabucks",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.09412747075025497,
+    "p_value": 0.5433545073345231,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "massachusetts_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4886798907266084,
+    "p_value": 0.03374642002256099,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 134.7432769614638,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.907461479895126,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.19971632149138968,
+    "p_value": 0.16887416837255284,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 5410,
+      "draws_b": 5410,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7800569335124687,
+    "p_value": 8.180896284910546e-05,
+    "sample_size": 5410,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 150.03567467652496,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 33.345489167727244,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.006891599341358364,
+    "p_value": 0.6123059356110403,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5115341959334565,
+      "avg_odd_ratio_b": 0.5079790511398644,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "colorado_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.07856058260661425,
+    "p_value": 0.6299116615177575,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 40,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "colorado_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.2528238051054717,
+    "p_value": 0.2963437956880992,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 123.37593568062101,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 26.53964415232299,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.18959468184123707,
+    "p_value": 0.21770986683760507,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 5410,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4945596999309965,
+    "p_value": 0.031352914623355176,
+    "sample_size": 5410,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 135.07800369685768,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.796626042484043,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.003821637617829746,
+    "p_value": 0.7786890424566186,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5115341959334565,
+      "avg_odd_ratio_b": 0.4975970425138632,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "indiana_hoosier_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.04927946350294191,
+    "p_value": 0.745007696343298,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 46,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "indiana_hoosier_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6192419334203672,
+    "p_value": 0.00469508631273683,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 141.0629331854727,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 30.379608794174427,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "missouri_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.042755075352992056,
+    "p_value": 0.782881003201562,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "missouri_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.5003365768961444,
+    "p_value": 0.029132116343172205,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 135.12032159689494,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.980456596621124,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "wisconsin_megabucks",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.01878827620714013,
+    "p_value": 0.8980429345736486,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "wisconsin_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7656758642728648,
+    "p_value": 0.00013289427501503545,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 149.54505128915997,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 33.052396126527384,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "maryland_multi_match",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.03374902443484494,
+    "p_value": 0.8298866225834624,
+    "sample_size": 2168,
+    "significant": false,
+    "details": {
+      "max_common_number": 43,
+      "draws_a": 3252,
+      "draws_b": 2168,
+      "date_range": "2006-02-02 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "maryland_multi_match",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.46059433214494105,
+    "p_value": 0.047193130011157984,
+    "sample_size": 2168,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.81334563345632,
+      "mean_sum_b": 132.42527675276753,
+      "std_sum_a": 43.83519713929585,
+      "std_sum_b": 29.62880672004924,
+      "draws_a": 3252,
+      "draws_b": 2168
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "connecticut_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.047164704934559265,
+    "p_value": 0.7611142525804001,
+    "sample_size": 3606,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3606,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "connecticut_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4895274654603764,
+    "p_value": 0.03339291699051876,
+    "sample_size": 3606,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 134.76927343316694,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.874467893700025,
+      "draws_a": 5410,
+      "draws_b": 3606
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oregon_megabucks",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.09379531049357548,
+    "p_value": 0.5260130499057843,
+    "sample_size": 3606,
+    "significant": false,
+    "details": {
+      "max_common_number": 48,
+      "draws_a": 5410,
+      "draws_b": 3606,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oregon_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7297866166243985,
+    "p_value": 0.00039018219766909505,
+    "sample_size": 3606,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 147.24847476428175,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 32.26777765718888,
+      "draws_a": 5410,
+      "draws_b": 3606
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.05271153720046627,
+    "p_value": 0.7249237655781274,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 5410,
+      "draws_b": 5410,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.21310185996108472,
+    "p_value": 0.38105578455583955,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 119.63142329020333,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.976588988949402,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.010611779070196966,
+    "p_value": 0.4351751017421608,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5115341959334565,
+      "avg_odd_ratio_b": 0.5119408502772643,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kentucky_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.11267659383197111,
+    "p_value": 0.4718985946189854,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 43,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kentucky_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4488349465140436,
+    "p_value": 0.0539041958067854,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 132.0981425006931,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 29.31105825926458,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "tennessee_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.09125660258193309,
+    "p_value": 0.5654509892405747,
+    "sample_size": 2337,
+    "significant": false,
+    "details": {
+      "max_common_number": 42,
+      "draws_a": 3505,
+      "draws_b": 2337,
+      "date_range": "2004-06-23 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "tennessee_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.386994341343106,
+    "p_value": 0.10165947509623954,
+    "sample_size": 2337,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.53837375178315,
+      "mean_sum_b": 129.53102267864784,
+      "std_sum_a": 43.74613278601803,
+      "std_sum_b": 27.884841745437214,
+      "draws_a": 3505,
+      "draws_b": 2337
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "louisiana_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.027271890197296356,
+    "p_value": 0.8638778151273383,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 42,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "louisiana_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.38228004614613964,
+    "p_value": 0.10625898389777086,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 129.33240920432493,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 27.69162858512848,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "iowa_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.011454144293726182,
+    "p_value": 0.9411748860799377,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "iowa_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.49325559185859996,
+    "p_value": 0.03187201158473843,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 134.75824785140006,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 29.102226980554764,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oklahoma_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.11986113842065672,
+    "p_value": 0.43835134814054716,
+    "sample_size": 2201,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 3301,
+      "draws_b": 2201,
+      "date_range": "2005-10-12 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oklahoma_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.510405128587826,
+    "p_value": 0.02555691610011893,
+    "sample_size": 2201,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.82156922144804,
+      "mean_sum_b": 135.09541117673785,
+      "std_sum_a": 43.785734198695614,
+      "std_sum_b": 29.332882151401172,
+      "draws_a": 3301,
+      "draws_b": 2201
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.03764352500892915,
+    "p_value": 0.837928376980339,
+    "sample_size": 3874,
+    "significant": false,
+    "details": {
+      "max_common_number": 32,
+      "draws_a": 3874,
+      "draws_b": 3874,
+      "date_range": "2002-02-13 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.3693489323815404,
+    "p_value": 0.1196412385413989,
+    "sample_size": 3874,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.5108415074858,
+      "mean_sum_b": 82.65436241610739,
+      "std_sum_a": 43.53475828935444,
+      "std_sum_b": 18.758637255318014,
+      "draws_a": 3874,
+      "draws_b": 3874
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.0014922186058709142,
+    "p_value": 0.9260243557677486,
+    "sample_size": 3874,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5153846153846154,
+      "avg_odd_ratio_b": 0.4992772328342799,
+      "draws_a": 3874,
+      "draws_b": 3874
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.13404324614547347,
+    "p_value": 0.4159054248950879,
+    "sample_size": 2693,
+    "significant": false,
+    "details": {
+      "max_common_number": 39,
+      "draws_a": 2693,
+      "draws_b": 2693,
+      "date_range": "2009-08-31 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.17524674217294,
+    "p_value": 0.4729999240541581,
+    "sample_size": 2693,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.6398069067954,
+      "mean_sum_b": 99.4597103601931,
+      "std_sum_a": 43.82334068194318,
+      "std_sum_b": 24.08129934834338,
+      "draws_a": 2693,
+      "draws_b": 2693
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.013627054661161379,
+    "p_value": 0.47964816542824096,
+    "sample_size": 2693,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5143705904196064,
+      "avg_odd_ratio_b": 0.5095432603044932,
+      "draws_a": 2693,
+      "draws_b": 2693
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_mexico_roadrunner",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.36104768871390475,
+    "p_value": 0.02813204702315177,
+    "sample_size": 4511,
+    "significant": true,
+    "details": {
+      "max_common_number": 37,
+      "draws_a": 4511,
+      "draws_b": 10524,
+      "date_range": "1998-01-19 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_mexico_roadrunner",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.25022783150152017,
+    "p_value": 0.30149853042509295,
+    "sample_size": 4511,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.5805808024828,
+      "mean_sum_b": 94.9239832763208,
+      "std_sum_a": 43.551228212331154,
+      "std_sum_b": 22.32865239657169,
+      "draws_a": 4511,
+      "draws_b": 10524
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "nebraska_pick5",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.03523303075986616,
+    "p_value": 0.8336670774731393,
+    "sample_size": 3472,
+    "significant": false,
+    "details": {
+      "max_common_number": 38,
+      "draws_a": 3472,
+      "draws_b": 8100,
+      "date_range": "2004-09-08 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "nebraska_pick5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.20360907587265314,
+    "p_value": 0.40311558532115055,
+    "sample_size": 3472,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.4542050691244,
+      "mean_sum_b": 97.69271604938271,
+      "std_sum_a": 43.71873049291189,
+      "std_sum_b": 23.144586254024702,
+      "draws_a": 3472,
+      "draws_b": 8100
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "idaho_weekly_grand",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.204325744131542,
+    "p_value": 0.20598462483371496,
+    "sample_size": 1967,
+    "significant": false,
+    "details": {
+      "max_common_number": 40,
+      "draws_a": 2951,
+      "draws_b": 1967,
+      "date_range": "2008-01-07 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "idaho_weekly_grand",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.15477705477578332,
+    "p_value": 0.526938342329988,
+    "sample_size": 1967,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.64283293798712,
+      "mean_sum_b": 102.3055414336553,
+      "std_sum_a": 43.80736127683163,
+      "std_sum_b": 24.425512860415918,
+      "draws_a": 2951,
+      "draws_b": 1967
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.050597625223165604,
+    "p_value": 0.7981868752038076,
+    "sample_size": 3995,
+    "significant": false,
+    "details": {
+      "max_common_number": 28,
+      "draws_a": 3995,
+      "draws_b": 3995,
+      "date_range": "2001-05-07 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.43938481641731447,
+    "p_value": 0.059802192013563765,
+    "sample_size": 3995,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.61026282853567,
+      "mean_sum_b": 71.99324155193993,
+      "std_sum_a": 43.50575805034808,
+      "std_sum_b": 16.57933343811025,
+      "draws_a": 3995,
+      "draws_b": 3995
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.005455098133689506,
+    "p_value": 0.7303276881268868,
+    "sample_size": 3995,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.51459324155194,
+      "avg_odd_ratio_b": 0.5010763454317898,
+      "draws_a": 3995,
+      "draws_b": 3995
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "euromillions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.1380569457741596,
+    "p_value": 0.33901788147540846,
+    "sample_size": 2374,
+    "significant": false,
+    "details": {
+      "max_common_number": 50,
+      "draws_a": 3561,
+      "draws_b": 2374,
+      "date_range": "2004-02-13 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "euromillions",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4082772011167666,
+    "p_value": 0.08267403183236276,
+    "sample_size": 2374,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.43021623139566,
+      "mean_sum_b": 128.34835720303286,
+      "std_sum_a": 43.73497225351339,
+      "std_sum_b": 30.767306884973287,
+      "draws_a": 3561,
+      "draws_b": 2374
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "uk_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.0420914324408891,
+    "p_value": 0.7515978587512402,
+    "sample_size": 3338,
+    "significant": false,
+    "details": {
+      "max_common_number": 59,
+      "draws_a": 5007,
+      "draws_b": 3338,
+      "date_range": "1994-11-19 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "uk_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9805949929069853,
+    "p_value": 1.8111904789944768e-13,
+    "sample_size": 3338,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.59356900339526,
+      "mean_sum_b": 180.72618334331935,
+      "std_sum_a": 43.7677338030338,
+      "std_sum_b": 39.50419099189913,
+      "draws_a": 5007,
+      "draws_b": 3338
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "canada_lotto649",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.06126036265770175,
+    "p_value": 0.6758407464022033,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "canada_lotto649",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7567604419529245,
+    "p_value": 0.00017658596007281833,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 148.7149986138065,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 33.279266366387105,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_ozlotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.14497773609192852,
+    "p_value": 0.33089981542361174,
+    "sample_size": 1708,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 5121,
+      "draws_b": 1708,
+      "date_range": "1994-02-22 to 2026-11-10"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_ozlotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9416395090445728,
+    "p_value": 1.840828130884582e-09,
+    "sample_size": 1708,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52548330404218,
+      "mean_sum_b": 167.34016393442624,
+      "std_sum_a": 43.77999024972624,
+      "std_sum_b": 33.67369389988356,
+      "draws_a": 5121,
+      "draws_b": 1708
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_powerball",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.004977562105287941,
+    "p_value": 0.9773604119299213,
+    "sample_size": 1590,
+    "significant": false,
+    "details": {
+      "max_common_number": 35,
+      "draws_a": 4770,
+      "draws_b": 1590,
+      "date_range": "1996-05-23 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_powerball",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.2838676338794377,
+    "p_value": 0.23888772481086237,
+    "sample_size": 1590,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.488679245283,
+      "mean_sum_b": 125.95094339622642,
+      "std_sum_a": 43.60915577293778,
+      "std_sum_b": 23.87780967148134,
+      "draws_a": 4770,
+      "draws_b": 1590
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "superenalotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.03838178161389956,
+    "p_value": 0.7541941359252652,
+    "sample_size": 4530,
+    "significant": false,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 4530,
+      "draws_b": 4530,
+      "date_range": "1997-12-04 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "superenalotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.023631963915298024,
+    "p_value": 0.9234975739396346,
+    "sample_size": 4530,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.60927152317882,
+      "mean_sum_b": 271.61037527593817,
+      "std_sum_a": 43.54051273905369,
+      "std_sum_b": 60.9651536418864,
+      "draws_a": 4530,
+      "draws_b": 4530
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "superenalotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": 0.026972358544684195,
+    "p_value": 0.06949145529885833,
+    "sample_size": 4530,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5131125827814569,
+      "avg_odd_ratio_b": 0.5019499632082413,
+      "draws_a": 4530,
+      "draws_b": 4530
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "eurojackpot",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.1385150867898412,
+    "p_value": 0.33740191446158657,
+    "sample_size": 1528,
+    "significant": false,
+    "details": {
+      "max_common_number": 50,
+      "draws_a": 2292,
+      "draws_b": 1528,
+      "date_range": "2012-03-23 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "eurojackpot",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.3866763378304257,
+    "p_value": 0.10196512804369849,
+    "sample_size": 1528,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 174.78708551483422,
+      "mean_sum_b": 129.03141361256544,
+      "std_sum_a": 43.42919704620616,
+      "std_sum_b": 30.6209140040184,
+      "draws_a": 2292,
+      "draws_b": 1528
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.9991413574009775,
+    "p_value": 2.2316098619457762e-94,
+    "sample_size": 5408,
+    "significant": true,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 5410,
+      "draws_b": 5408,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.017435972764658567,
+    "p_value": 0.9013799336188946,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 53,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "florida_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9259349788137831,
+    "p_value": 1.3218614993679523e-08,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 162.13473800942612,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 35.99526551949686,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.9991413574009775,
+    "p_value": 2.2316098619457762e-94,
+    "sample_size": 5408,
+    "significant": true,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 5410,
+      "draws_b": 5408,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9999966530410188,
+    "p_value": 1.988891012085427e-45,
+    "sample_size": 5408,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 175.5515902366864,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 43.81405202689573,
+      "draws_a": 5410,
+      "draws_b": 5408
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "california_superlotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.04588068552406212,
+    "p_value": 0.7594268197259062,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "california_superlotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.21853304777052002,
+    "p_value": 0.36874417442971996,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 120.17133351815913,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.825113980279347,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_york_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.07673837069336589,
+    "p_value": 0.5634803163758952,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 59,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_york_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9862111549820854,
+    "p_value": 1.0114030104257819e-14,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 180.6498475187136,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 40.03126293332041,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.10235303581955436,
+    "p_value": 0.46144080500813106,
+    "sample_size": 5325,
+    "significant": false,
+    "details": {
+      "max_common_number": 54,
+      "draws_a": 5325,
+      "draws_b": 5325,
+      "date_range": "1992-11-07 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9524148050388135,
+    "p_value": 3.3695059630270263e-10,
+    "sample_size": 5325,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50328638497652,
+      "mean_sum_b": 165.3092957746479,
+      "std_sum_a": 43.79412611478188,
+      "std_sum_b": 36.432007775908794,
+      "draws_a": 5325,
+      "draws_b": 5325
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "texas_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.009958557344071759,
+    "p_value": 0.4675021536832786,
+    "sample_size": 5325,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5117370892018779,
+      "avg_odd_ratio_b": 0.4986541471048513,
+      "draws_a": 5325,
+      "draws_b": 5325
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "georgia_fantasy5",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.09344791535588243,
+    "p_value": 0.5561124516094335,
+    "sample_size": 5009,
+    "significant": false,
+    "details": {
+      "max_common_number": 42,
+      "draws_a": 5009,
+      "draws_b": 11686,
+      "date_range": "1994-11-14 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "georgia_fantasy5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.01742305819947012,
+    "p_value": 0.9435613814763079,
+    "sample_size": 5009,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.58235176681973,
+      "mean_sum_b": 107.74062981345199,
+      "std_sum_a": 43.76300600654308,
+      "std_sum_b": 25.62241934670794,
+      "draws_a": 5009,
+      "draws_b": 11686
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "illinois_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.1195675772463057,
+    "p_value": 0.39850777602659565,
+    "sample_size": 5409,
+    "significant": false,
+    "details": {
+      "max_common_number": 52,
+      "draws_a": 5410,
+      "draws_b": 5409,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "illinois_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.8986023704167179,
+    "p_value": 1.7353429007540773e-07,
+    "sample_size": 5409,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 159.13403586614902,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 34.676168287011635,
+      "draws_a": 5410,
+      "draws_b": 5409
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.05908442486485542,
+    "p_value": 0.6867520791615593,
+    "sample_size": 3568,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 3568,
+      "draws_b": 3568,
+      "date_range": "2004-01-28 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7772759404768307,
+    "p_value": 9.010071326334155e-05,
+    "sample_size": 3568,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.4369394618834,
+      "mean_sum_b": 149.58380044843048,
+      "std_sum_a": 43.704463205558554,
+      "std_sum_b": 33.08208021416583,
+      "draws_a": 3568,
+      "draws_b": 3568
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "pennsylvania_match6",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.0040892908858064765,
+    "p_value": 0.8070914363235413,
+    "sample_size": 3568,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5142937219730942,
+      "avg_odd_ratio_b": 0.5081745142002989,
+      "draws_a": 3568,
+      "draws_b": 3568
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.07687692224972544,
+    "p_value": 0.5995662772709488,
+    "sample_size": 3101,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 3101,
+      "draws_b": 3101,
+      "date_range": "2007-01-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7646679175322554,
+    "p_value": 0.00013731770107785782,
+    "sample_size": 3101,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.90519187358916,
+      "mean_sum_b": 149.23798774588843,
+      "std_sum_a": 43.80983401480374,
+      "std_sum_b": 33.06858383287494,
+      "draws_a": 3101,
+      "draws_b": 3101
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "ohio_classic_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": 0.02547117148888407,
+    "p_value": 0.1561727453827475,
+    "sample_size": 3101,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5140277329893582,
+      "avg_odd_ratio_b": 0.5090293453724605,
+      "draws_a": 3101,
+      "draws_b": 3101
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "michigan_lotto47",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.11377830187979075,
+    "p_value": 0.4463594445272474,
+    "sample_size": 2243,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 3364,
+      "draws_b": 2243,
+      "date_range": "2005-05-18 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "michigan_lotto47",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6852270902599427,
+    "p_value": 0.001205118498707643,
+    "sample_size": 2243,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.67211652794293,
+      "mean_sum_b": 143.1395452518948,
+      "std_sum_a": 43.73169514986622,
+      "std_sum_b": 31.882302236035077,
+      "draws_a": 3364,
+      "draws_b": 2243
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_jersey_pick6",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.00103937962756365,
+    "p_value": 0.9945302189072363,
+    "sample_size": 3606,
+    "significant": false,
+    "details": {
+      "max_common_number": 46,
+      "draws_a": 5410,
+      "draws_b": 3606,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_jersey_pick6",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6140194167118463,
+    "p_value": 0.00516331279925086,
+    "sample_size": 3606,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 140.66361619523016,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 30.376008237433094,
+      "draws_a": 5410,
+      "draws_b": 3606
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "virginia_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.024216927063523935,
+    "p_value": 0.8852498702269577,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 38,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "virginia_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.11925043315844983,
+    "p_value": 0.6267876627912304,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 117.3490435264763,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 24.622616306309126,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "massachusetts_megabucks",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.09412747075025497,
+    "p_value": 0.5433545073345231,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "massachusetts_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4886798907266084,
+    "p_value": 0.03374642002256099,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 134.7432769614638,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.907461479895126,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.19971632149138968,
+    "p_value": 0.16887416837255284,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 5410,
+      "draws_b": 5410,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7800569335124687,
+    "p_value": 8.180896284910546e-05,
+    "sample_size": 5410,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 150.03567467652496,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 33.345489167727244,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "washington_lotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.006891599341358364,
+    "p_value": 0.6123059356110403,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5115341959334565,
+      "avg_odd_ratio_b": 0.5079790511398644,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "colorado_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.07856058260661425,
+    "p_value": 0.6299116615177575,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 40,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "colorado_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.2528238051054717,
+    "p_value": 0.2963437956880992,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 123.37593568062101,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 26.53964415232299,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.18959468184123707,
+    "p_value": 0.21770986683760507,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 5410,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4945596999309965,
+    "p_value": 0.031352914623355176,
+    "sample_size": 5410,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 135.07800369685768,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.796626042484043,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arizona_the_pick",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.003821637617829746,
+    "p_value": 0.7786890424566186,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5115341959334565,
+      "avg_odd_ratio_b": 0.4975970425138632,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "indiana_hoosier_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.04927946350294191,
+    "p_value": 0.745007696343298,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 46,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "indiana_hoosier_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.6192419334203672,
+    "p_value": 0.00469508631273683,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 141.0629331854727,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 30.379608794174427,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "missouri_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.042755075352992056,
+    "p_value": 0.782881003201562,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "missouri_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.5003365768961444,
+    "p_value": 0.029132116343172205,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 135.12032159689494,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.980456596621124,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "wisconsin_megabucks",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.01878827620714013,
+    "p_value": 0.8980429345736486,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "wisconsin_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7656758642728648,
+    "p_value": 0.00013289427501503545,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 149.54505128915997,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 33.052396126527384,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "maryland_multi_match",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.03374902443484494,
+    "p_value": 0.8298866225834624,
+    "sample_size": 2168,
+    "significant": false,
+    "details": {
+      "max_common_number": 43,
+      "draws_a": 3252,
+      "draws_b": 2168,
+      "date_range": "2006-02-02 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "maryland_multi_match",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.46059433214494105,
+    "p_value": 0.047193130011157984,
+    "sample_size": 2168,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.81334563345632,
+      "mean_sum_b": 132.42527675276753,
+      "std_sum_a": 43.83519713929585,
+      "std_sum_b": 29.62880672004924,
+      "draws_a": 3252,
+      "draws_b": 2168
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "connecticut_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.047164704934559265,
+    "p_value": 0.7611142525804001,
+    "sample_size": 3606,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3606,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "connecticut_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4895274654603764,
+    "p_value": 0.03339291699051876,
+    "sample_size": 3606,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 134.76927343316694,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.874467893700025,
+      "draws_a": 5410,
+      "draws_b": 3606
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oregon_megabucks",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.09379531049357548,
+    "p_value": 0.5260130499057843,
+    "sample_size": 3606,
+    "significant": false,
+    "details": {
+      "max_common_number": 48,
+      "draws_a": 5410,
+      "draws_b": 3606,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oregon_megabucks",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7297866166243985,
+    "p_value": 0.00039018219766909505,
+    "sample_size": 3606,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 147.24847476428175,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 32.26777765718888,
+      "draws_a": 5410,
+      "draws_b": 3606
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.05271153720046627,
+    "p_value": 0.7249237655781274,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 5410,
+      "draws_b": 5410,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.21310185996108472,
+    "p_value": 0.38105578455583955,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 119.63142329020333,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 28.976588988949402,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "minnesota_gopher5",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.010611779070196966,
+    "p_value": 0.4351751017421608,
+    "sample_size": 5410,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5115341959334565,
+      "avg_odd_ratio_b": 0.5119408502772643,
+      "draws_a": 5410,
+      "draws_b": 5410
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kentucky_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.11267659383197111,
+    "p_value": 0.4718985946189854,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 43,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kentucky_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4488349465140436,
+    "p_value": 0.0539041958067854,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 132.0981425006931,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 29.31105825926458,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "tennessee_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.09125660258193309,
+    "p_value": 0.5654509892405747,
+    "sample_size": 2337,
+    "significant": false,
+    "details": {
+      "max_common_number": 42,
+      "draws_a": 3505,
+      "draws_b": 2337,
+      "date_range": "2004-06-23 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "tennessee_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.386994341343106,
+    "p_value": 0.10165947509623954,
+    "sample_size": 2337,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.53837375178315,
+      "mean_sum_b": 129.53102267864784,
+      "std_sum_a": 43.74613278601803,
+      "std_sum_b": 27.884841745437214,
+      "draws_a": 3505,
+      "draws_b": 2337
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "louisiana_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.027271890197296356,
+    "p_value": 0.8638778151273383,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 42,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "louisiana_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.38228004614613964,
+    "p_value": 0.10625898389777086,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 129.33240920432493,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 27.69162858512848,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "iowa_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.011454144293726182,
+    "p_value": 0.9411748860799377,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "iowa_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.49325559185859996,
+    "p_value": 0.03187201158473843,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 134.75824785140006,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 29.102226980554764,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oklahoma_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.11986113842065672,
+    "p_value": 0.43835134814054716,
+    "sample_size": 2201,
+    "significant": false,
+    "details": {
+      "max_common_number": 44,
+      "draws_a": 3301,
+      "draws_b": 2201,
+      "date_range": "2005-10-12 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "oklahoma_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.510405128587826,
+    "p_value": 0.02555691610011893,
+    "sample_size": 2201,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.82156922144804,
+      "mean_sum_b": 135.09541117673785,
+      "std_sum_a": 43.785734198695614,
+      "std_sum_b": 29.332882151401172,
+      "draws_a": 3301,
+      "draws_b": 2201
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.03764352500892915,
+    "p_value": 0.837928376980339,
+    "sample_size": 3874,
+    "significant": false,
+    "details": {
+      "max_common_number": 32,
+      "draws_a": 3874,
+      "draws_b": 3874,
+      "date_range": "2002-02-13 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.3693489323815404,
+    "p_value": 0.1196412385413989,
+    "sample_size": 3874,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.5108415074858,
+      "mean_sum_b": 82.65436241610739,
+      "std_sum_a": 43.53475828935444,
+      "std_sum_b": 18.758637255318014,
+      "draws_a": 3874,
+      "draws_b": 3874
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "kansas_super_kansas_cash",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.0014922186058709142,
+    "p_value": 0.9260243557677486,
+    "sample_size": 3874,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5153846153846154,
+      "avg_odd_ratio_b": 0.4992772328342799,
+      "draws_a": 3874,
+      "draws_b": 3874
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.13404324614547347,
+    "p_value": 0.4159054248950879,
+    "sample_size": 2693,
+    "significant": false,
+    "details": {
+      "max_common_number": 39,
+      "draws_a": 2693,
+      "draws_b": 2693,
+      "date_range": "2009-08-31 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.17524674217294,
+    "p_value": 0.4729999240541581,
+    "sample_size": 2693,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.6398069067954,
+      "mean_sum_b": 99.4597103601931,
+      "std_sum_a": 43.82334068194318,
+      "std_sum_b": 24.08129934834338,
+      "draws_a": 2693,
+      "draws_b": 2693
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "arkansas_natural_state",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.013627054661161379,
+    "p_value": 0.47964816542824096,
+    "sample_size": 2693,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5143705904196064,
+      "avg_odd_ratio_b": 0.5095432603044932,
+      "draws_a": 2693,
+      "draws_b": 2693
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_mexico_roadrunner",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.36104768871390475,
+    "p_value": 0.02813204702315177,
+    "sample_size": 4511,
+    "significant": true,
+    "details": {
+      "max_common_number": 37,
+      "draws_a": 4511,
+      "draws_b": 10524,
+      "date_range": "1998-01-19 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "new_mexico_roadrunner",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.25022783150152017,
+    "p_value": 0.30149853042509295,
+    "sample_size": 4511,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.5805808024828,
+      "mean_sum_b": 94.9239832763208,
+      "std_sum_a": 43.551228212331154,
+      "std_sum_b": 22.32865239657169,
+      "draws_a": 4511,
+      "draws_b": 10524
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "nebraska_pick5",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.03523303075986616,
+    "p_value": 0.8336670774731393,
+    "sample_size": 3472,
+    "significant": false,
+    "details": {
+      "max_common_number": 38,
+      "draws_a": 3472,
+      "draws_b": 8100,
+      "date_range": "2004-09-08 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "nebraska_pick5",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.20360907587265314,
+    "p_value": 0.40311558532115055,
+    "sample_size": 3472,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.4542050691244,
+      "mean_sum_b": 97.69271604938271,
+      "std_sum_a": 43.71873049291189,
+      "std_sum_b": 23.144586254024702,
+      "draws_a": 3472,
+      "draws_b": 8100
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "idaho_weekly_grand",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.204325744131542,
+    "p_value": 0.20598462483371496,
+    "sample_size": 1967,
+    "significant": false,
+    "details": {
+      "max_common_number": 40,
+      "draws_a": 2951,
+      "draws_b": 1967,
+      "date_range": "2008-01-07 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "idaho_weekly_grand",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.15477705477578332,
+    "p_value": 0.526938342329988,
+    "sample_size": 1967,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.64283293798712,
+      "mean_sum_b": 102.3055414336553,
+      "std_sum_a": 43.80736127683163,
+      "std_sum_b": 24.425512860415918,
+      "draws_a": 2951,
+      "draws_b": 1967
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.050597625223165604,
+    "p_value": 0.7981868752038076,
+    "sample_size": 3995,
+    "significant": false,
+    "details": {
+      "max_common_number": 28,
+      "draws_a": 3995,
+      "draws_b": 3995,
+      "date_range": "2001-05-07 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": -0.43938481641731447,
+    "p_value": 0.059802192013563765,
+    "sample_size": 3995,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.61026282853567,
+      "mean_sum_b": 71.99324155193993,
+      "std_sum_a": 43.50575805034808,
+      "std_sum_b": 16.57933343811025,
+      "draws_a": 3995,
+      "draws_b": 3995
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "montana_big_sky",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": -0.005455098133689506,
+    "p_value": 0.7303276881268868,
+    "sample_size": 3995,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.51459324155194,
+      "avg_odd_ratio_b": 0.5010763454317898,
+      "draws_a": 3995,
+      "draws_b": 3995
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "euromillions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.1380569457741596,
+    "p_value": 0.33901788147540846,
+    "sample_size": 2374,
+    "significant": false,
+    "details": {
+      "max_common_number": 50,
+      "draws_a": 3561,
+      "draws_b": 2374,
+      "date_range": "2004-02-13 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "euromillions",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.4082772011167666,
+    "p_value": 0.08267403183236276,
+    "sample_size": 2374,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.43021623139566,
+      "mean_sum_b": 128.34835720303286,
+      "std_sum_a": 43.73497225351339,
+      "std_sum_b": 30.767306884973287,
+      "draws_a": 3561,
+      "draws_b": 2374
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "uk_lotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.0420914324408891,
+    "p_value": 0.7515978587512402,
+    "sample_size": 3338,
+    "significant": false,
+    "details": {
+      "max_common_number": 59,
+      "draws_a": 5007,
+      "draws_b": 3338,
+      "date_range": "1994-11-19 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "uk_lotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9805949929069853,
+    "p_value": 1.8111904789944768e-13,
+    "sample_size": 3338,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.59356900339526,
+      "mean_sum_b": 180.72618334331935,
+      "std_sum_a": 43.7677338030338,
+      "std_sum_b": 39.50419099189913,
+      "draws_a": 5007,
+      "draws_b": 3338
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "canada_lotto649",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.06126036265770175,
+    "p_value": 0.6758407464022033,
+    "sample_size": 3607,
+    "significant": false,
+    "details": {
+      "max_common_number": 49,
+      "draws_a": 5410,
+      "draws_b": 3607,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "canada_lotto649",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.7567604419529245,
+    "p_value": 0.00017658596007281833,
+    "sample_size": 3607,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.50887245841034,
+      "mean_sum_b": 148.7149986138065,
+      "std_sum_a": 43.79761063824821,
+      "std_sum_b": 33.279266366387105,
+      "draws_a": 5410,
+      "draws_b": 3607
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_ozlotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.14497773609192852,
+    "p_value": 0.33089981542361174,
+    "sample_size": 1708,
+    "significant": false,
+    "details": {
+      "max_common_number": 47,
+      "draws_a": 5121,
+      "draws_b": 1708,
+      "date_range": "1994-02-22 to 2026-11-10"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_ozlotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.9416395090445728,
+    "p_value": 1.840828130884582e-09,
+    "sample_size": 1708,
+    "significant": true,
+    "details": {
+      "mean_sum_a": 175.52548330404218,
+      "mean_sum_b": 167.34016393442624,
+      "std_sum_a": 43.77999024972624,
+      "std_sum_b": 33.67369389988356,
+      "draws_a": 5121,
+      "draws_b": 1708
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_powerball",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.004977562105287941,
+    "p_value": 0.9773604119299213,
+    "sample_size": 1590,
+    "significant": false,
+    "details": {
+      "max_common_number": 35,
+      "draws_a": 4770,
+      "draws_b": 1590,
+      "date_range": "1996-05-23 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "australia_powerball",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.2838676338794377,
+    "p_value": 0.23888772481086237,
+    "sample_size": 1590,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.488679245283,
+      "mean_sum_b": 125.95094339622642,
+      "std_sum_a": 43.60915577293778,
+      "std_sum_b": 23.87780967148134,
+      "draws_a": 4770,
+      "draws_b": 1590
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "superenalotto",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.03838178161389956,
+    "p_value": 0.7541941359252652,
+    "sample_size": 4530,
+    "significant": false,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 4530,
+      "draws_b": 4530,
+      "date_range": "1997-12-04 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "superenalotto",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.023631963915298024,
+    "p_value": 0.9234975739396346,
+    "sample_size": 4530,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 175.60927152317882,
+      "mean_sum_b": 271.61037527593817,
+      "std_sum_a": 43.54051273905369,
+      "std_sum_b": 60.9651536418864,
+      "draws_a": 4530,
+      "draws_b": 4530
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "superenalotto",
+    "correlation_type": "odd_even",
+    "correlation_coefficient": 0.026972358544684195,
+    "p_value": 0.06949145529885833,
+    "sample_size": 4530,
+    "significant": false,
+    "details": {
+      "avg_odd_ratio_a": 0.5131125827814569,
+      "avg_odd_ratio_b": 0.5019499632082413,
+      "draws_a": 4530,
+      "draws_b": 4530
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "eurojackpot",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": -0.1385150867898412,
+    "p_value": 0.33740191446158657,
+    "sample_size": 1528,
+    "significant": false,
+    "details": {
+      "max_common_number": 50,
+      "draws_a": 2292,
+      "draws_b": 1528,
+      "date_range": "2012-03-23 to 2026-11-11"
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "eurojackpot",
+    "correlation_type": "sum_distribution",
+    "correlation_coefficient": 0.3866763378304257,
+    "p_value": 0.10196512804369849,
+    "sample_size": 1528,
+    "significant": false,
+    "details": {
+      "mean_sum_a": 174.78708551483422,
+      "mean_sum_b": 129.03141361256544,
+      "std_sum_a": 43.42919704620616,
+      "std_sum_b": 30.6209140040184,
+      "draws_a": 2292,
+      "draws_b": 1528
+    }
+  },
+  {
+    "lottery_a": "powerball",
+    "lottery_b": "mega_millions",
+    "correlation_type": "number_frequency",
+    "correlation_coefficient": 0.9991413574009775,
+    "p_value": 2.2316098619457762e-94,
+    "sample_size": 5408,
+    "significant": true,
+    "details": {
+      "max_common_number": 69,
+      "draws_a": 5410,
+      "draws_b": 5408,
+      "date_range": "1992-04-22 to 2026-11-11"
+    }
+  }
+]

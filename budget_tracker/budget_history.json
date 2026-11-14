@@ -1,0 +1,10 @@
+[
+  {
+    "timestamp": "2026-11-02T07:42:58.962025",
+    "lottery": "powerball",
+    "amount_spent": 20.0,
+    "amount_won": 0.0,
+    "tickets_purchased": 10,
+    "net": -20.0
+  }
+]

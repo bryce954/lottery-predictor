@@ -1,0 +1,35 @@
+{
+  "username": "testuser",
+  "email": "test@example.com",
+  "created_at": "2026-11-02T07:20:06.894602",
+  "last_login": "2026-11-02T07:21:31.979182",
+  "preferences": {
+    "favorite_lotteries": [
+      "mega_millions"
+    ],
+    "default_lottery": "mega_millions",
+    "default_method": "statistical",
+    "default_prediction_count": 5,
+    "default_history_depth": 200,
+    "language": "es",
+    "theme": "dark",
+    "notifications": {
+      "email_enabled": false,
+      "email_address": null,
+      "discord_enabled": false,
+      "discord_webhook": null,
+      "pushbullet_enabled": false,
+      "pushbullet_token": null,
+      "smtp_server": null,
+      "smtp_port": 587,
+      "smtp_user": null,
+      "smtp_pass": null
+    },
+    "auto_detect_state": true,
+    "use_all_history": false
+  },
+  "prediction_history": [],
+  "syndicate_memberships": [],
+  "total_spent": 0.0,
+  "total_won": 0.0
+}

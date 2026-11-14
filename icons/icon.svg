@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a2e"/>
+      <stop offset="100%" style="stop-color:#16213e"/>
+    </linearGradient>
+    <linearGradient id="ballGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00d4aa"/>
+      <stop offset="100%" style="stop-color:#00997a"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="url(#bgGradient)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="120" cy="120" r="60" fill="#00d4aa" opacity="0.1"/>
+  <circle cx="392" cy="392" r="80" fill="#00d4aa" opacity="0.08"/>
+  <circle cx="400" cy="100" r="40" fill="#00d4aa" opacity="0.06"/>
+  <circle cx="112" cy="400" r="50" fill="#00d4aa" opacity="0.06"/>
+
+  <!-- Main lottery balls -->
+  <g filter="url(#glow)">
+    <!-- Ball 1 -->
+    <circle cx="150" cy="200" r="55" fill="url(#ballGradient)" stroke="#00997a" stroke-width="3"/>
+    <text x="150" y="218" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">7</text>
+
+    <!-- Ball 2 -->
+    <circle cx="256" cy="160" r="55" fill="url(#ballGradient)" stroke="#00997a" stroke-width="3"/>
+    <text x="256" y="178" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">14</text>
+
+    <!-- Ball 3 -->
+    <circle cx="362" cy="200" r="55" fill="url(#ballGradient)" stroke="#00997a" stroke-width="3"/>
+    <text x="362" y="218" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">23</text>
+
+    <!-- Ball 4 -->
+    <circle cx="190" cy="310" r="55" fill="url(#ballGradient)" stroke="#00997a" stroke-width="3"/>
+    <text x="190" y="328" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">38</text>
+
+    <!-- Ball 5 -->
+    <circle cx="322" cy="310" r="55" fill="url(#ballGradient)" stroke="#00997a" stroke-width="3"/>
+    <text x="322" y="328" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">52</text>
+
+    <!-- Bonus ball (smaller, different color) -->
+    <circle cx="256" cy="410" r="40" fill="#ff6b6b" stroke="#cc3333" stroke-width="3"/>
+    <text x="256" y="426" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">12</text>
+  </g>
+
+  <!-- Sparkle effects -->
+  <g fill="#00d4aa" opacity="0.8">
+    <polygon points="256,80 260,95 275,95 262,105 265,120 256,110 247,120 250,105 237,95 252,95"/>
+    <polygon points="120,120 123,128 132,128 125,133 127,142 120,136 113,142 115,133 108,128 117,128" transform="scale(0.5) translate(120,120)"/>
+    <polygon points="392,392 395,400 404,400 397,405 400,414 392,408 384,414 387,405 380,400 389,400" transform="scale(0.4) translate(392,392)"/>
+  </g>
+</svg>

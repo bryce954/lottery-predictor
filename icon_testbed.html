@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Material Icons Testbed - Streamlit Component Replica</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f1115;
+      color: #f3f4f6;
+      padding: 20px;
+      margin: 0;
+    }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    .section {
+      background: #181a1f;
+      border: 1px solid #2d3139;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section h2 { margin-top: 0; color: #e8c54a; font-size: 1.1rem; }
+
+    /* Streamlit-like expander */
+    .st-expander {
+      background: #1f2228;
+      border: 1px solid #2d3139;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+    .st-expander summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: #181a1f;
+      border-bottom: 1px solid #2d3139;
+      cursor: pointer;
+      font-weight: 600;
+      color: #f3f4f6;
+    }
+    .st-expander summary::marker {
+      content: "▶";
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+    .st-expander[open] summary::marker {
+      content: "▼";
+    }
+    .st-expander summary .material-icons {
+      font-size: 0;
+      display: inline-block;
+      width: 1em;
+    }
+    .st-expander summary .material-icons::before {
+      font-size: 0.875rem;
+      font-family: system-ui, sans-serif;
+      content: "▶";
+    }
+    .st-expander[open] summary .material-icons::before {
+      content: "▼";
+    }
+    .st-expander > div:last-child {
+      padding: 16px;
+    }
+
+    /* Streamlit-like selectbox */
+    .st-selectbox {
+      position: relative;
+      width: 100%;
+    }
+    .st-selectbox > div {
+      background: #1f2228;
+      border: 1px solid #3d424c;
+      border-radius: 8px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      position: relative;
+    }
+    .st-selectbox .material-icons {
+      display: none;
+    }
+    .st-selectbox > div::after {
+      content: "▼";
+      font-family: system-ui, sans-serif;
+      font-size: 0.7rem;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #9ca3af;
+    }
+
+    /* Sidebar collapse button */
+    .st-sidebar-collapse {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      background: #1f2228;
+      border: 1px solid #2d3139;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .st-sidebar-collapse .material-icons {
+      display: none;
+    }
+    .st-sidebar-collapse::after {
+      content: "◀";
+      font-family: system-ui, sans-serif;
+      font-size: 1rem;
+    }
+
+    /* Number input */
+    .st-number-input {
+      display: flex;
+      gap: 4px;
+    }
+    .st-number-input input {
+      flex: 1;
+      background: #1f2228;
+      border: 1px solid #3d424c;
+      border-radius: 8px;
+      min-height: 44px;
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.875rem;
+      color: #f3f4f6;
+    }
+    .st-number-input button {
+      width: 44px;
+      height: 44px;
+      background: #1f2228;
+      border: 1px solid #3d424c;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .st-number-input button .material-icons {
+      display: none;
+    }
+    .st-number-input button:first-child::after {
+      content: "▲";
+      font-family: system-ui, sans-serif;
+      font-size: 0.6rem;
+      color: #9ca3af;
+    }
+    .st-number-input button:last-child::after {
+      content: "▼";
+      font-family: system-ui, sans-serif;
+      font-size: 0.6rem;
+      color: #9ca3af;
+    }
+
+    /* Material Icons test elements */
+    .material-icons-test {
+      display: inline-flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0;
+    }
+    .material-icons-test span {
+      background: #2d3139;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-family: 'Material Icons', 'Material Symbols Outlined', system-ui, sans-serif;
+      font-size: 1rem;
+    }
+    .material-icons-test .unicode-fallback {
+      background: #064e3b;
+      border: 1px solid #34d399;
+    }
+
+    /* Debug overlay */
+    #debug-overlay {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 9999;
+      background: rgba(0,0,0,0.9);
+      color: #0f0;
+      padding: 10px;
+      font-family: monospace;
+      font-size: 11px;
+      max-width: 400px;
+      max-height: 300px;
+      overflow: auto;
+      border: 2px solid #0f0;
+      border-radius: 4px;
+    }
+    #debug-overlay button {
+      margin-top: 5px;
+      padding: 2px 6px;
+      cursor: pointer;
+      background: #1f2228;
+      border: 1px solid #3d424c;
+      color: #0f0;
+      border-radius: 4px;
+    }
+
+    .test-label {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin-bottom: 4px;
+      display: block;
+    }
+
+    /* Font loading test */
+    .font-status {
+      padding: 8px 12px;
+      border-radius: 6px;
+      margin: 8px 0;
+      font-size: 0.875rem;
+    }
+    .font-status.loaded { background: #064e3b; border: 1px solid #34d399; color: #34d399; }
+    .font-status.failed { background: #7f1d1d; border: 1px solid #f87171; color: #f87171; }
+    .font-status.loading { background: #422006; border: 1px solid #fbbf24; color: #fbbf24; }
+  </style>
+
+  <!-- Material Icons fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons|Material+Symbols+Outlined" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons|Material+Symbols+Outlined" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/material-design-icons/3.0.1/iconfont/material-icons.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/materialicons/v182/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2">
+</head>
+<body>
+  <div class="container">
+    <h1>🧪 Material Icons Testbed</h1>
+    <p>Replicates Streamlit's component structure to test icon fixes</p>
+
+    <div class="section">
+      <h2>Font Loading Status</h2>
+      <div id="font-status" class="font-status loading">Checking font load...</div>
+    </div>
+
+    <div class="section">
+      <h2>1. Expander Components (st.expander)</h2>
+      <details class="st-expander">
+        <summary>
+          <span class="material-icons">expand_more</span>
+          Test Expander with Material Icon
+        </summary>
+        <div>Content inside expander</div>
+      </details>
+      <details class="st-expander" open>
+        <summary>
+          <span class="material-icons">expand_less</span>
+          Open Expander with Material Icon
+        </summary>
+        <div>This expander is open by default</div>
+      </details>
+      <details class="st-expander">
+        <summary>
+          Native summary marker (no icon span)
+        </summary>
+        <div>Uses CSS ::marker pseudo-element</div>
+      </details>
+    </div>
+
+    <div class="section">
+      <h2>2. Selectbox Component (st.selectbox)</h2>
+      <label class="test-label">Select an option:</label>
+      <div class="st-selectbox">
+        <div>
+          <span>Option 1</span>
+          <span class="material-icons">keyboard_arrow_down</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>3. Sidebar Collapse Button</h2>
+      <div class="st-sidebar-collapse">
+        <span class="material-icons">keyboard_double_arrow_right</span>
+      </div>
+      <p class="test-label">Should show ◀ (left arrow)</p>
+    </div>
+
+    <div class="section">
+      <h2>4. Number Input</h2>
+      <label class="test-label">Enter a number:</label>
+      <div class="st-number-input">
+        <input type="number" value="5">
+        <button><span class="material-icons">keyboard_arrow_up</span></button>
+        <button><span class="material-icons">keyboard_arrow_down</span></button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>5. Raw Material Icons Elements</h2>
+      <p class="test-label">Direct material-icons spans (various ligatures):</p>
+      <div class="material-icons-test">
+        <span class="material-icons" data-icon="keyboard_double_arrow_right">keyboard_double_arrow_right</span>
+        <span class="material-icons" data-icon="keyboard_arrow_right">keyboard_arrow_right</span>
+        <span class="material-icons" data-icon="expand_more">expand_more</span>
+        <span class="material-icons" data-icon="chevron_right">chevron_right</span>
+        <span class="material-icons" data-icon="keyboard_arrow_left">keyboard_arrow_left</span>
+        <span class="material-icons" data-icon="expand_less">expand_less</span>
+        <span class="material-icons" data-icon="chevron_left">chevron_left</span>
+        <span class="material-icons" data-icon="keyboard_arrow_up">keyboard_arrow_up</span>
+        <span class="material-icons" data-icon="keyboard_arrow_down">keyboard_arrow_down</span>
+      </div>
+      <p class="test-label">Without data-icon attribute (fallback):</p>
+      <div class="material-icons-test">
+        <span class="material-icons">keyboard_double_arrow_right</span>
+        <span class="material-icons">expand_more</span>
+        <span class="material-icons">keyboard_arrow_down</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>6. JavaScript Fix Test</h2>
+      <p class="test-label">Text nodes with ligature text (simulated Streamlit rendering):</p>
+      <div id="js-test-area">
+        <div>Expand more: keyboard_arrow_down</div>
+        <div>Double arrow: keyboard_double_arrow_right</div>
+        <span>Collapse: expand_less</span>
+        <p>Sidebar: keyboard_double_arrow_right</p>
+      </div>
+      <button id="run-js-fix" style="margin-top: 10px; padding: 8px 16px; background: #2d3a8c; color: white; border: none; border-radius: 6px; cursor: pointer;">Run JS Fix</button>
+      <button id="run-js-fix-deep" style="margin-left: 8px; padding: 8px 16px; background: #d4a82a; color: #111; border: none; border-radius: 6px; cursor: pointer;">Run Deep JS Fix (TreeWalker + Attributes)</button>
+    </div>
+  </div>
+
+  <!-- Debug Overlay -->
+  <div id="debug-overlay" style="display:none;">
+    <strong>Icon Debug</strong><br>
+    <span id="debug-status">Ready</span><br>
+    <button onclick="document.getElementById('debug-overlay').style.display='none'">Close</button>
+  </div>
+
+  <script>
+    // Font loading check
+    document.fonts.ready.then(() => {
+      const status = document.getElementById('font-status');
+      const testIcon = document.createElement('span');
+      testIcon.className = 'material-icons';
+      testIcon.textContent = 'keyboard_arrow_right';
+      testIcon.style.position = 'absolute';
+      testIcon.style.left = '-9999px';
+      document.body.appendChild(testIcon);
+
+      // Check if ligature worked by measuring width
+      setTimeout(() => {
+        const width = testIcon.getBoundingClientRect().width;
+        document.body.removeChild(testIcon);
+
+        if (width > 10) {
+          status.textContent = `✅ Font loaded - ligatures working (width: ${width}px)`;
+          status.className = 'font-status loaded';
+        } else {
+          status.textContent = `⚠️ Font loaded but ligatures NOT working (width: ${width}px) - using Unicode fallback`;
+          status.className = 'font-status failed';
+        }
+      }, 100);
+    }).catch(() => {
+      const status = document.getElementById('font-status');
+      status.textContent = '❌ Font failed to load';
+      status.className = 'font-status failed';
+    });
+
+    // Replacements map
+    const replacements = {
+      'keyboard_double_arrow_right': '▶',
+      'keyboard_arrow_right': '▶',
+      'expand_more': '▶',
+      'chevron_right': '▶',
+      'keyboard_arrow_left': '◀',
+      'expand_less': '◀',
+      'chevron_left': '◀',
+      'keyboard_arrow_up': '▲',
+      'keyboard_arrow_down': '▼',
+    };
+
+    function createDebugOverlay() {
+      const overlay = document.getElementById('debug-overlay');
+      overlay.style.display = 'block';
+      return overlay;
+    }
+
+    function updateDebugOverlay(found, replaced) {
+      const overlay = document.getElementById('debug-overlay');
+      const status = document.getElementById('debug-status');
+      const lines = [`Found: ${found.length}`, `Replaced: ${replaced}`];
+      if (found.length > 0) {
+        lines.push('---');
+        found.slice(0, 10).forEach(f => {
+          lines.push(`${f.text} in <${f.tag}> (${f.type})`);
+        });
+        if (found.length > 10) lines.push(`... and ${found.length - 10} more`);
+      }
+      status.innerHTML = lines.join('<br>');
+    }
+
+    // Simple fix - textContent replacement
+    function simpleFix() {
+      let found = 0, replaced = 0;
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+      let node;
+      while (node = walker.nextNode()) {
+        let text = node.textContent;
+        for (const [search, replace] of Object.entries(replacements)) {
+          if (text.includes(search)) {
+            found++;
+            node.textContent = text.replace(new RegExp(search, 'g'), replace);
+            replaced++;
+          }
+        }
+      }
+      return { found, replaced };
+    }
+
+    // Deep fix - element textContent + attributes
+    function deepFix() {
+      let found = 0, replaced = 0;
+      const foundItems = [];
+
+      // Method 1: TreeWalker for text nodes
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+      let node;
+      while (node = walker.nextNode()) {
+        let text = node.textContent;
+        for (const [search, replace] of Object.entries(replacements)) {
+          if (text.includes(search)) {
+            foundItems.push({text: text.trim().substring(0,50), tag: node.parentElement?.tagName || '?', type: 'textNode'});
+            node.textContent = text.replace(new RegExp(search, 'g'), replace);
+            replaced++;
+          }
+        }
+      }
+
+      // Method 2: Direct element scan
+      document.querySelectorAll('*').forEach(el => {
+        if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE' || el.id === 'debug-overlay') return;
+
+        let text = el.textContent;
+        let changed = false;
+        for (const [search, replace] of Object.entries(replacements)) {
+          if (text.includes(search)) {
+            text = text.replace(new RegExp(search, 'g'), replace);
+            changed = true;
+          }
+        }
+        if (changed) {
+          foundItems.push({text: text.trim().substring(0,50), tag: el.tagName, type: 'element'});
+          if (el.children.length === 0) {
+            el.textContent = text;
+          } else {
+            const walker2 = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null, false);
+            let node2;
+            while (node2 = walker2.nextNode()) {
+              let t = node2.textContent;
+              for (const [search, replace] of Object.entries(replacements)) {
+                if (t.includes(search)) {
+                  node2.textContent = t.replace(new RegExp(search, 'g'), replace);
+                  replaced++;
+                }
+              }
+            }
+          }
+          replaced++;
+        }
+
+        // Check attributes
+        ['aria-label', 'title', 'data-icon'].forEach(attr => {
+          const val = el.getAttribute(attr);
+          if (val) {
+            let newVal = val;
+            for (const [search, replace] of Object.entries(replacements)) {
+              if (newVal.includes(search)) {
+                newVal = newVal.replace(new RegExp(search, 'g'), replace);
+              }
+            }
+            if (newVal !== val) {
+              foundItems.push({text: val, tag: el.tagName + '[' + attr + ']', type: 'attribute'});
+              el.setAttribute(attr, newVal);
+              replaced++;
+            }
+          }
+        });
+      });
+
+      return { found: foundItems, replaced };
+    }
+
+    document.getElementById('run-js-fix').addEventListener('click', () => {
+      createDebugOverlay();
+      const result = simpleFix();
+      updateDebugOverlay([{text: 'simple fix', tag: 'body', type: 'summary'}], result.replaced);
+    });
+
+    document.getElementById('run-js-fix-deep').addEventListener('click', () => {
+      createDebugOverlay();
+      const result = deepFix();
+      updateDebugOverlay(result.found, result.replaced);
+    });
+
+    // Auto-run deep fix on load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        createDebugOverlay();
+        const result = deepFix();
+        updateDebugOverlay(result.found, result.replaced);
+      }, 500);
+    });
+  </script>
+</body>
+</html>

@@ -87,7 +87,7 @@ def main():
         ])
 
     # Compare commands
-    tests.append((f"{base_cmd} compare --lottery powerball --methods statistical --methods frequency --methods cold --count 2", "Compare statistical methods"))
+    tests.append((f"{base_cmd} compare --lottery powerball --method-a statistical --method-b frequency --trials 2", "Compare statistical methods"))
 
     # Output to file
     tests.append((f"{base_cmd} predict --lottery powerball --method statistical --count 3 --output test_output.json", "Save predictions to JSON"))
