@@ -65,6 +65,37 @@
   }
   .brand svg { width: 30px; height: 30px; color: var(--accent); filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
   .brand .tag { font-size: 0.75rem; font-weight: 500; color: var(--muted); margin-left: auto; font-family: Inter, sans-serif; text-transform: uppercase; letter-spacing: 0.05em; }
+  .theme-toggle { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0.55rem; cursor: pointer; font-size: 1.25rem; transition: all 0.2s; }
+  .theme-toggle:hover { background: var(--accent-glow); transform: rotate(15deg); }
+  [data-theme="dark"] .theme-toggle { background: #1e293b; border-color: #334155; color: #f8fafc; }
+
+  /* Dark mode overrides */
+  [data-theme="dark"] {
+    --bg: #0f172a;
+    --panel: #1e293b;
+    --ink: #f8fafc;
+    --muted: #94a3b8;
+    --line: #334155;
+  }
+  [data-theme="dark"] html { background: #0f172a; }
+  [data-theme="dark"] header { background: rgba(15, 23, 42, 0.7); border-bottom-color: #334155; }
+  [data-theme="dark"] .panel, [data-theme="dark"] .metric, [data-theme="dark"] .ticket, [data-theme="dark"] .health-metric,
+  [data-theme="dark"] .login-form, [data-theme="dark"] .notification-card, [data-theme="dark"] .syndicate-card,
+  [data-theme="dark"] .odds-card, [data-theme="dark"] .favorites-list, [data-theme="dark"] .compare-card { background: #1e293b; border-color: #334155; color: #f8fafc; }
+  [data-theme="dark"] .hero { background: linear-gradient(135deg, #1e2a6b 0%, #0f172a 100%); color: #f8fafc; }
+  [data-theme="dark"] .health-metric, [data-theme="dark"] .ticket { background: #0f172a; }
+  [data-theme="dark"] select, [data-theme="dark"] input[type="number"], [data-theme="dark"] input[type="text"],
+  [data-theme="dark"] input[type="email"], [data-theme="dark"] input[type="password"], [data-theme="dark"] textarea {
+    background: #0f172a; border-color: #334155; color: #f8fafc;
+  }
+  [data-theme="dark"] select:focus, [data-theme="dark"] input[type="number"]:focus,
+  [data-theme="dark"] input[type="text"]:focus, [data-theme="dark"] input[type="email"]:focus,
+  [data-theme="dark"] input[type="password"]:focus, [data-theme="dark"] textarea:focus { border-color: var(--accent); }
+  [data-theme="dark"] table { color: #f8fafc; }
+  [data-theme="dark"] .health-table tr:hover td { background: rgba(45, 58, 140, 0.15); }
+  [data-theme="dark"] .conn-status { background: #0f172a; border-color: #334155; }
+  [data-theme="dark"] .conn-error { background: #1e1b4b; border-color: #4338ca; }
+  [data-theme="dark"] .empty { color: #94a3b8; }
 
   /* ---------- Layout ---------- */
   main { flex: 1; padding: 2.5rem 2rem; max-width: 1100px; margin: 0 auto; width: 100%; }
@@ -349,6 +380,31 @@
   .notification-channel .status-badge.configured { background: #dcfce7; color: #166534; }
   .notification-channel .status-badge.not-configured { background: #f1f5f9; color: #64748b; }
 
+  /* ---------- Data Health ---------- */
+  .health-card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 1.5rem;
+  }
+  .health-card h3 { font-family: "Space Grotesk", sans-serif; font-size: 1.25rem; margin-bottom: 1rem; color: var(--ink); }
+  .health-metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  @media (max-width: 768px) { .health-metrics { grid-template-columns: repeat(2, 1fr); } }
+  .health-metric { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 1rem; text-align: center; }
+  .health-metric .v { font-family: "Space Grotesk", sans-serif; font-size: 1.5rem; font-weight: 800; }
+  .health-metric .v.good { color: var(--ok); }
+  .health-metric .v.warn { color: var(--warn); }
+  .health-metric .v.bad { color: var(--warn); }
+  .health-metric .k { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+  .health-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 1rem; }
+  .health-table th { text-align: left; color: var(--muted); font-weight: 600; padding: 0.75rem; border-bottom: 1px solid var(--line); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .health-table td { padding: 0.75rem; border-bottom: 1px solid #f1f5f9; }
+  .health-table tr:last-child td { border-bottom: none; }
+  .health-table tr:hover td { background: rgba(45, 58, 140, 0.03); }
+
   /* ---------- Profile ---------- */
   .profile-card {
     background: linear-gradient(135deg, var(--accent) 0%, #1e2a6b 100%);
@@ -422,6 +478,7 @@
     </svg>
     Lottery Predictor
     <span class="tag">AI number predictions</span>
+    <button class="theme-toggle" onclick="toggleTheme(event)" title="Toggle dark mode">🌙</button>
   </div>
 </header>
 <main>
@@ -461,6 +518,7 @@
     <button onclick="showTab('odds', event)">Odds</button>
     <button onclick="showTab('syndicate', event)">Syndicates</button>
     <button onclick="showTab('notifications', event)">Notifications</button>
+    <button onclick="showTab('health', event)">Data Health</button>
   </div>
 
   <!-- Predict tab -->
@@ -849,6 +907,22 @@
 <script>
 const API = "http://127.0.0.1:8000";
 let chartInstances = {};
+
+// ---------- Theme (dark mode) ----------
+function toggleTheme(evt) {
+  if (evt) evt.preventDefault();
+  const html = document.documentElement;
+  const isDark = html.getAttribute("data-theme") === "dark";
+  html.setAttribute("data-theme", isDark ? "light" : "dark");
+  localStorage.setItem("lottery-theme", isDark ? "light" : "dark");
+}
+
+function loadTheme() {
+  const saved = localStorage.getItem("lottery-theme");
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  const theme = saved || (prefersDark ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", theme);
+}
 
 function setConnected(ok, msg) {
   const s = document.getElementById("conn-status");
@@ -1697,6 +1771,7 @@ async function _ensureRemoveFavoriteEndpoint() {
   // placeholder - endpoint added below
 }
 
+loadTheme();
 loadLotteries();
 </script>
 </body>
