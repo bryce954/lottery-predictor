@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
   :root {
     --ink: #0f172a;
@@ -1625,6 +1626,17 @@ async function doCheckTicket(evt) {
           <strong>Your numbers:</strong> ${data.ticket.main_numbers.join(", ")}${data.ticket.bonus_numbers.length ? ` | Bonus: ${data.ticket.bonus_numbers.join(", ")}` : ""}
           ${prizeTier ? `<br><strong>Prize tier:</strong> ${prizeTier}` : ""}
         </div>
+        <div style="margin-top:1rem; display:flex; gap:1rem; align-items:flex-start;">
+          <div style="flex:1;">
+            <canvas id="tc-qr" width="200" height="200" style="border:1px solid var(--line); border-radius:8px; background:#fff;"></canvas>
+            <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--muted); text-align:center;">Scan QR with phone to get ticket numbers</div>
+          </div>
+          <div style="flex:1;">
+            <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Import from phone</label>
+            <textarea id="tc-import" rows="3" placeholder="Paste: 7,14,23,38,52|22" style="width:100%; padding:0.7rem 0.9rem; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:0.9rem; font-family:Inter,sans-serif;"></textarea>
+            <button class="primary" style="margin-top:0.5rem; width:100%;" onclick="doImportTicket(event)">Import & Check</button>
+          </div>
+        </div>
         <div style="margin-top:1rem;">
           <h4 style="margin-bottom:0.5rem;">Top matches</h4>
           <table>
@@ -1644,9 +1656,35 @@ async function doCheckTicket(evt) {
         </div>
       </div>
     `;
+    // Generate QR code with ticket numbers for phone scanning
+    const qrText = `${data.ticket.main_numbers.join(",")}|${data.ticket.bonus_numbers.join(",")}`;
+    try {
+      QRCode.toCanvas(document.getElementById("tc-qr"), qrText, { width: 200, margin: 2 });
+    } catch (e) {
+      console.error("QR code generation failed:", e);
+    }
   } catch (e) {
     result.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to check ticket: ${e.message}</div>`;
   }
+}
+
+async function doImportTicket(evt) {
+  if (evt) evt.preventDefault();
+  const text = document.getElementById("tc-import").value.trim();
+  if (!text) {
+    alert("Please paste ticket numbers");
+    return;
+  }
+  const parts = text.split("|");
+  const mainNums = parts[0].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  const bonusNums = parts[1] ? parts[1].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n)) : [];
+  if (mainNums.length === 0) {
+    alert("Invalid format. Use: 7,14,23,38,52|22");
+    return;
+  }
+  document.getElementById("tc-main").value = mainNums.join(", ");
+  document.getElementById("tc-bonus").value = bonusNums.join(", ");
+  doCheckTicket(evt);
 }
 
 // ---------- Syndicate functions ----------
