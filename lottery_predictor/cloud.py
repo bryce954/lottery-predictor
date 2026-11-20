@@ -154,6 +154,13 @@ class OddsRequest(BaseModel):
     ticket_cost: float = 2.0
 
 
+class TicketCheckRequest(BaseModel):
+    lottery: str
+    main_numbers: List[int]
+    bonus_numbers: List[int] = []
+    check_recent: int = 100
+
+
 # Syndicate models
 class SyndicateMemberRequest(BaseModel):
     name: str
@@ -797,6 +804,60 @@ def create_app() -> FastAPI:
                 break_even_jackpot=result.break_even_jackpot,
                 prize_tiers=result.prize_tiers,
             )
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/check-ticket")
+    async def check_ticket(request: TicketCheckRequest):
+        """Check a ticket's numbers against recent historical draws."""
+        if request.lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{request.lottery}'")
+
+        if not request.main_numbers:
+            raise HTTPException(status_code=400, detail="main_numbers is required")
+
+        try:
+            dm = get_data_manager(request.lottery)
+            df = dm.load_data()
+            recent = df.tail(request.check_recent)
+
+            config = LOTTERY_CONFIGS[request.lottery]
+            main_set = set(request.main_numbers)
+            bonus_set = set(request.bonus_numbers) if request.bonus_numbers else set()
+
+            matches = []
+            for _, row in recent.iterrows():
+                draw_main = set(row['main_numbers'])
+                draw_bonus = set(row['bonus_numbers']) if row['bonus_numbers'] else set()
+                main_match = len(main_set & draw_main)
+                bonus_match = len(bonus_set & draw_bonus)
+                matches.append({
+                    "date": row['date'].strftime('%Y-%m-%d') if hasattr(row['date'], 'strftime') else str(row['date']),
+                    "draw_number": int(row['draw_number']),
+                    "main_match": main_match,
+                    "bonus_match": bonus_match,
+                    "total_match": main_match + bonus_match,
+                    "is_winner": main_match >= config['main_numbers']
+                })
+
+            matches.sort(key=lambda x: x['total_match'], reverse=True)
+            best = matches[0] if matches else None
+
+            calc = OddsCalculator(request.lottery)
+            tiers = calc.calculate_prize_tiers()
+
+            return _to_py({
+                "lottery": request.lottery,
+                "ticket": {
+                    "main_numbers": sorted(request.main_numbers),
+                    "bonus_numbers": sorted(request.bonus_numbers) if request.bonus_numbers else []
+                },
+                "draws_checked": len(recent),
+                "best_match": best,
+                "all_matches": matches[:10],
+                "total_wins": sum(1 for m in matches if m['is_winner']),
+                "prize_tiers": tiers[:6],
+            })
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 

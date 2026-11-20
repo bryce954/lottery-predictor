@@ -543,6 +543,7 @@
       <button data-tab="history" onclick="showTab('history', event)">History</button>
       <button data-tab="profile" onclick="showTab('profile', event)">Profile</button>
       <button data-tab="odds" onclick="showTab('odds', event)">Odds</button>
+      <button data-tab="ticket-check" onclick="showTab('ticket-check', event)">Ticket Check</button>
       <button data-tab="syndicate" onclick="showTab('syndicate', event)">Syndicates</button>
       <button data-tab="notifications" onclick="showTab('notifications', event)">Notifications</button>
       <button data-tab="health" onclick="showTab('health', event)">Data Health</button>
@@ -839,6 +840,38 @@
     </div>
   </section>
 
+  <!-- Ticket Check tab -->
+  <section id="tab-ticket-check" class="tab-panel" style="display:none;">
+    <div class="panel">
+      <h2>🎫 Check Ticket</h2>
+      <p class="note" style="margin-bottom:1rem;">Enter your ticket numbers and check them against recent draws to see if you're a winner.</p>
+
+      <div class="row">
+        <div class="control-group">
+          <label>Lottery</label>
+          <select id="tc-lottery"></select>
+        </div>
+        <div class="control-group">
+          <label>Main numbers (comma-separated)</label>
+          <input type="text" id="tc-main" placeholder="e.g. 7, 14, 23, 38, 52">
+        </div>
+        <div class="control-group">
+          <label>Bonus numbers (comma-separated)</label>
+          <input type="text" id="tc-bonus" placeholder="e.g. 22">
+        </div>
+        <div class="control-group">
+          <label>Recent draws to check</label>
+          <input type="number" id="tc-count" min="10" max="1000" value="100">
+        </div>
+        <div style="grid-column: 1 / -1;">
+          <button class="primary" onclick="doCheckTicket(event)">Check ticket</button>
+        </div>
+      </div>
+
+      <div id="tc-result" style="margin-top:1.5rem;"></div>
+    </div>
+  </section>
+
   <!-- Syndicate tab -->
   <section id="tab-syndicate" class="tab-panel" style="display:none;">
     <div class="panel">
@@ -1034,7 +1067,7 @@
 </div>
 
 <script>
-const API = "http://127.0.0.1:8000";
+const API = "http://127.0.0.1:8002";
 let chartInstances = {};
 
 // ---------- Theme (dark mode) ----------
@@ -1122,7 +1155,7 @@ async function loadLotteries(evt) {
       const el = document.getElementById(id);
       el.innerHTML = lotteries.map(l => `<option value="${l.key}">${l.name}</option>`).join("");
     };
-    ["pl-lottery", "al-lottery", "vl-lottery", "cl-lottery", "hl-lottery", "ol-lottery", "syndicate-lottery", "corr-lottery-a", "corr-lottery-b", "corr-base-lottery"].forEach(sel);
+    ["pl-lottery", "al-lottery", "vl-lottery", "cl-lottery", "hl-lottery", "ol-lottery", "syndicate-lottery", "tc-lottery", "corr-lottery-a", "corr-lottery-b", "corr-base-lottery"].forEach(sel);
     loadJackpot(evt);
     loadSyndicates();
   } catch (e) {
@@ -1537,6 +1570,82 @@ async function doOdds(evt) {
     document.getElementById("ol-result").style.display = "grid";
   } catch (e) {
     alert("Odds calculation failed: " + e.message);
+  }
+}
+
+async function doCheckTicket(evt) {
+  if (evt) evt.preventDefault();
+  const lottery = document.getElementById("tc-lottery").value;
+  const mainInput = document.getElementById("tc-main").value.trim();
+  const bonusInput = document.getElementById("tc-bonus").value.trim();
+  const count = parseInt(document.getElementById("tc-count").value) || 100;
+  const result = document.getElementById("tc-result");
+
+  if (!mainInput) {
+    alert("Please enter main numbers");
+    return;
+  }
+
+  const mainNums = mainInput.split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+  const bonusNums = bonusInput ? bonusInput.split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n)) : [];
+
+  if (mainNums.length === 0) {
+    alert("Please enter valid main numbers");
+    return;
+  }
+
+  result.innerHTML = `<div class="empty fade-in"><div class="spinner"></div><div style="margin-top:0.75rem;">Checking ticket against ${count} recent draws…</div></div>`;
+
+  try {
+    const data = await apiRequest("/check-ticket", {
+      method: "POST",
+      body: JSON.stringify({ lottery, main_numbers: mainNums, bonus_numbers: bonusNums, check_recent: count }),
+    });
+
+    const best = data.best_match;
+    const totalWins = data.total_wins || 0;
+    const isWinner = best && best.is_winner;
+
+    let prizeTier = "";
+    if (best) {
+      const tier = data.prize_tiers?.find(t => t.main_match === best.main_match && t.bonus_match === best.bonus_match);
+      prizeTier = tier ? ` — ${tier.tier}` : "";
+    }
+
+    result.innerHTML = `
+      <div class="panel fade-in" style="border:${isWinner ? '2px solid var(--ok)' : '1px solid var(--line)'};">
+        <h3 style="margin-top:0; color:${isWinner ? 'var(--ok)' : 'var(--ink)'};">${isWinner ? '🎉 WINNER!' : 'No jackpot match'}</h3>
+        <div class="metrics" style="margin-top:1rem;">
+          <div class="metric"><div class="v">${data.draws_checked}</div><div class="k">Draws Checked</div></div>
+          <div class="metric"><div class="v">${best ? best.main_match + best.bonus_match : 0}</div><div class="k">Best Match</div></div>
+          <div class="metric"><div class="v">${totalWins}</div><div class="k">Jackpot Wins</div></div>
+          <div class="metric"><div class="v">${best ? best.date : '—'}</div><div class="k">Best Draw Date</div></div>
+        </div>
+        <div style="margin-top:1rem;">
+          <strong>Your numbers:</strong> ${data.ticket.main_numbers.join(", ")}${data.ticket.bonus_numbers.length ? ` | Bonus: ${data.ticket.bonus_numbers.join(", ")}` : ""}
+          ${prizeTier ? `<br><strong>Prize tier:</strong> ${prizeTier}` : ""}
+        </div>
+        <div style="margin-top:1rem;">
+          <h4 style="margin-bottom:0.5rem;">Top matches</h4>
+          <table>
+            <thead><tr><th>Date</th><th>Draw #</th><th>Main Match</th><th>Bonus Match</th><th>Total</th></tr></thead>
+            <tbody>
+              ${data.all_matches.map(m => `
+                <tr>
+                  <td>${m.date}</td>
+                  <td>${m.draw_number}</td>
+                  <td>${m.main_match}</td>
+                  <td>${m.bonus_match}</td>
+                  <td style="font-weight:700; color:${m.is_winner ? 'var(--ok)' : 'var(--ink)'};">${m.total_match}${m.is_winner ? ' 🏆' : ''}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+  } catch (e) {
+    result.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to check ticket: ${e.message}</div>`;
   }
 }
 
