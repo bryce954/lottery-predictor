@@ -377,13 +377,26 @@ class MLModelPredictor:
                 # Get probability distribution
                 if hasattr(model, 'predict_proba'):
                     proba = model.predict_proba(latest_scaled)[0]
-                    # Sample from distribution
-                    pred = np.random.choice(
-                        len(proba),
-                        size=self.config['main_numbers'],
-                        replace=False,
-                        p=proba
-                    )
+                    proba = np.asarray(proba, dtype=float)
+                    if proba.sum() > 0:
+                        proba = proba / proba.sum()
+                    else:
+                        proba = None
+                    try:
+                        # Sample from distribution
+                        pred = np.random.choice(
+                            len(proba) if proba is not None else self.config['main_max'],
+                            size=self.config['main_numbers'],
+                            replace=False,
+                            p=proba
+                        )
+                    except ValueError:
+                        # Fall back to uniform choice if the distribution can't be sampled
+                        pred = np.random.choice(
+                            self.config['main_max'],
+                            size=self.config['main_numbers'],
+                            replace=False
+                        )
                 else:
                     pred = model.predict(latest_scaled)
                     pred = np.random.choice(
@@ -391,12 +404,18 @@ class MLModelPredictor:
                         size=self.config['main_numbers'],
                         replace=False
                     )
-                predictions.extend([p + 1 for p in pred])  # Convert to 1-indexed
+                predictions.extend([int(p) + 1 for p in pred])  # Convert to 1-indexed
 
             # Ensemble: take most frequent predictions
             from collections import Counter
             counter = Counter(predictions)
             main = sorted([n for n, _ in counter.most_common(self.config['main_numbers'])])
+            # Fill with random numbers if the ensemble produced too few unique values
+            while len(main) < self.config['main_numbers']:
+                num = int(np.random.randint(1, self.config['main_max'] + 1))
+                if num not in main:
+                    main.append(num)
+            main = sorted(main[:self.config['main_numbers']])
 
             # Bonus prediction (simplified)
             bonus = []
@@ -832,7 +851,7 @@ class TransformerPredictor:
         self.config = self.dm.config
         self.model = None
         self.scaler = StandardScaler()
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu") if HAS_TORCH else None
 
     class TransformerModel(nn.Module):
         """Transformer model for sequence prediction."""

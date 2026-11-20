@@ -23,7 +23,7 @@ def run_cmd(cmd, description, timeout=60):
             capture_output=True,
             text=True,
             timeout=timeout,
-            cwd="/home/bryce/lottery-predictor"
+            cwd=str(Path(__file__).resolve().parent)
         )
 
         if result.returncode == 0:
@@ -62,7 +62,8 @@ def main():
     os.chdir("/home/bryce/lottery-predictor")
 
     # Activate venv in command
-    venv_python = "/home/bryce/lottery-predictor/venv/bin/python"
+    venv = Path(__file__).resolve().parent / "venv" / "bin" / "python"
+    venv_python = str(venv) if venv.exists() else sys.executable
     base_cmd = f"{venv_python} main.py"
 
     # Test lotteries (sample of available ones)

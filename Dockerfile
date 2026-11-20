@@ -23,5 +23,5 @@ RUN pip install -e .
 # Expose port
 EXPOSE 8000
 
-# Run the API server
-CMD ["uvicorn", "lottery_predictor.api:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run the API server (create_app is the ASGI factory in cloud.py)
+CMD ["uvicorn", "lottery_predictor.cloud:create_app", "--factory", "--host", "0.0.0.0", "--port", "8000"]

@@ -68,7 +68,7 @@ class LotteryDataManager:
             self.df["date"] = pd.to_datetime(self.df["date"])
         self.refresh_status = self.refresh_official_results()
         if self.df.empty:
-            raise RuntimeError(self.refresh_status["message"])
+            logger.warning("No draw data available for %s (%s)", self.config['name'], self.refresh_status["message"])
         return self.df
 
     def refresh_official_results(self) -> Dict:

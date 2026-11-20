@@ -324,7 +324,6 @@ def create_app() -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
-        allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
@@ -461,6 +460,7 @@ def create_app() -> FastAPI:
             stats = dm.get_sum_statistics(request.last_n)
             # 'recent' is a list; AnalysisResponse requires all float values
             stats.pop("recent", None)
+            stats = _to_py(stats)
             pairs = dm.get_pair_frequency(request.last_n)
             top_pairs = list(pairs.items())[:10]
 
@@ -1157,74 +1157,10 @@ def get_db():
         db.close()
 
 
-# Docker configuration
-DOCKERFILE_CONTENT = '''# Dockerfile for Lottery Predictor
-FROM python:3.11-slim
+# Generate files (copies from repo-root templates; not embedded here to avoid drift)
+_PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \\
-    gcc \\
-    g++ \\
-    libpq-dev \\
-    && rm -rf /var/lib/apt/lists/*
-
-# Copy requirements first for better caching
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy application code
-COPY . .
-
-# Install package
-RUN pip install -e .
-
-# Expose port
-EXPOSE 8000
-
-# Run the API server
-CMD ["uvicorn", "lottery_predictor.api:app", "--host", "0.0.0.0", "--port", "8000"]
-'''
-
-DOCKER_COMPOSE_CONTENT = '''version: '3.8'
-
-services:
-  api:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/lottery
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - db
-      - redis
-    volumes:
-      - ./data:/app/data
-      - ./models:/app/models
-
-  db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=lottery
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-
-volumes:
-  postgres_data:
-'''
-
-KUBERNETES_DEPLOYMENT = '''apiVersion: apps/v1
+_K8S_DEPLOYMENT = '''apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: lottery-predictor
@@ -1308,23 +1244,25 @@ spec:
         averageUtilization: 70
 '''
 
-# Generate files
+
 def generate_dockerfile(output_path: str = "Dockerfile"):
-    """Generate Dockerfile."""
-    Path(output_path).write_text(DOCKERFILE_CONTENT)
+    """Generate Dockerfile from the repo-root template."""
+    src = _PROJECT_ROOT / "Dockerfile"
+    Path(output_path).write_text(src.read_text())
     return output_path
 
 
 def generate_docker_compose(output_path: str = "docker-compose.yml"):
-    """Generate docker-compose.yml."""
-    Path(output_path).write_text(DOCKER_COMPOSE_CONTENT)
+    """Generate docker-compose.yml from the repo-root template."""
+    src = _PROJECT_ROOT / "docker-compose.yml"
+    Path(output_path).write_text(src.read_text())
     return output_path
 
 
 def generate_kubernetes(output_dir: str = "k8s"):
     """Generate Kubernetes deployment files."""
     Path(output_dir).mkdir(parents=True, exist_ok=True)
-    Path(f"{output_dir}/deployment.yaml").write_text(KUBERNETES_DEPLOYMENT)
+    Path(f"{output_dir}/deployment.yaml").write_text(_K8S_DEPLOYMENT)
     return output_dir
 
 

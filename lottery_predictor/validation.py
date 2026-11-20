@@ -521,9 +521,8 @@ class ResultsVerifier:
             test_df = df.iloc[start:test_end]
             num_test_draws = len(test_df)
 
-            # Generate one prediction per test draw
-            preds_per_draw = max(1, num_predictions)
-            total_preds_needed = num_test_draws * preds_per_draw
+            # Generate one prediction per test draw to keep predictions aligned with actuals
+            total_preds_needed = num_test_draws
 
             # Generate predictions using training data
             if method == "statistical":
@@ -549,7 +548,7 @@ class ResultsVerifier:
             else:
                 continue
 
-            all_predictions.extend(preds[:total_preds_needed])
+            all_predictions.extend(preds[:num_test_draws])
             all_actual.extend(test_df.to_dict('records'))
 
         return self.verify_predictions(all_predictions, all_actual)
@@ -612,11 +611,10 @@ class SignificanceTester:
                 else:
                     continue
 
-                # Count matches
+                # Count matches: align each prediction to one distinct draw
                 matches = 0
-                for p in preds:
-                    for d in test_draws:
-                        matches += len(set(p.main_numbers) & set(d['main_numbers']))
+                for p, d in zip(preds, test_draws):
+                    matches += len(set(p.main_numbers) & set(d['main_numbers']))
 
                 if method_name == method_a:
                     method_a_matches.append(matches)
@@ -702,11 +700,10 @@ class SignificanceTester:
             else:
                 continue
 
-            # Count method matches
+            # Count method matches: align each prediction to one distinct draw
             matches = 0
-            for p in preds:
-                for d in test_draws:
-                    matches += len(set(p.main_numbers) & set(d['main_numbers']))
+            for p, d in zip(preds, test_draws):
+                matches += len(set(p.main_numbers) & set(d['main_numbers']))
             method_matches.append(matches)
 
             # Random predictions (same number of tickets)
@@ -717,7 +714,7 @@ class SignificanceTester:
                     size=main_n,
                     replace=False
                 ))
-                for d in test_draws:
+                for d in test_draws[:len(preds)]:
                     random_matches_this_trial += len(set(rand_nums) & set(d['main_numbers']))
             random_matches.append(random_matches_this_trial)
 

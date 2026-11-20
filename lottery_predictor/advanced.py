@@ -431,9 +431,10 @@ class NotificationSystem:
             print(f"Email send failed: {e}")
             return False
 
-    def send_discord(self, message: str, embed: Optional[Dict] = None) -> bool:
+    def send_discord(self, message: str, embed: Optional[Dict] = None, webhook_url: Optional[str] = None) -> bool:
         """Send Discord notification."""
-        if not self.discord_webhook:
+        webhook = webhook_url or self.discord_webhook
+        if not webhook:
             return False
 
         import requests
@@ -442,21 +443,22 @@ class NotificationSystem:
             if embed:
                 payload["embeds"] = [embed]
 
-            response = requests.post(self.discord_webhook, json=payload)
+            response = requests.post(webhook, json=payload)
             return response.status_code == 204
         except Exception as e:
             print(f"Discord send failed: {e}")
             return False
 
-    def send_pushbullet(self, title: str, body: str) -> bool:
+    def send_pushbullet(self, title: str, body: str, token: Optional[str] = None) -> bool:
         """Send Pushbullet notification."""
-        if not self.pushbullet_token:
+        token = token or self.pushbullet_token
+        if not token:
             return False
 
         import requests
         try:
             headers = {
-                "Access-Token": self.pushbullet_token,
+                "Access-Token": token,
                 "Content-Type": "application/json"
             }
             payload = {
@@ -497,14 +499,13 @@ class NotificationSystem:
                 )
             elif recipient.startswith("discord:"):  # Discord
                 webhook = recipient.replace("discord:", "")
-                self.discord_webhook = webhook
-                results[recipient] = self.send_discord(pred_text)
+                results[recipient] = self.send_discord(pred_text, webhook_url=webhook)
             elif recipient.startswith("pushbullet:"):  # Pushbullet
                 token = recipient.replace("pushbullet:", "")
-                self.pushbullet_token = token
                 results[recipient] = self.send_pushbullet(
                     f"🎲 {config['name']} Predictions",
-                    pred_text
+                    pred_text,
+                    token=token,
                 )
 
         return results
