@@ -891,7 +891,6 @@ def create_app() -> FastAPI:
             result = reader.readtext(np.array(image))
 
             # Extract all numbers from OCR text
-            import numpy as np
             all_text = " ".join([text for _, text, _ in result])
             numbers = [int(n) for n in __import__('re').findall(r'\d+', all_text) if 1 <= int(n) <= max(main_max, bonus_max)]
 
