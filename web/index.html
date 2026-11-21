@@ -1076,7 +1076,8 @@
 </div>
 
 <script>
-const API = "http://127.0.0.1:8000";
+// API on same host as this page, port 8000 (works on localhost and over LAN)
+const API = window.location.protocol + "//" + window.location.hostname + ":8000";
 let chartInstances = {};
 
 // ---------- Theme (dark mode) ----------
