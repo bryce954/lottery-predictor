@@ -8,7 +8,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
   :root {
     --ink: #0f172a;
@@ -869,14 +868,6 @@
         </div>
       </div>
 
-      <div style="grid-column: 1 / -1; margin-top:1rem; padding:1rem; background:#f8fafc; border:1px dashed var(--line); border-radius:10px;">
-        <label style="display:block; margin-bottom:0.5rem; font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Scan ticket with phone camera</label>
-        <p style="margin:0 0 0.75rem 0; font-size:0.85rem; color:var(--muted);">Open this page on your phone, take a photo of your ticket, and upload it. The app reads the numbers automatically.</p>
-        <input type="file" id="tc-photo" accept="image/*" capture="environment" style="width:100%; margin-bottom:0.5rem;">
-        <button class="primary" style="width:auto;" onclick="doUploadTicket(event)">Upload & Check</button>
-        <div id="tc-ocr-preview" style="margin-top:0.5rem; font-size:0.85rem; color:var(--muted);"></div>
-      </div>
-
       <div id="tc-result" style="margin-top:1.5rem;"></div>
     </div>
   </section>
@@ -1635,17 +1626,6 @@ async function doCheckTicket(evt) {
           <strong>Your numbers:</strong> ${data.ticket.main_numbers.join(", ")}${data.ticket.bonus_numbers.length ? ` | Bonus: ${data.ticket.bonus_numbers.join(", ")}` : ""}
           ${prizeTier ? `<br><strong>Prize tier:</strong> ${prizeTier}` : ""}
         </div>
-        <div style="margin-top:1rem; display:flex; gap:1rem; align-items:flex-start;">
-          <div style="flex:1;">
-            <canvas id="tc-qr" width="200" height="200" style="border:1px solid var(--line); border-radius:8px; background:#fff;"></canvas>
-            <div style="margin-top:0.5rem; font-size:0.8rem; color:var(--muted); text-align:center;">Scan QR with phone to get ticket numbers</div>
-          </div>
-          <div style="flex:1;">
-            <label style="display:block; margin-bottom:0.4rem; font-size:0.8rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.05em;">Import from phone</label>
-            <textarea id="tc-import" rows="3" placeholder="Paste: 7,14,23,38,52|22" style="width:100%; padding:0.7rem 0.9rem; border:1px solid var(--line); border-radius:10px; background:#fff; font-size:0.9rem; font-family:Inter,sans-serif;"></textarea>
-            <button class="primary" style="margin-top:0.5rem; width:100%;" onclick="doImportTicket(event)">Import & Check</button>
-          </div>
-        </div>
         <div style="margin-top:1rem;">
           <h4 style="margin-bottom:0.5rem;">Top matches</h4>
           <table>
@@ -1665,128 +1645,8 @@ async function doCheckTicket(evt) {
         </div>
       </div>
     `;
-    // Generate QR code with ticket numbers for phone scanning
-    const qrText = `${data.ticket.main_numbers.join(",")}|${data.ticket.bonus_numbers.join(",")}`;
-    try {
-      QRCode.toCanvas(document.getElementById("tc-qr"), qrText, { width: 200, margin: 2 });
-    } catch (e) {
-      console.error("QR code generation failed:", e);
-    }
   } catch (e) {
     result.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to check ticket: ${e.message}</div>`;
-  }
-}
-
-async function doImportTicket(evt) {
-  if (evt) evt.preventDefault();
-  const text = document.getElementById("tc-import").value.trim();
-  if (!text) {
-    alert("Please paste ticket numbers");
-    return;
-  }
-  const parts = text.split("|");
-  const mainNums = parts[0].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n));
-  const bonusNums = parts[1] ? parts[1].split(",").map(s => parseInt(s.trim())).filter(n => !isNaN(n)) : [];
-  if (mainNums.length === 0) {
-    alert("Invalid format. Use: 7,14,23,38,52|22");
-    return;
-  }
-  document.getElementById("tc-main").value = mainNums.join(", ");
-  document.getElementById("tc-bonus").value = bonusNums.join(", ");
-  doCheckTicket(evt);
-}
-
-async function doUploadTicket(evt) {
-  if (evt) evt.preventDefault();
-  const fileInput = document.getElementById("tc-photo");
-  const lottery = document.getElementById("tc-lottery").value;
-  const count = parseInt(document.getElementById("tc-count").value) || 100;
-  const preview = document.getElementById("tc-ocr-preview");
-  const result = document.getElementById("tc-result");
-
-  if (!fileInput.files || fileInput.files.length === 0) {
-    alert("Please select a ticket photo");
-    return;
-  }
-
-  const file = fileInput.files[0];
-  preview.textContent = "Uploading and scanning ticket…";
-  result.innerHTML = "";
-
-  const formData = new FormData();
-  formData.append("lottery", lottery);
-  formData.append("file", file);
-
-  try {
-    const res = await fetch(API + "/ocr-ticket", {
-      method: "POST",
-      body: formData,
-    });
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      throw new Error(`HTTP ${res.status}${body ? ": " + body : ""}`);
-    }
-    const data = await res.json();
-
-    if (!data.main_numbers || data.main_numbers.length === 0) {
-      preview.textContent = "Could not read ticket numbers. Try a clearer photo.";
-      return;
-    }
-
-    document.getElementById("tc-main").value = data.main_numbers.join(", ");
-    document.getElementById("tc-bonus").value = data.bonus_numbers ? data.bonus_numbers.join(", ") : "";
-    preview.textContent = `Read ${data.main_numbers.length} main numbers${data.bonus_numbers && data.bonus_numbers.length ? ` + ${data.bonus_numbers.length} bonus` : ""}: ${data.main_numbers.join(", ")}${data.bonus_numbers && data.bonus_numbers.length ? ` | Bonus: ${data.bonus_numbers.join(", ")}` : ""}`;
-
-    // Auto-check the ticket
-    const checkRes = await apiRequest("/check-ticket", {
-      method: "POST",
-      body: JSON.stringify({ lottery, main_numbers: data.main_numbers, bonus_numbers: data.bonus_numbers || [], check_recent: count }),
-    });
-
-    const best = checkRes.best_match;
-    const totalWins = checkRes.total_wins || 0;
-    const isWinner = best && best.is_winner;
-    let prizeTier = "";
-    if (best) {
-      const tier = checkRes.prize_tiers?.find(t => t.main_match === best.main_match && t.bonus_match === best.bonus_match);
-      prizeTier = tier ? ` — ${tier.tier}` : "";
-    }
-
-    result.innerHTML = `
-      <div class="panel fade-in" style="border:${isWinner ? '2px solid var(--ok)' : '1px solid var(--line)'};">
-        <h3 style="margin-top:0; color:${isWinner ? 'var(--ok)' : 'var(--ink)'};">${isWinner ? '🎉 WINNER!' : 'No jackpot match'}</h3>
-        <div class="metrics" style="margin-top:1rem;">
-          <div class="metric"><div class="v">${checkRes.draws_checked}</div><div class="k">Draws Checked</div></div>
-          <div class="metric"><div class="v">${best ? best.main_match + best.bonus_match : 0}</div><div class="k">Best Match</div></div>
-          <div class="metric"><div class="v">${totalWins}</div><div class="k">Jackpot Wins</div></div>
-          <div class="metric"><div class="v">${best ? best.date : '—'}</div><div class="k">Best Draw Date</div></div>
-        </div>
-        <div style="margin-top:1rem;">
-          <strong>Scanned numbers:</strong> ${checkRes.ticket.main_numbers.join(", ")}${checkRes.ticket.bonus_numbers.length ? ` | Bonus: ${checkRes.ticket.bonus_numbers.join(", ")}` : ""}
-          ${prizeTier ? `<br><strong>Prize tier:</strong> ${prizeTier}` : ""}
-        </div>
-        <div style="margin-top:1rem;">
-          <h4 style="margin-bottom:0.5rem;">Top matches</h4>
-          <table>
-            <thead><tr><th>Date</th><th>Draw #</th><th>Main Match</th><th>Bonus Match</th><th>Total</th></tr></thead>
-            <tbody>
-              ${checkRes.all_matches.map(m => `
-                <tr>
-                  <td>${m.date}</td>
-                  <td>${m.draw_number}</td>
-                  <td>${m.main_match}</td>
-                  <td>${m.bonus_match}</td>
-                  <td style="font-weight:700; color:${m.is_winner ? 'var(--ok)' : 'var(--ink)'};">${m.total_match}${m.is_winner ? ' 🏆' : ''}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    `;
-  } catch (e) {
-    preview.textContent = "Upload failed: " + e.message;
-    result.innerHTML = `<div class="empty" style="color:var(--warn);">Unable to scan ticket: ${e.message}</div>`;
   }
 }
 
