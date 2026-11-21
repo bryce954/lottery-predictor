@@ -879,7 +879,14 @@ def create_app() -> FastAPI:
 
         try:
             contents = await file.read()
-            image = Image.open(io.BytesIO(contents))
+            image = Image.open(io.BytesIO(contents)).convert("RGB")
+
+            # Preprocess: grayscale + autocontrast for better OCR on phone photos
+            from PIL import ImageOps, ImageEnhance
+            gray = ImageOps.grayscale(image)
+            enhanced = ImageEnhance.Contrast(gray).enhance(2.0)
+            # Threshold: convert to black/white to sharpen digits
+            bw = enhanced.point(lambda x: 0 if x < 140 else 255, "1").convert("L")
 
             # Lazy-load easyocr (heavy dependency)
             try:
@@ -888,14 +895,17 @@ def create_app() -> FastAPI:
                 raise HTTPException(status_code=500, detail="easyocr not installed. Run: pip install easyocr")
 
             reader = easyocr.Reader(['en'], gpu=False)
-            result = reader.readtext(np.array(image))
+            result = reader.readtext(np.array(bw))
 
-            # Extract all numbers from OCR text
-            all_text = " ".join([text for _, text, _ in result])
-            numbers = [int(n) for n in __import__('re').findall(r'\d+', all_text) if 1 <= int(n) <= max(main_max, bonus_max)]
+            # Extract all numbers with confidence
+            detected = []
+            for bbox, text, conf in result:
+                detected.append({"text": text, "confidence": round(conf, 2)})
+            all_text = " ".join(d["text"] for d in detected)
+            numbers = [int(n) for n in re.findall(r'\d+', all_text) if 1 <= int(n) <= max(main_max, bonus_max)]
 
             if len(numbers) < main_n:
-                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n})")
+                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n}). Try a clearer photo with better lighting.")
 
             # First main_n numbers are main, rest are bonus
             main_numbers = sorted(numbers[:main_n])
@@ -907,6 +917,7 @@ def create_app() -> FastAPI:
                 "bonus_numbers": bonus_numbers,
                 "ocr_text": all_text[:500],
                 "raw_numbers": numbers,
+                "detections": detected[:20],
             })
         except HTTPException:
             raise
