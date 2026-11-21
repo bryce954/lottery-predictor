@@ -902,7 +902,14 @@ def create_app() -> FastAPI:
                 result = reader.readtext(np.array(img_variant), allowlist='0123456789 ')
                 detected = []
                 for bbox, text, conf in result:
-                    detected.append({"text": text, "confidence": round(conf, 2)})
+                    # bbox = [[x1,y1],[x2,y2],[x3,y3],[x4,y4]]
+                    xs = [p[0] for p in bbox]
+                    ys = [p[1] for p in bbox]
+                    detected.append({
+                        "text": text,
+                        "confidence": round(conf, 2),
+                        "bbox": [round(xs[0]), round(ys[0]), round(xs[2]), round(ys[2])],
+                    })
                 nums = [int(n) for n in re.findall(r'\d+', " ".join(d["text"] for d in detected)) if 1 <= int(n) <= max(main_max, bonus_max)]
                 if best is None or len(nums) > len(best[0]):
                     best = (nums, detected, " ".join(d["text"] for d in detected))
@@ -910,7 +917,7 @@ def create_app() -> FastAPI:
             numbers, detected, all_text = best
 
             if len(numbers) < main_n:
-                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n}). Try a clearer photo with better lighting and make sure numbers are fully in frame.")
+                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n}). All detections: {[d['text'] for d in detected]}. Try a clearer photo with better lighting and make sure numbers are fully in frame.")
 
             # First main_n numbers are main, rest are bonus
             main_numbers = sorted(numbers[:main_n])
@@ -922,7 +929,7 @@ def create_app() -> FastAPI:
                 "bonus_numbers": bonus_numbers,
                 "ocr_text": all_text[:500],
                 "raw_numbers": numbers,
-                "detections": detected[:20],
+                "detections": detected[:30],
             })
         except HTTPException:
             raise
