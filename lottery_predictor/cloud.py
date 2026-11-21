@@ -881,12 +881,12 @@ def create_app() -> FastAPI:
             contents = await file.read()
             image = Image.open(io.BytesIO(contents)).convert("RGB")
 
-            # Preprocess: grayscale + autocontrast for better OCR on phone photos
+            # Preprocess: upscale 2x + grayscale + contrast (helps small phone-camera digits)
             from PIL import ImageOps, ImageEnhance
+            w, h = image.size
+            image = image.resize((w * 2, h * 2), Image.LANCZOS)
             gray = ImageOps.grayscale(image)
-            enhanced = ImageEnhance.Contrast(gray).enhance(2.0)
-            # Threshold: convert to black/white to sharpen digits
-            bw = enhanced.point(lambda x: 0 if x < 140 else 255, "1").convert("L")
+            enhanced = ImageEnhance.Contrast(gray).enhance(1.5)
 
             # Lazy-load easyocr (heavy dependency)
             try:
@@ -895,17 +895,22 @@ def create_app() -> FastAPI:
                 raise HTTPException(status_code=500, detail="easyocr not installed. Run: pip install easyocr")
 
             reader = easyocr.Reader(['en'], gpu=False)
-            result = reader.readtext(np.array(bw))
 
-            # Extract all numbers with confidence
-            detected = []
-            for bbox, text, conf in result:
-                detected.append({"text": text, "confidence": round(conf, 2)})
-            all_text = " ".join(d["text"] for d in detected)
-            numbers = [int(n) for n in re.findall(r'\d+', all_text) if 1 <= int(n) <= max(main_max, bonus_max)]
+            # Try both grayscale and enhanced, pick the variant with more digit detections
+            best = None
+            for img_variant in (gray, enhanced):
+                result = reader.readtext(np.array(img_variant), allowlist='0123456789 ')
+                detected = []
+                for bbox, text, conf in result:
+                    detected.append({"text": text, "confidence": round(conf, 2)})
+                nums = [int(n) for n in re.findall(r'\d+', " ".join(d["text"] for d in detected)) if 1 <= int(n) <= max(main_max, bonus_max)]
+                if best is None or len(nums) > len(best[0]):
+                    best = (nums, detected, " ".join(d["text"] for d in detected))
+
+            numbers, detected, all_text = best
 
             if len(numbers) < main_n:
-                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n}). Try a clearer photo with better lighting.")
+                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n}). Try a clearer photo with better lighting and make sure numbers are fully in frame.")
 
             # First main_n numbers are main, rest are bonus
             main_numbers = sorted(numbers[:main_n])
