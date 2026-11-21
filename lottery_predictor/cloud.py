@@ -3,7 +3,7 @@ Cloud & Scale Module for Lottery Predictor (v2.0)
 FastAPI REST API, Docker, Database backend, User accounts, A/B testing.
 """
 
-from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -11,7 +11,11 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime, timedelta
 import json
 import os
+import re
+import io
+import numpy as np
 from pathlib import Path
+from PIL import Image
 
 # Optional imports for database
 try:
@@ -860,6 +864,55 @@ def create_app() -> FastAPI:
             })
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
+
+    @app.post("/ocr-ticket")
+    async def ocr_ticket(lottery: str = File(...), file: UploadFile = File(...)):
+        """OCR a ticket photo and extract numbers."""
+        if lottery not in LOTTERY_CONFIGS:
+            raise HTTPException(status_code=404, detail=f"Unknown lottery '{lottery}'")
+
+        config = LOTTERY_CONFIGS[lottery]
+        main_max = config['main_max']
+        main_n = config['main_numbers']
+        bonus_n = config['bonus_numbers']
+        bonus_max = config['bonus_max']
+
+        try:
+            contents = await file.read()
+            image = Image.open(io.BytesIO(contents))
+
+            # Lazy-load easyocr (heavy dependency)
+            try:
+                import easyocr
+            except ImportError:
+                raise HTTPException(status_code=500, detail="easyocr not installed. Run: pip install easyocr")
+
+            reader = easyocr.Reader(['en'], gpu=False)
+            result = reader.readtext(np.array(image))
+
+            # Extract all numbers from OCR text
+            import numpy as np
+            all_text = " ".join([text for _, text, _ in result])
+            numbers = [int(n) for n in __import__('re').findall(r'\d+', all_text) if 1 <= int(n) <= max(main_max, bonus_max)]
+
+            if len(numbers) < main_n:
+                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n})")
+
+            # First main_n numbers are main, rest are bonus
+            main_numbers = sorted(numbers[:main_n])
+            bonus_numbers = sorted(numbers[main_n:main_n + bonus_n]) if bonus_n > 0 else []
+
+            return _to_py({
+                "lottery": lottery,
+                "main_numbers": main_numbers,
+                "bonus_numbers": bonus_numbers,
+                "ocr_text": all_text[:500],
+                "raw_numbers": numbers,
+            })
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"OCR failed: {str(e)}")
 
     # =========================================================================
     # Syndicate Endpoints
