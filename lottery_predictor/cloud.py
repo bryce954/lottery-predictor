@@ -916,10 +916,11 @@ def create_app() -> FastAPI:
 
             numbers, detected, all_text = best
 
-            if len(numbers) < main_n:
-                raise HTTPException(status_code=400, detail=f"Could not read enough numbers from ticket (found {len(numbers)}, need {main_n}). All detections: {[d['text'] for d in detected]}. Try a clearer photo with better lighting and make sure numbers are fully in frame.")
+            # Be lenient: return whatever digits OCR found (even partial), let user fill in the rest
+            if len(numbers) == 0:
+                raise HTTPException(status_code=400, detail=f"Could not read any numbers from ticket. All detections: {[d['text'] for d in detected]}. Try a clearer photo with better lighting, make sure numbers are fully in frame, and avoid glare.")
 
-            # First main_n numbers are main, rest are bonus
+            # Use whatever we found: first main_n as main, rest as bonus
             main_numbers = sorted(numbers[:main_n])
             bonus_numbers = sorted(numbers[main_n:main_n + bonus_n]) if bonus_n > 0 else []
 
